@@ -9,6 +9,7 @@ MediaLightbox::MediaLightbox(QWidget *parent)
       m_prevButton(new QPushButton(tr("\u25c0 Prev"), this)),
       m_nextButton(new QPushButton(tr("Next \u25b6"), this)),
       m_downloadButton(new QPushButton(tr("Download"), this)),
+      m_deleteButton(new QPushButton(tr("🗑 Delete"), this)),
       m_closeButton(new QPushButton(tr("Close"), this)), m_currentIndex(-1) {
 
   setWindowTitle(tr("Media Preview"));
@@ -35,7 +36,10 @@ MediaLightbox::MediaLightbox(QWidget *parent)
   navLayout->addWidget(m_nextButton);
 
   // Action buttons
+  m_deleteButton->setStyleSheet(
+      "QPushButton { color: #e74c3c; } QPushButton:hover { background-color: #e74c3c; color: white; }");
   QHBoxLayout *buttonLayout = new QHBoxLayout;
+  buttonLayout->addWidget(m_deleteButton);
   buttonLayout->addStretch();
   buttonLayout->addWidget(m_downloadButton);
   buttonLayout->addWidget(m_closeButton);
@@ -54,6 +58,10 @@ MediaLightbox::MediaLightbox(QWidget *parent)
 
   connect(m_downloadButton, &QPushButton::clicked, this, [this]() {
     emit downloadRequested(m_mediaInfo);
+  });
+
+  connect(m_deleteButton, &QPushButton::clicked, this, [this]() {
+    emit deleteRequested(m_mediaInfo);
   });
 
   connect(m_closeButton, &QPushButton::clicked, this, &QDialog::reject);

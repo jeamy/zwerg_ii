@@ -73,6 +73,18 @@ void DwarfFtpDownloader::downloadThumbnail(
   m_ftpClient->downloadToMemory(ip, ftpPath, callback);
 }
 
+void DwarfFtpDownloader::deleteFile(
+    const QString &ip, const QString &remotePath,
+    std::function<void(bool success, const QString &error)> callback) {
+  // Use same path conversion as download (without /sdcard)
+  QString ftpPath = convertToFtpPath(remotePath);
+
+  qDebug() << "[FtpDownloader] Queued file delete:" << ftpPath
+           << "(original:" << remotePath << ")";
+
+  m_ftpClient->deleteFile(ip, ftpPath, callback);
+}
+
 void DwarfFtpDownloader::onFtpDownloadStarted(const QString &remotePath) {
   // Don't emit signals for thumbnail downloads (memory downloads)
   if (remotePath.contains(QStringLiteral("thumbnail"), Qt::CaseInsensitive))

@@ -38,6 +38,15 @@ public:
   void downloadThumbnail(const QString &ip, const QString &thumbnailPath,
                          std::function<void(const QByteArray &)> callback);
 
+  /**
+   * @brief Delete a file from the DWARF.
+   * @param ip DWARF IP address
+   * @param remotePath Path from API (e.g. /sdcard/DWARF_II/Normal_Photos/x.jpg)
+   * @param callback Called with success status
+   */
+  void deleteFile(const QString &ip, const QString &remotePath,
+                  std::function<void(bool success, const QString &error)> callback);
+
   bool isBusy() const;
 
 signals:

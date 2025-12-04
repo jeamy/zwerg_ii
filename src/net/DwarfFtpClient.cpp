@@ -37,7 +37,7 @@ void DwarfFtpClient::downloadFile(const QString &host, const QString &remotePath
   job.host = host;
   job.remotePath = remotePath;
   job.localPath = localPath;
-  job.toMemory = false;
+  job.type = JobType::Download;
 
   m_queue.enqueue(job);
   qDebug() << "[FtpClient] Queued file download:" << remotePath
@@ -53,10 +53,26 @@ void DwarfFtpClient::downloadToMemory(
   job.host = host;
   job.remotePath = remotePath;
   job.memoryCallback = callback;
-  job.toMemory = true;
+  job.type = JobType::DownloadToMemory;
 
   m_queue.enqueue(job);
   qDebug() << "[FtpClient] Queued memory download:" << remotePath
+           << "queue size:" << m_queue.size() << "state:" << static_cast<int>(m_state);
+
+  tryStartNextJob();
+}
+
+void DwarfFtpClient::deleteFile(
+    const QString &host, const QString &remotePath,
+    std::function<void(bool success, const QString &error)> callback) {
+  Job job;
+  job.host = host;
+  job.remotePath = remotePath;
+  job.deleteCallback = callback;
+  job.type = JobType::Delete;
+
+  m_queue.enqueue(job);
+  qDebug() << "[FtpClient] Queued file delete:" << remotePath
            << "queue size:" << m_queue.size() << "state:" << static_cast<int>(m_state);
 
   tryStartNextJob();
@@ -183,10 +199,27 @@ void DwarfFtpClient::handleResponse(int code, const QString &line) {
 
   case State::SendingType:
     if (code == 200) {
-      m_state = State::SendingPasv;
-      sendCommand("PASV");
+      // For delete, we don't need data connection
+      if (m_currentJob.type == JobType::Delete) {
+        m_state = State::SendingDele;
+        sendCommand(QString("DELE %1").arg(m_currentJob.remotePath));
+      } else {
+        m_state = State::SendingPasv;
+        sendCommand("PASV");
+      }
     } else {
       finishDownload(false, tr("TYPE failed: %1").arg(line));
+    }
+    break;
+
+  case State::SendingDele:
+    if (code == 250) {
+      // Delete successful
+      finishDownload(true);
+    } else if (code == 550) {
+      finishDownload(false, tr("File not found or cannot delete: %1").arg(m_currentJob.remotePath));
+    } else {
+      finishDownload(false, tr("DELE failed: %1").arg(line));
     }
     break;
 
@@ -292,8 +325,18 @@ void DwarfFtpClient::finishDownload(bool success, const QString &error) {
 
   m_state = State::Done;
 
-  if (success && m_dataBuffer.size() > 0) {
-    if (m_currentJob.toMemory) {
+  // Handle delete operation
+  if (m_currentJob.type == JobType::Delete) {
+    qDebug() << "[FtpClient] Delete" << (success ? "successful" : "failed")
+             << m_currentJob.remotePath;
+    if (m_currentJob.deleteCallback) {
+      m_currentJob.deleteCallback(success, error);
+    }
+    if (!success) {
+      emit errorOccurred(m_currentJob.remotePath, error);
+    }
+  } else if (success && m_dataBuffer.size() > 0) {
+    if (m_currentJob.type == JobType::DownloadToMemory) {
       qDebug() << "[FtpClient] Download to memory complete:"
                << m_dataBuffer.size() << "bytes";
       emit downloadDataReady(m_currentJob.remotePath, m_dataBuffer);

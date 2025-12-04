@@ -39,6 +39,15 @@ public:
   void downloadToMemory(const QString &host, const QString &remotePath,
                         std::function<void(const QByteArray &)> callback);
 
+  /**
+   * @brief Delete a file from the DWARF FTP server.
+   * @param host DWARF IP address
+   * @param remotePath Remote file path to delete
+   * @param callback Called with success status
+   */
+  void deleteFile(const QString &host, const QString &remotePath,
+                  std::function<void(bool success, const QString &error)> callback);
+
   bool isBusy() const { return m_state != State::Idle; }
 
 signals:
@@ -68,16 +77,20 @@ private:
     SendingType,
     SendingPasv,
     SendingRetr,
+    SendingDele,
     Downloading,
     Done
   };
+
+  enum class JobType { Download, DownloadToMemory, Delete };
 
   struct Job {
     QString host;
     QString remotePath;
     QString localPath; // empty for memory download
     std::function<void(const QByteArray &)> memoryCallback;
-    bool toMemory;
+    std::function<void(bool, const QString &)> deleteCallback;
+    JobType type;
   };
 
   void tryStartNextJob();

@@ -12,9 +12,12 @@ class DwarfHttpClient : public QObject {
 public:
   explicit DwarfHttpClient(const QString &ip, QObject *parent = nullptr);
   void fetchMediaList();
+  void deleteMedia(const QString &filePath);
 
 signals:
   void mediaListReceived(const QJsonDocument &document);
+  void mediaDeleted(const QString &filePath);
+  void deleteError(const QString &filePath, const QString &error);
   void errorOccurred(const QString &error);
 
 private:

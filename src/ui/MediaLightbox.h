@@ -20,6 +20,7 @@ public:
 
 signals:
   void downloadRequested(const QJsonObject &mediaInfo);
+  void deleteRequested(const QJsonObject &mediaInfo);
 
 protected:
   void keyPressEvent(QKeyEvent *event) override;
@@ -36,6 +37,7 @@ private:
   QPushButton *m_prevButton;
   QPushButton *m_nextButton;
   QPushButton *m_downloadButton;
+  QPushButton *m_deleteButton;
   QPushButton *m_closeButton;
   QJsonObject m_mediaInfo;
   QVector<QJsonObject> m_mediaList;

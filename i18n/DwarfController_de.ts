@@ -286,6 +286,25 @@
       <source>%1 / %2</source>
       <translation>%1 / %2</translation>
     </message>
+    <message>
+      <source>🗑 Delete</source>
+      <translation>🗑 Löschen</translation>
+    </message>
+  </context>
+  <context>
+    <name>MainWindow</name>
+    <message>
+      <source>Delete Media</source>
+      <translation>Medium löschen</translation>
+    </message>
+    <message>
+      <source>Are you sure you want to delete '%1' from the DWARF II?</source>
+      <translation>Möchten Sie '%1' wirklich vom DWARF II löschen?</translation>
+    </message>
+    <message>
+      <source>Delete not yet implemented</source>
+      <translation>Löschen noch nicht implementiert</translation>
+    </message>
   </context>
   <context>
     <name>CameraSettingsPanel</name>

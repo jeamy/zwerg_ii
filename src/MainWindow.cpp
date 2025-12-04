@@ -1280,6 +1280,44 @@ void MainWindow::onMediaItemClicked(QListWidgetItem *item) {
             onMediaItemActivated(&tempItem);
           });
 
+  connect(lightbox, &MediaLightbox::deleteRequested, this,
+          [this, lightbox](const QJsonObject &mediaInfo) {
+            QString filePath = mediaInfo.value(QStringLiteral("filePath")).toString();
+            QString fileName = mediaInfo.value(QStringLiteral("fileName")).toString();
+            if (fileName.isEmpty()) {
+              QFileInfo fi(filePath);
+              fileName = fi.fileName();
+            }
+
+            // Confirm deletion
+            QMessageBox::StandardButton reply = QMessageBox::question(
+                this, tr("Delete Media"),
+                tr("Are you sure you want to delete '%1' from the DWARF II?").arg(fileName),
+                QMessageBox::Yes | QMessageBox::No);
+
+            if (reply == QMessageBox::Yes && m_ftpDownloader) {
+              QString ip = m_ipInput->text().trimmed();
+              statusBar()->showMessage(tr("Deleting %1...").arg(fileName), 0);
+
+              // Use FTP for deletion
+              m_ftpDownloader->deleteFile(ip, filePath,
+                  [this, fileName, lightbox](bool success, const QString &error) {
+                    if (success) {
+                      statusBar()->showMessage(tr("Deleted %1").arg(fileName), 3000);
+                      if (lightbox) {
+                        lightbox->close();
+                      }
+                      // Refresh media list
+                      if (m_httpClient) {
+                        m_httpClient->fetchMediaList();
+                      }
+                    } else {
+                      statusBar()->showMessage(tr("Delete failed: %1").arg(error), 5000);
+                    }
+                  });
+            }
+          });
+
   lightbox->show();
 }
 

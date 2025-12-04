@@ -23,8 +23,38 @@ inline int scale01To255(int value01) {
 
 DwarfCameraController::DwarfCameraController(QObject *parent)
     : QObject(parent), m_client(nullptr) {
-  m_teleParams.Clear();
-  m_wideParams.Clear();
+  // Initialize with sensible defaults
+  // Tele camera defaults
+  m_teleParams.set_exp_mode(0);      // Auto exposure
+  m_teleParams.set_exp_index(10);    // Mid-range exposure
+  m_teleParams.set_gain_mode(0);     // Auto gain
+  m_teleParams.set_gain_index(15);   // Mid-range gain
+  m_teleParams.set_ircut_value(0);   // IR-Cut ON (day mode)
+  m_teleParams.set_wb_mode(0);       // Auto white balance
+  m_teleParams.set_wb_index_type(0); // Color temperature
+  m_teleParams.set_wb_index(5);      // ~5500K
+  m_teleParams.set_brightness(128);  // 50%
+  m_teleParams.set_contrast(128);    // 50%
+  m_teleParams.set_hue(128);         // 50%
+  m_teleParams.set_saturation(128);  // 50%
+  m_teleParams.set_sharpness(50);    // 50%
+  m_teleParams.set_jpg_quality(90);  // High quality
+
+  // Wide camera defaults (same as tele)
+  m_wideParams.set_exp_mode(0);
+  m_wideParams.set_exp_index(8);     // Mid-range for wide
+  m_wideParams.set_gain_mode(0);
+  m_wideParams.set_gain_index(5);    // Mid-range for wide (0-100)
+  m_wideParams.set_ircut_value(0);
+  m_wideParams.set_wb_mode(0);
+  m_wideParams.set_wb_index_type(0);
+  m_wideParams.set_wb_index(5);
+  m_wideParams.set_brightness(128);
+  m_wideParams.set_contrast(128);
+  m_wideParams.set_hue(128);
+  m_wideParams.set_saturation(128);
+  m_wideParams.set_sharpness(50);
+  m_wideParams.set_jpg_quality(90);
 }
 
 void DwarfCameraController::setClient(DwarfWebSocketClient *client) {
