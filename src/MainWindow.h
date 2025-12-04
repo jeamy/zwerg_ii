@@ -12,6 +12,7 @@
 #include <QMainWindow>
 #include <QMediaPlayer>
 #include <QMouseEvent>
+#include <QPointer>
 #include <QPushButton>
 #include <QSlider>
 #include <QTabWidget>
@@ -22,9 +23,11 @@ class DwarfCameraController;
 class DwarfMotorController;
 class DwarfFocusController;
 class DwarfMjpegStream;
+class MediaLightbox;
 class DwarfMjpegView;
 class QPointF;
 class DwarfHttpClient;
+class DwarfFtpDownloader;
 
 class ClickableLabel : public QWidget {
   Q_OBJECT
@@ -101,9 +104,17 @@ private slots:
   void onOpenGalleryClicked();
   void onMediaListReceived(const QJsonDocument &document);
   void onMediaListError(const QString &error);
+  void onChangeDownloadDirClicked();
+  void onMediaItemClicked(QListWidgetItem *item);
+  void onMediaItemActivated(QListWidgetItem *item);
+  void onDownloadStarted(const QString &fileName);
+  void onDownloadFinished(const QString &fileName, const QString &localPath);
+  void onDownloadError(const QString &fileName, const QString &error);
 
 private:
   void setupUi();
+  void loadThumbnails();
+  void setItemThumbnail(QListWidgetItem *item, const QByteArray &data);
 
   QLineEdit *m_ipInput;
   QLineEdit *m_subnetInput;
@@ -168,4 +179,17 @@ private:
   QListWidget *m_mediaBurstList;
   QListWidget *m_mediaAstroList;
   QListWidget *m_mediaPanoList;
+  QLineEdit *m_downloadDirEdit;
+  QPushButton *m_changeDownloadDirButton;
+  QString m_downloadDir;
+  DwarfFtpDownloader *m_ftpDownloader;
+  struct PendingThumbnail {
+    QPointer<QListWidget> list;
+    int row;
+    QString path;
+  };
+  QList<PendingThumbnail> m_pendingThumbnails;
+  int m_thumbnailsLoading;
+  QPointer<MediaLightbox> m_currentLightbox;
+  static constexpr int THUMBNAIL_SIZE = 120;
 };

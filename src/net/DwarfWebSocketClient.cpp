@@ -12,6 +12,8 @@ DwarfWebSocketClient::DwarfWebSocketClient(const QString &ip, QObject *parent)
           &DwarfWebSocketClient::onDisconnected);
   connect(&m_webSocket, &QWebSocket::binaryMessageReceived, this,
           &DwarfWebSocketClient::onBinaryMessageReceived);
+  connect(&m_webSocket, &QWebSocket::textMessageReceived, this,
+          &DwarfWebSocketClient::onTextMessageReceived);
   connect(
       &m_webSocket,
       QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::errorOccurred),
@@ -87,13 +89,29 @@ void DwarfWebSocketClient::onBinaryMessageReceived(const QByteArray &message) {
   emit messageReceived(packet.module_id(), packet.cmd(), data);
 }
 
+void DwarfWebSocketClient::onTextMessageReceived(const QString &message) {
+  // DWARF API 4.6: Server returns "pong" in response to "ping"
+  if (message == QStringLiteral("pong")) {
+    qDebug() << "[DwarfWebSocketClient] Received heartbeat pong";
+  } else {
+    qDebug() << "[DwarfWebSocketClient] Received text message:" << message;
+  }
+}
+
 void DwarfWebSocketClient::onError(QAbstractSocket::SocketError error) {
   QString errorString = m_webSocket.errorString();
   qWarning() << "WebSocket error:" << error << errorString;
   emit errorOccurred(errorString);
 }
 
-void DwarfWebSocketClient::sendPing() { sendCommand(0, 0, QByteArray()); }
+void DwarfWebSocketClient::sendPing() {
+  if (!isConnected())
+    return;
+
+  // DWARF API 4.6: Client sends "ping", server returns "pong"
+  m_webSocket.sendTextMessage(QStringLiteral("ping"));
+  qDebug() << "[DwarfWebSocketClient] Sent heartbeat ping";
+}
 
 QByteArray DwarfWebSocketClient::createPacket(uint32_t moduleId, uint32_t cmd,
                                               const QByteArray &data) {

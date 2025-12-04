@@ -506,6 +506,7 @@ CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o: \
  /usr/include/qt6/QtCore/qcoreapplication_platform.h \
  /usr/include/qt6/QtGui/qinputmethod.h \
  /usr/include/qt6/QtGui/qguiapplication_platform.h \
+ /usr/include/qt6/QtCore/QPointer /usr/include/qt6/QtCore/qpointer.h \
  /usr/include/qt6/QtWidgets/QPushButton \
  /usr/include/qt6/QtWidgets/qpushbutton.h \
  /usr/include/qt6/QtWidgets/QSlider /usr/include/qt6/QtWidgets/qslider.h \
@@ -528,6 +529,11 @@ CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o: \
  /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/moc_DwarfFocusController.cpp \
  /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/../../../src/net/DwarfFocusController.h \
  /home/lux/programming/pydwarf/build/focus.pb.h \
+ /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/moc_DwarfFtpClient.cpp \
+ /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/../../../src/net/DwarfFtpClient.h \
+ /usr/include/qt6/QtCore/QQueue /usr/include/qt6/QtCore/qqueue.h \
+ /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/moc_DwarfFtpDownloader.cpp \
+ /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/../../../src/net/DwarfFtpDownloader.h \
  /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/moc_DwarfHttpClient.cpp \
  /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/../../../src/net/DwarfHttpClient.h \
  /usr/include/qt6/QtCore/QJsonDocument \
@@ -543,4 +549,15 @@ CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o: \
  /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/moc_DwarfMotorController.cpp \
  /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/../../../src/net/DwarfMotorController.h \
  /home/lux/programming/pydwarf/build/motor.pb.h \
- /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/moc_DwarfWebSocketClient.cpp
+ /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/moc_DwarfWebSocketClient.cpp \
+ /home/lux/programming/pydwarf/build/DwarfController_autogen/YPKJ5OE7LN/moc_MediaLightbox.cpp \
+ /home/lux/programming/pydwarf/build/DwarfController_autogen/YPKJ5OE7LN/../../../src/ui/MediaLightbox.h \
+ /usr/include/qt6/QtWidgets/QDialog /usr/include/qt6/QtWidgets/qdialog.h \
+ /usr/include/qt6/QtCore/QJsonObject \
+ /usr/include/qt6/QtCore/qjsonobject.h \
+ /usr/include/qt6/QtCore/qjsonvalue.h \
+ /usr/include/qt6/QtCore/qcborvalue.h \
+ /usr/include/qt6/QtCore/qcborcommon.h /usr/include/qt6/QtCore/quuid.h \
+ /usr/include/qt6/QtCore/qjsondocument.h /usr/include/qt6/QtGui/QKeyEvent \
+ /usr/include/qt6/QtGui/QPixmap /usr/include/qt6/QtGui/qpixmap.h \
+ /usr/include/qt6/QtCore/QVector /usr/include/qt6/QtCore/qvector.h

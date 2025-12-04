@@ -49,6 +49,12 @@ set(SOURCES
     src/net/DwarfMjpegStream.h
     src/net/DwarfMjpegView.cpp
     src/net/DwarfMjpegView.h
+    src/net/DwarfFtpDownloader.cpp
+    src/net/DwarfFtpDownloader.h
+    src/net/DwarfFtpClient.cpp
+    src/net/DwarfFtpClient.h
+    src/ui/MediaLightbox.cpp
+    src/ui/MediaLightbox.h
     ${PROTO_SRCS}
     ${PROTO_HDRS}
 )

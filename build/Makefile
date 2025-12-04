@@ -443,6 +443,54 @@ src/net/DwarfFocusController.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.s
 .PHONY : src/net/DwarfFocusController.cpp.s
 
+src/net/DwarfFtpClient.o: src/net/DwarfFtpClient.cpp.o
+.PHONY : src/net/DwarfFtpClient.o
+
+# target to build an object file
+src/net/DwarfFtpClient.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o
+.PHONY : src/net/DwarfFtpClient.cpp.o
+
+src/net/DwarfFtpClient.i: src/net/DwarfFtpClient.cpp.i
+.PHONY : src/net/DwarfFtpClient.i
+
+# target to preprocess a source file
+src/net/DwarfFtpClient.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.i
+.PHONY : src/net/DwarfFtpClient.cpp.i
+
+src/net/DwarfFtpClient.s: src/net/DwarfFtpClient.cpp.s
+.PHONY : src/net/DwarfFtpClient.s
+
+# target to generate assembly for a file
+src/net/DwarfFtpClient.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.s
+.PHONY : src/net/DwarfFtpClient.cpp.s
+
+src/net/DwarfFtpDownloader.o: src/net/DwarfFtpDownloader.cpp.o
+.PHONY : src/net/DwarfFtpDownloader.o
+
+# target to build an object file
+src/net/DwarfFtpDownloader.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o
+.PHONY : src/net/DwarfFtpDownloader.cpp.o
+
+src/net/DwarfFtpDownloader.i: src/net/DwarfFtpDownloader.cpp.i
+.PHONY : src/net/DwarfFtpDownloader.i
+
+# target to preprocess a source file
+src/net/DwarfFtpDownloader.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.i
+.PHONY : src/net/DwarfFtpDownloader.cpp.i
+
+src/net/DwarfFtpDownloader.s: src/net/DwarfFtpDownloader.cpp.s
+.PHONY : src/net/DwarfFtpDownloader.s
+
+# target to generate assembly for a file
+src/net/DwarfFtpDownloader.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.s
+.PHONY : src/net/DwarfFtpDownloader.cpp.s
+
 src/net/DwarfHttpClient.o: src/net/DwarfHttpClient.cpp.o
 .PHONY : src/net/DwarfHttpClient.o
 
@@ -611,6 +659,30 @@ src/net/ProtobufHelper.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.s
 .PHONY : src/net/ProtobufHelper.cpp.s
 
+src/ui/MediaLightbox.o: src/ui/MediaLightbox.cpp.o
+.PHONY : src/ui/MediaLightbox.o
+
+# target to build an object file
+src/ui/MediaLightbox.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o
+.PHONY : src/ui/MediaLightbox.cpp.o
+
+src/ui/MediaLightbox.i: src/ui/MediaLightbox.cpp.i
+.PHONY : src/ui/MediaLightbox.i
+
+# target to preprocess a source file
+src/ui/MediaLightbox.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.i
+.PHONY : src/ui/MediaLightbox.cpp.i
+
+src/ui/MediaLightbox.s: src/ui/MediaLightbox.cpp.s
+.PHONY : src/ui/MediaLightbox.s
+
+# target to generate assembly for a file
+src/ui/MediaLightbox.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.s
+.PHONY : src/ui/MediaLightbox.cpp.s
+
 system.pb.o: system.pb.cc.o
 .PHONY : system.pb.o
 
@@ -706,6 +778,12 @@ help:
 	@echo "... src/net/DwarfFocusController.o"
 	@echo "... src/net/DwarfFocusController.i"
 	@echo "... src/net/DwarfFocusController.s"
+	@echo "... src/net/DwarfFtpClient.o"
+	@echo "... src/net/DwarfFtpClient.i"
+	@echo "... src/net/DwarfFtpClient.s"
+	@echo "... src/net/DwarfFtpDownloader.o"
+	@echo "... src/net/DwarfFtpDownloader.i"
+	@echo "... src/net/DwarfFtpDownloader.s"
 	@echo "... src/net/DwarfHttpClient.o"
 	@echo "... src/net/DwarfHttpClient.i"
 	@echo "... src/net/DwarfHttpClient.s"
@@ -727,6 +805,9 @@ help:
 	@echo "... src/net/ProtobufHelper.o"
 	@echo "... src/net/ProtobufHelper.i"
 	@echo "... src/net/ProtobufHelper.s"
+	@echo "... src/ui/MediaLightbox.o"
+	@echo "... src/ui/MediaLightbox.i"
+	@echo "... src/ui/MediaLightbox.s"
 	@echo "... system.pb.o"
 	@echo "... system.pb.i"
 	@echo "... system.pb.s"

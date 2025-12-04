@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="de_DE" sourcelanguage="en_US">
   <context>
@@ -146,6 +146,145 @@
     <message>
       <source>Ready</source>
       <translation>Bereit</translation>
+    </message>
+    <message>
+      <source>Open gallery</source>
+      <translation>Galerie öffnen</translation>
+    </message>
+    <message>
+      <source>Photo</source>
+      <translation>Foto</translation>
+    </message>
+    <message>
+      <source>Video</source>
+      <translation>Video</translation>
+    </message>
+    <message>
+      <source>Burst</source>
+      <translation>Serienaufnahme</translation>
+    </message>
+    <message>
+      <source>Astro</source>
+      <translation>Astro</translation>
+    </message>
+    <message>
+      <source>Panorama</source>
+      <translation>Panorama</translation>
+    </message>
+    <message>
+      <source>Media gallery</source>
+      <translation>Mediengalerie</translation>
+    </message>
+    <message>
+      <source>Download folder:</source>
+      <translation>Download-Ordner:</translation>
+    </message>
+    <message>
+      <source>Change...</source>
+      <translation>Ändern...</translation>
+    </message>
+    <message>
+      <source>Select download folder</source>
+      <translation>Download-Ordner auswählen</translation>
+    </message>
+    <message>
+      <source>No media found</source>
+      <translation>Keine Medien gefunden</translation>
+    </message>
+    <message>
+      <source>Downloading %1...</source>
+      <translation>Lade %1 herunter...</translation>
+    </message>
+    <message>
+      <source>Downloaded %1</source>
+      <translation>%1 heruntergeladen</translation>
+    </message>
+    <message>
+      <source>Download failed: %1 - %2</source>
+      <translation>Download fehlgeschlagen: %1 - %2</translation>
+    </message>
+    <message>
+      <source>Stream source:</source>
+      <translation>Stream-Quelle:</translation>
+    </message>
+    <message>
+      <source>Live Stream (TELE)</source>
+      <translation>Live-Stream (TELE)</translation>
+    </message>
+    <message>
+      <source>Live Stream (WIDE)</source>
+      <translation>Live-Stream (WIDE)</translation>
+    </message>
+    <message>
+      <source>%1 deg/s</source>
+      <translation>%1 °/s</translation>
+    </message>
+  </context>
+  <context>
+    <name>MediaLightbox</name>
+    <message>
+      <source>◀ Prev</source>
+      <translation>◀ Zurück</translation>
+    </message>
+    <message>
+      <source>Next ▶</source>
+      <translation>Weiter ▶</translation>
+    </message>
+    <message>
+      <source>Download</source>
+      <translation>Herunterladen</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+    <message>
+      <source>Media Preview</source>
+      <translation>Medienvorschau</translation>
+    </message>
+    <message>
+      <source>Photo</source>
+      <translation>Foto</translation>
+    </message>
+    <message>
+      <source>Video</source>
+      <translation>Video</translation>
+    </message>
+    <message>
+      <source>Burst</source>
+      <translation>Serienaufnahme</translation>
+    </message>
+    <message>
+      <source>Astro</source>
+      <translation>Astro</translation>
+    </message>
+    <message>
+      <source>Panorama</source>
+      <translation>Panorama</translation>
+    </message>
+    <message>
+      <source>Unknown</source>
+      <translation>Unbekannt</translation>
+    </message>
+    <message>
+      <source>Tele</source>
+      <translation>Tele</translation>
+    </message>
+    <message>
+      <source>Wide</source>
+      <translation>Weitwinkel</translation>
+    </message>
+    <message>
+      <source>Type</source>
+      <translation>Typ</translation>
+    </message>
+    <message>
+      <source>Camera</source>
+      <translation>Kamera</translation>
+    </message>
+    <message>
+      <source>%1 / %2</source>
+      <translation>%1 / %2</translation>
     </message>
   </context>
 </TS>

@@ -5,6 +5,8 @@
 #include "net/DwarfMjpegStream.h"
 #include "net/DwarfMjpegView.h"
 #include "net/DwarfHttpClient.h"
+#include "net/DwarfFtpDownloader.h"
+#include "ui/MediaLightbox.h"
 #include "qnamespace.h"
 #include <QDebug>
 #include <QDockWidget>
@@ -19,6 +21,14 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QFileInfo>
+#include <QFileDialog>
+#include <QDir>
+#include <QSettings>
+#include <QStandardPaths>
+#include <QPixmap>
+#include <QImage>
+#include <QListView>
+#include <QVector>
 #include <cmath>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -31,7 +41,9 @@ MainWindow::MainWindow(QWidget *parent)
       m_httpClient(nullptr), m_openGalleryButton(nullptr),
       m_mediaTabs(nullptr), m_mediaPhotoList(nullptr),
       m_mediaVideoList(nullptr), m_mediaBurstList(nullptr),
-      m_mediaAstroList(nullptr), m_mediaPanoList(nullptr) {
+      m_mediaAstroList(nullptr), m_mediaPanoList(nullptr),
+      m_downloadDirEdit(nullptr), m_changeDownloadDirButton(nullptr),
+      m_ftpDownloader(nullptr), m_thumbnailsLoading(0) {
   m_mainStreamView = nullptr;
   m_pipStreamView = nullptr;
   m_teleButton = nullptr;
@@ -312,6 +324,14 @@ void MainWindow::setupUi() {
 
   QGroupBox *mediaGroup = new QGroupBox(tr("Media gallery"), systemMediaTab);
   QVBoxLayout *mediaLayout = new QVBoxLayout(mediaGroup);
+  QHBoxLayout *downloadLayout = new QHBoxLayout();
+  QLabel *downloadLabel = new QLabel(tr("Download folder:"), mediaGroup);
+  m_downloadDirEdit = new QLineEdit(mediaGroup);
+  m_downloadDirEdit->setReadOnly(true);
+  m_changeDownloadDirButton = new QPushButton(tr("Change..."), mediaGroup);
+  downloadLayout->addWidget(downloadLabel);
+  downloadLayout->addWidget(m_downloadDirEdit);
+  downloadLayout->addWidget(m_changeDownloadDirButton);
   m_openGalleryButton = new QPushButton(tr("Open gallery"), mediaGroup);
   m_mediaTabs = new QTabWidget(mediaGroup);
   m_mediaPhotoList = new QListWidget(m_mediaTabs);
@@ -324,6 +344,7 @@ void MainWindow::setupUi() {
   m_mediaTabs->addTab(m_mediaBurstList, tr("Burst"));
   m_mediaTabs->addTab(m_mediaAstroList, tr("Astro"));
   m_mediaTabs->addTab(m_mediaPanoList, tr("Panorama"));
+  mediaLayout->addLayout(downloadLayout);
   mediaLayout->addWidget(m_openGalleryButton);
   mediaLayout->addWidget(m_mediaTabs);
   mediaGroup->setLayout(mediaLayout);
@@ -332,6 +353,62 @@ void MainWindow::setupUi() {
   if (m_openGalleryButton)
     connect(m_openGalleryButton, &QPushButton::clicked, this,
             &MainWindow::onOpenGalleryClicked);
+
+  // Update lightbox content when switching tabs
+  connect(m_mediaTabs, &QTabWidget::currentChanged, this, [this](int index) {
+    if (!m_currentLightbox)
+      return;
+
+    // Get the new list widget for this tab
+    QListWidget *newList = nullptr;
+    switch (index) {
+    case 0:
+      newList = m_mediaPhotoList;
+      break;
+    case 1:
+      newList = m_mediaVideoList;
+      break;
+    case 2:
+      newList = m_mediaBurstList;
+      break;
+    case 3:
+      newList = m_mediaAstroList;
+      break;
+    case 4:
+      newList = m_mediaPanoList;
+      break;
+    }
+
+    if (!newList)
+      return;
+
+    const int count = newList->count();
+    if (count <= 0) {
+      m_currentLightbox->close();
+      m_currentLightbox = nullptr;
+      return;
+    }
+
+    QVector<QJsonObject> mediaList(count);
+    QVector<QPixmap> thumbnails(count);
+    for (int i = 0; i < count; ++i) {
+      QListWidgetItem *item = newList->item(i);
+      if (!item)
+        continue;
+      QVariant data = item->data(Qt::UserRole);
+      if (data.isValid())
+        mediaList[i] = data.toJsonObject();
+      QIcon icon = item->icon();
+      if (!icon.isNull())
+        thumbnails[i] = icon.pixmap(500, 350);
+    }
+
+    int currentIndex = newList->currentRow();
+    if (currentIndex < 0 || currentIndex >= count)
+      currentIndex = 0;
+
+    m_currentLightbox->setMediaList(mediaList, currentIndex, thumbnails);
+  });
 
   systemMediaTab->setLayout(systemMediaLayout);
 
@@ -624,6 +701,39 @@ void MainWindow::setupUi() {
   }
 
   statusBar()->showMessage(tr("Ready"));
+
+  QSettings settings("DwarfLab", "DwarfController");
+  QString dir = settings.value("downloadDir").toString();
+  if (dir.isEmpty()) {
+    QString base = QStandardPaths::writableLocation(
+        QStandardPaths::DownloadLocation);
+    if (base.isEmpty())
+      base = QDir::homePath();
+    QDir d(base);
+    if (!d.exists("DWARF_II"))
+      d.mkpath("DWARF_II");
+    dir = d.filePath("DWARF_II");
+  }
+  m_downloadDir = dir;
+  if (m_downloadDirEdit)
+    m_downloadDirEdit->setText(dir);
+
+  if (m_changeDownloadDirButton)
+    connect(m_changeDownloadDirButton, &QPushButton::clicked, this,
+            &MainWindow::onChangeDownloadDirClicked);
+
+  // Single click: open lightbox preview
+  // Double click: start download
+  for (QListWidget *list :
+       {m_mediaPhotoList, m_mediaVideoList, m_mediaBurstList, m_mediaAstroList,
+        m_mediaPanoList}) {
+    if (list) {
+      connect(list, &QListWidget::itemClicked, this,
+              &MainWindow::onMediaItemClicked);
+      connect(list, &QListWidget::itemDoubleClicked, this,
+              &MainWindow::onMediaItemActivated);
+    }
+  }
 }
 
 void MainWindow::onScanClicked() {
@@ -1123,6 +1233,12 @@ void MainWindow::onOpenGalleryClicked() {
   if (ip.isEmpty())
     return;
 
+  // Delete any open lightbox BEFORE clearing lists - must delete immediately
+  if (m_currentLightbox) {
+    delete m_currentLightbox;
+    m_currentLightbox = nullptr;
+  }
+
   if (m_httpClient) {
     m_httpClient->deleteLater();
     m_httpClient = nullptr;
@@ -1156,6 +1272,16 @@ void MainWindow::onMediaListReceived(const QJsonDocument &document) {
   if (!m_mediaTabs)
     return;
 
+  // Delete any open lightbox before clearing lists - must delete immediately
+  if (m_currentLightbox) {
+    delete m_currentLightbox;
+    m_currentLightbox = nullptr;
+  }
+
+  // Clear pending thumbnail downloads to avoid stale references
+  m_pendingThumbnails.clear();
+  m_thumbnailsLoading = 0;
+
   if (m_mediaPhotoList)
     m_mediaPhotoList->clear();
   if (m_mediaVideoList)
@@ -1166,9 +1292,6 @@ void MainWindow::onMediaListReceived(const QJsonDocument &document) {
     m_mediaAstroList->clear();
   if (m_mediaPanoList)
     m_mediaPanoList->clear();
-
-  qWarning() << "[MainWindow] mediaInfos JSON"
-             << document.toJson(QJsonDocument::Indented);
 
   QJsonArray files;
   if (document.isArray())
@@ -1208,43 +1331,8 @@ void MainWindow::onMediaListReceived(const QJsonDocument &document) {
     int mediaType = obj.value(QStringLiteral("mediaType")).toInt(-1);
     int camId = obj.value(QStringLiteral("camId")).toInt(-1);
 
-    QStringList tags;
-
-    if (mediaType >= 0) {
-      QString mt;
-      switch (mediaType) {
-      case 1:
-        mt = tr("Photo");
-        break;
-      case 2:
-        mt = tr("Video");
-        break;
-      case 3:
-        mt = tr("Burst");
-        break;
-      case 4:
-        mt = tr("Astro");
-        break;
-      case 5:
-        mt = tr("Panorama");
-        break;
-      default:
-        mt = QString::number(mediaType);
-        break;
-      }
-      tags << mt;
-    }
-
-    if (camId == 0)
-      tags << tr("Tele");
-    else if (camId == 1)
-      tags << tr("Wide");
-
+    // Display name: just the filename (Tele/Wide is already in the name)
     QString display = baseName;
-    if (!tags.isEmpty())
-      display += QStringLiteral(" [") + tags.join(QStringLiteral(", ")) +
-                 QStringLiteral("]");
-
     if (display.isEmpty())
       display = QString::fromUtf8(
           QJsonDocument(obj).toJson(QJsonDocument::Compact));
@@ -1271,9 +1359,292 @@ void MainWindow::onMediaListReceived(const QJsonDocument &document) {
       break;
     }
 
-    if (target)
-      target->addItem(display);
+    if (target) {
+      QListWidgetItem *item = new QListWidgetItem(display, target);
+      item->setData(Qt::UserRole, obj);
+      item->setTextAlignment(Qt::AlignHCenter | Qt::AlignBottom);
+
+      // Queue thumbnail for loading - store safe reference, not raw pointer
+      QString thumbnailPath =
+          obj.value(QStringLiteral("thumbnailPath")).toString();
+      if (!thumbnailPath.isEmpty()) {
+        PendingThumbnail pending;
+        pending.list = target;
+        pending.row = target->count() - 1; // Just added item
+        pending.path = thumbnailPath;
+        m_pendingThumbnails.append(pending);
+      } else {
+        qDebug() << "[MainWindow] No thumbnail for:" << baseName
+                 << "mediaType:" << mediaType;
+      }
+    }
   }
+
+  // Configure list widgets for icon mode with grid layout
+  // Thumbnails are landscape (16:9), so height is ~67% of width
+  int thumbHeight = THUMBNAIL_SIZE * 2 / 3; // ~80px for 120px width
+  for (QListWidget *list :
+       {m_mediaPhotoList, m_mediaVideoList, m_mediaBurstList, m_mediaAstroList,
+        m_mediaPanoList}) {
+    if (list) {
+      list->setViewMode(QListView::IconMode);
+      list->setIconSize(QSize(THUMBNAIL_SIZE, thumbHeight));
+      list->setGridSize(QSize(THUMBNAIL_SIZE + 20, thumbHeight + 45));
+      list->setSpacing(6);
+      list->setResizeMode(QListView::Adjust);
+      list->setWordWrap(true);
+      list->setUniformItemSizes(false);
+      list->setMovement(QListView::Static);
+    }
+  }
+
+  // Start loading thumbnails
+  loadThumbnails();
+}
+
+void MainWindow::loadThumbnails() {
+  if (m_pendingThumbnails.isEmpty())
+    return;
+
+  QString ip = m_ipInput ? m_ipInput->text().trimmed() : QString();
+  if (ip.isEmpty())
+    return;
+
+  if (!m_ftpDownloader) {
+    m_ftpDownloader = new DwarfFtpDownloader(this);
+    connect(m_ftpDownloader, &DwarfFtpDownloader::downloadStarted, this,
+            &MainWindow::onDownloadStarted);
+    connect(m_ftpDownloader, &DwarfFtpDownloader::downloadFinished, this,
+            &MainWindow::onDownloadFinished);
+    connect(m_ftpDownloader, &DwarfFtpDownloader::downloadError, this,
+            &MainWindow::onDownloadError);
+  }
+
+  // Load thumbnails in batches (max 5 concurrent)
+  while (!m_pendingThumbnails.isEmpty() && m_thumbnailsLoading < 5) {
+    PendingThumbnail pending = m_pendingThumbnails.takeFirst();
+
+    // Skip if list was deleted or row is invalid
+    if (!pending.list || pending.row < 0 ||
+        pending.row >= pending.list->count())
+      continue;
+
+    if (pending.path.isEmpty())
+      continue;
+
+    m_thumbnailsLoading++;
+
+    // Capture safe references for callback
+    QPointer<QListWidget> capturedList = pending.list;
+    int capturedRow = pending.row;
+    QString capturedPath = pending.path;
+
+    m_ftpDownloader->downloadThumbnail(
+        ip, pending.path,
+        [this, capturedList, capturedRow, capturedPath](const QByteArray &data) {
+          if (m_thumbnailsLoading > 0)
+            m_thumbnailsLoading--;
+
+          if (!data.isEmpty() && capturedList && capturedRow >= 0 &&
+              capturedRow < capturedList->count()) {
+            QListWidgetItem *currentItem = capturedList->item(capturedRow);
+            if (currentItem)
+              setItemThumbnail(currentItem, data);
+          }
+
+          // Continue loading more thumbnails
+          QTimer::singleShot(50, this, &MainWindow::loadThumbnails);
+        });
+  }
+}
+
+void MainWindow::setItemThumbnail(QListWidgetItem *item,
+                                  const QByteArray &data) {
+  if (!item || data.isEmpty())
+    return;
+
+  QImage image;
+  if (image.loadFromData(data)) {
+    // Scale to fit width, keep aspect ratio (landscape thumbnails)
+    int thumbHeight = THUMBNAIL_SIZE * 2 / 3;
+    QPixmap pixmap = QPixmap::fromImage(
+        image.scaled(THUMBNAIL_SIZE, thumbHeight, Qt::KeepAspectRatio,
+                     Qt::SmoothTransformation));
+    item->setIcon(QIcon(pixmap));
+  } else {
+    qWarning() << "[MainWindow] Failed to decode thumbnail image, size:"
+               << data.size();
+  }
+}
+
+void MainWindow::onChangeDownloadDirClicked() {
+  QString startDir = m_downloadDir;
+  if (startDir.isEmpty()) {
+    startDir = QStandardPaths::writableLocation(
+        QStandardPaths::DownloadLocation);
+    if (startDir.isEmpty())
+      startDir = QDir::homePath();
+  }
+
+  QString dir = QFileDialog::getExistingDirectory(
+      this, tr("Select download folder"), startDir,
+      QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+  if (dir.isEmpty())
+    return;
+
+  m_downloadDir = dir;
+  if (m_downloadDirEdit)
+    m_downloadDirEdit->setText(dir);
+
+  QSettings settings("DwarfLab", "DwarfController");
+  settings.setValue("downloadDir", dir);
+}
+
+void MainWindow::onMediaItemClicked(QListWidgetItem *item) {
+  if (!item)
+    return;
+
+  // Find which list widget this item belongs to
+  QListWidget *listWidget = item->listWidget();
+  if (!listWidget)
+    return;
+
+  int currentIndex = listWidget->row(item);
+  if (currentIndex < 0)
+    return;
+
+  const int count = listWidget->count();
+  if (count <= 0)
+    return;
+
+  // Build media list and thumbnails from the whole QListWidget
+  QVector<QJsonObject> mediaList(count);
+  QVector<QPixmap> thumbnails(count);
+  for (int i = 0; i < count; ++i) {
+    QListWidgetItem *it = listWidget->item(i);
+    if (!it)
+      continue;
+
+    QVariant d = it->data(Qt::UserRole);
+    if (d.isValid())
+      mediaList[i] = d.toJsonObject();
+
+    QIcon ic = it->icon();
+    if (!ic.isNull())
+      thumbnails[i] = ic.pixmap(500, 350);
+  }
+
+  if (mediaList.isEmpty())
+    return;
+
+  // Delete any existing lightbox first
+  if (m_currentLightbox) {
+    delete m_currentLightbox;
+    m_currentLightbox = nullptr;
+  }
+
+  MediaLightbox *lightbox = new MediaLightbox(this);
+  lightbox->setMediaList(mediaList, currentIndex, thumbnails);
+  m_currentLightbox = lightbox;
+
+  connect(lightbox, &MediaLightbox::downloadRequested, this,
+          [this](const QJsonObject &mediaInfo) {
+            // Create a temporary item to trigger download
+            QListWidgetItem tempItem;
+            tempItem.setData(Qt::UserRole, mediaInfo);
+            onMediaItemActivated(&tempItem);
+          });
+
+  lightbox->show();
+}
+
+void MainWindow::onMediaItemActivated(QListWidgetItem *item) {
+  if (!item)
+    return;
+
+  QVariant data = item->data(Qt::UserRole);
+  if (!data.isValid())
+    return;
+
+  QJsonObject obj = data.toJsonObject();
+  QString filePath = obj.value(QStringLiteral("filePath")).toString();
+  QString fileName = obj.value(QStringLiteral("fileName")).toString();
+  int mediaType = obj.value(QStringLiteral("mediaType")).toInt(0);
+
+  if (fileName.isEmpty()) {
+    QFileInfo fi(filePath);
+    fileName = fi.fileName();
+  }
+
+  if (filePath.isEmpty()) {
+    statusBar()->showMessage(tr("No file path available"), 3000);
+    return;
+  }
+
+  QString ip = m_ipInput ? m_ipInput->text().trimmed() : QString();
+  if (ip.isEmpty()) {
+    statusBar()->showMessage(tr("No DWARF IP configured"), 3000);
+    return;
+  }
+
+  if (m_downloadDir.isEmpty()) {
+    statusBar()->showMessage(tr("No download folder configured"), 3000);
+    return;
+  }
+
+  // Create subdirectory based on media type
+  QString subDir;
+  switch (mediaType) {
+  case 1:
+    subDir = QStringLiteral("Photos");
+    break;
+  case 2:
+    subDir = QStringLiteral("Videos");
+    break;
+  case 3:
+    subDir = QStringLiteral("Burst");
+    break;
+  case 4:
+    subDir = QStringLiteral("Astro");
+    break;
+  case 5:
+    subDir = QStringLiteral("Panorama");
+    break;
+  default:
+    subDir = QStringLiteral("Other");
+    break;
+  }
+
+  QString targetDir = QDir(m_downloadDir).filePath(subDir);
+  QDir().mkpath(targetDir);
+
+  if (!m_ftpDownloader) {
+    m_ftpDownloader = new DwarfFtpDownloader(this);
+    connect(m_ftpDownloader, &DwarfFtpDownloader::downloadStarted, this,
+            &MainWindow::onDownloadStarted);
+    connect(m_ftpDownloader, &DwarfFtpDownloader::downloadFinished, this,
+            &MainWindow::onDownloadFinished);
+    connect(m_ftpDownloader, &DwarfFtpDownloader::downloadError, this,
+            &MainWindow::onDownloadError);
+  }
+
+  m_ftpDownloader->downloadFile(ip, filePath, targetDir);
+}
+
+void MainWindow::onDownloadStarted(const QString &fileName) {
+  statusBar()->showMessage(tr("Downloading %1...").arg(fileName));
+}
+
+void MainWindow::onDownloadFinished(const QString &fileName,
+                                    const QString &localPath) {
+  Q_UNUSED(localPath);
+  statusBar()->showMessage(tr("Downloaded %1").arg(fileName), 5000);
+}
+
+void MainWindow::onDownloadError(const QString &fileName,
+                                 const QString &error) {
+  statusBar()->showMessage(tr("Download failed: %1 - %2").arg(fileName, error),
+                           5000);
 }
 
 void MainWindow::onMediaListError(const QString &error) {
