@@ -45,6 +45,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o.d"
   "CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o"
   "CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o.d"
+  "CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o"
+  "CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o.d"
   "CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o"
   "CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o.d"
   "CMakeFiles/DwarfController.dir/system.pb.cc.o"

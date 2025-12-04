@@ -7,6 +7,7 @@
 #include "net/DwarfHttpClient.h"
 #include "net/DwarfFtpDownloader.h"
 #include "ui/MediaLightbox.h"
+#include "ui/CameraSettingsPanel.h"
 #include "qnamespace.h"
 #include <QDebug>
 #include <QDockWidget>
@@ -35,8 +36,8 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), m_wsClient(nullptr), m_dispatcher(nullptr),
       m_scanCancelled(false), m_cameraController(nullptr),
       m_motorController(nullptr), m_focusController(nullptr),
-      m_isRecording(false),
       m_mainVideoWidget(nullptr), m_pipVideoWidget(nullptr),
+      m_cameraSettingsPanel(nullptr),
       m_teleStream(nullptr), m_wideStream(nullptr),
       m_httpClient(nullptr), m_openGalleryButton(nullptr),
       m_mediaTabs(nullptr), m_mediaPhotoList(nullptr),
@@ -46,8 +47,6 @@ MainWindow::MainWindow(QWidget *parent)
       m_ftpDownloader(nullptr), m_thumbnailsLoading(0) {
   m_mainStreamView = nullptr;
   m_pipStreamView = nullptr;
-  m_teleButton = nullptr;
-  m_wideButton = nullptr;
   m_mainStream = CameraStream::Tele;
   m_pipStream = CameraStream::Wide;
   m_cameraController = new DwarfCameraController(this);
@@ -104,9 +103,13 @@ void MainWindow::updateCameraStreamViews() {
     // m_pipStreamView->setText(tr("TELE"));
   }
 
-  if (m_teleButton && m_wideButton) {
-    m_teleButton->setChecked(mainIsTele);
-    m_wideButton->setChecked(!mainIsTele);
+  // Sync camera settings panel with stream view
+  if (m_cameraSettingsPanel) {
+    auto mode = mainIsTele ? CameraSettingsPanel::CameraMode::Tele
+                           : CameraSettingsPanel::CameraMode::Wide;
+    if (m_cameraSettingsPanel->cameraMode() != mode) {
+      m_cameraSettingsPanel->setCameraMode(mode);
+    }
   }
 
   // Ensure overlays stay on top
@@ -415,155 +418,19 @@ void MainWindow::setupUi() {
   // Tab widget for modules
   m_tabWidget = new QTabWidget(this);
 
-  QWidget *cameraTab = new QWidget(this);
-  QVBoxLayout *cameraLayout = new QVBoxLayout(cameraTab);
+  // Camera Settings Panel (Tab 1)
+  m_cameraSettingsPanel = new CameraSettingsPanel(this);
+  m_cameraSettingsPanel->setCameraController(m_cameraController);
 
-  QHBoxLayout *sourceLayout = new QHBoxLayout();
-  QLabel *sourceLabel = new QLabel(tr("Stream source:"), cameraTab);
-  m_teleButton = new QPushButton(tr("TELE"), cameraTab);
-  m_wideButton = new QPushButton(tr("WIDE"), cameraTab);
-  m_teleButton->setCheckable(true);
-  m_wideButton->setCheckable(true);
-  m_teleButton->setChecked(true);
-  sourceLayout->addWidget(sourceLabel);
-  sourceLayout->addWidget(m_teleButton);
-  sourceLayout->addWidget(m_wideButton);
-  sourceLayout->addStretch();
-  connect(m_teleButton, &QPushButton::clicked, this,
-          &MainWindow::onCameraSourceTele);
-  connect(m_wideButton, &QPushButton::clicked, this,
-          &MainWindow::onCameraSourceWide);
-
-  QHBoxLayout *captureLayout = new QHBoxLayout();
-  m_photoButton = new QPushButton(tr("PHOTO"), cameraTab);
-  m_recButton = new QPushButton(tr("REC"), cameraTab);
-  m_photoButton->setMinimumHeight(40);
-  m_recButton->setMinimumHeight(40);
-  captureLayout->addWidget(m_photoButton);
-  captureLayout->addWidget(m_recButton);
-  connect(m_photoButton, &QPushButton::clicked, this,
-          &MainWindow::onCameraPhotoClicked);
-  connect(m_recButton, &QPushButton::clicked, this,
-          &MainWindow::onCameraRecClicked);
-
-  QGroupBox *exposureGroup = new QGroupBox(tr("Exposure"), cameraTab);
-  QGridLayout *exposureLayout = new QGridLayout(exposureGroup);
-  QLabel *modeLabel = new QLabel(tr("Mode:"), exposureGroup);
-  m_exposureModeCombo = new QComboBox(exposureGroup);
-  m_exposureModeCombo->addItem(tr("Auto"));
-  m_exposureModeCombo->addItem(tr("Manual"));
-  connect(m_exposureModeCombo,
-          QOverload<int>::of(&QComboBox::currentIndexChanged), this,
-          &MainWindow::onExposureModeChanged);
-
-  QLabel *shutterLabel = new QLabel(tr("Shutter"), exposureGroup);
-  m_shutterSlider = new QSlider(Qt::Horizontal, exposureGroup);
-  m_shutterSlider->setRange(1, 100);
-  connect(m_shutterSlider, &QSlider::valueChanged, this,
-          &MainWindow::onShutterSliderChanged);
-
-  QLabel *gainLabel = new QLabel(tr("Gain"), exposureGroup);
-  m_gainSlider = new QSlider(Qt::Horizontal, exposureGroup);
-  m_gainSlider->setRange(0, 300);
-  connect(m_gainSlider, &QSlider::valueChanged, this,
-          &MainWindow::onGainSliderChanged);
-
-  exposureLayout->addWidget(modeLabel, 0, 0);
-  exposureLayout->addWidget(m_exposureModeCombo, 0, 1);
-  exposureLayout->addWidget(shutterLabel, 1, 0);
-  exposureLayout->addWidget(m_shutterSlider, 1, 1);
-  exposureLayout->addWidget(gainLabel, 2, 0);
-  exposureLayout->addWidget(m_gainSlider, 2, 1);
-  exposureGroup->setLayout(exposureLayout);
-
-  QGroupBox *imageGroup = new QGroupBox(tr("Image parameters"), cameraTab);
-  QGridLayout *imageLayout = new QGridLayout(imageGroup);
-
-  m_irCutCheckBox = new QCheckBox(tr("IR-Cut"), imageGroup);
-  connect(m_irCutCheckBox, &QCheckBox::toggled, this,
-          &MainWindow::onIrCutToggled);
-
-  QLabel *binningLabel = new QLabel(tr("Binning"), imageGroup);
-  m_binningCombo = new QComboBox(imageGroup);
-  m_binningCombo->addItem(tr("4K"));
-  m_binningCombo->addItem(tr("2K"));
-  connect(m_binningCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-          this, &MainWindow::onBinningChanged);
-
-  QLabel *brightnessLabel = new QLabel(tr("Brightness"), imageGroup);
-  m_brightnessSlider = new QSlider(Qt::Horizontal, imageGroup);
-  m_brightnessSlider->setRange(0, 100);
-  connect(m_brightnessSlider, &QSlider::valueChanged, this,
-          &MainWindow::onBrightnessSliderChanged);
-
-  QLabel *contrastLabel = new QLabel(tr("Contrast"), imageGroup);
-  m_contrastSlider = new QSlider(Qt::Horizontal, imageGroup);
-  m_contrastSlider->setRange(0, 100);
-  connect(m_contrastSlider, &QSlider::valueChanged, this,
-          &MainWindow::onContrastSliderChanged);
-
-  QLabel *saturationLabel = new QLabel(tr("Saturation"), imageGroup);
-  m_saturationSlider = new QSlider(Qt::Horizontal, imageGroup);
-  m_saturationSlider->setRange(0, 100);
-  connect(m_saturationSlider, &QSlider::valueChanged, this,
-          &MainWindow::onSaturationSliderChanged);
-
-  QLabel *sharpnessLabel = new QLabel(tr("Sharpness"), imageGroup);
-  m_sharpnessSlider = new QSlider(Qt::Horizontal, imageGroup);
-  m_sharpnessSlider->setRange(0, 100);
-  connect(m_sharpnessSlider, &QSlider::valueChanged, this,
-          &MainWindow::onSharpnessSliderChanged);
-
-  QLabel *hueLabel = new QLabel(tr("Hue"), imageGroup);
-  m_hueSlider = new QSlider(Qt::Horizontal, imageGroup);
-  m_hueSlider->setRange(0, 100);
-  connect(m_hueSlider, &QSlider::valueChanged, this,
-          &MainWindow::onHueSliderChanged);
-
-  imageLayout->addWidget(m_irCutCheckBox, 0, 0, 1, 2);
-  imageLayout->addWidget(binningLabel, 1, 0);
-  imageLayout->addWidget(m_binningCombo, 1, 1);
-  imageLayout->addWidget(brightnessLabel, 2, 0);
-  imageLayout->addWidget(m_brightnessSlider, 2, 1);
-  imageLayout->addWidget(contrastLabel, 3, 0);
-  imageLayout->addWidget(m_contrastSlider, 3, 1);
-  imageLayout->addWidget(saturationLabel, 4, 0);
-  imageLayout->addWidget(m_saturationSlider, 4, 1);
-  imageLayout->addWidget(sharpnessLabel, 5, 0);
-  imageLayout->addWidget(m_sharpnessSlider, 5, 1);
-  imageLayout->addWidget(hueLabel, 6, 0);
-  imageLayout->addWidget(m_hueSlider, 6, 1);
-  imageGroup->setLayout(imageLayout);
-
-  QGroupBox *wbGroup = new QGroupBox(tr("White balance"), cameraTab);
-  QGridLayout *wbLayout = new QGridLayout(wbGroup);
-
-  QLabel *wbModeLabel = new QLabel(tr("Mode:"), wbGroup);
-  m_wbModeCombo = new QComboBox(wbGroup);
-  m_wbModeCombo->addItem(tr("Auto"));
-  m_wbModeCombo->addItem(tr("Manual"));
-  connect(m_wbModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-          this, &MainWindow::onWbModeChanged);
-
-  QLabel *wbTempLabel = new QLabel(tr("Color temperature"), wbGroup);
-  m_wbTemperatureSlider = new QSlider(Qt::Horizontal, wbGroup);
-  m_wbTemperatureSlider->setRange(0, 100);
-  connect(m_wbTemperatureSlider, &QSlider::valueChanged, this,
-          &MainWindow::onWbTemperatureChanged);
-
-  wbLayout->addWidget(wbModeLabel, 0, 0);
-  wbLayout->addWidget(m_wbModeCombo, 0, 1);
-  wbLayout->addWidget(wbTempLabel, 1, 0);
-  wbLayout->addWidget(m_wbTemperatureSlider, 1, 1);
-  wbGroup->setLayout(wbLayout);
-
-  cameraLayout->addLayout(sourceLayout);
-  cameraLayout->addLayout(captureLayout);
-  cameraLayout->addWidget(exposureGroup);
-  cameraLayout->addWidget(imageGroup);
-  cameraLayout->addWidget(wbGroup);
-  cameraLayout->addStretch();
-  cameraTab->setLayout(cameraLayout);
+  // Connect camera mode changes to stream switching
+  connect(m_cameraSettingsPanel, &CameraSettingsPanel::cameraModeChanged, this,
+          [this](CameraSettingsPanel::CameraMode mode) {
+            if (mode == CameraSettingsPanel::CameraMode::Tele) {
+              onCameraSourceTele();
+            } else {
+              onCameraSourceWide();
+            }
+          });
 
   updateCameraStreamViews();
 
@@ -660,7 +527,7 @@ void MainWindow::setupUi() {
 
   m_tabWidget->addTab(systemMediaTab, tr("System & Media"));
   m_tabWidget->addTab(motorFocusTab, tr("Motor & Focus"));
-  m_tabWidget->addTab(cameraTab, tr("Camera & Capture"));
+  m_tabWidget->addTab(m_cameraSettingsPanel, tr("Camera & Capture"));
   m_tabWidget->addTab(astroTab, tr("Astro & Navigation"));
 
   m_tabWidget->setTabPosition(QTabWidget::East);
@@ -930,33 +797,6 @@ void MainWindow::onCameraSourceWide() {
   updateCameraStreamViews();
 }
 
-void MainWindow::onCameraPhotoClicked() {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-  m_cameraController->takePhoto(kind);
-}
-
-void MainWindow::onCameraRecClicked() {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-
-  if (!m_isRecording) {
-    m_cameraController->startRecord(kind);
-    m_isRecording = true;
-  } else {
-    m_cameraController->stopRecord(kind);
-    m_isRecording = false;
-  }
-}
-
 void MainWindow::onMotorLeftPressed() {
   if (!m_motorController)
     return;
@@ -1065,121 +905,6 @@ void MainWindow::onMotorDownReleased() {
     return;
   // Stop Azimuth axis
   m_motorController->stopMotor(DwarfMotorController::Axis::Altitude);
-}
-
-void MainWindow::onExposureModeChanged(int index) {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-  m_cameraController->setExposureMode(kind, index);
-}
-
-void MainWindow::onShutterSliderChanged(int value) {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-  m_cameraController->setExposureIndex(kind, value);
-}
-
-void MainWindow::onGainSliderChanged(int value) {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-  m_cameraController->setGainIndex(kind, value);
-}
-
-void MainWindow::onIrCutToggled(bool checked) {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-  m_cameraController->setIrCut(kind, checked ? 1 : 0);
-}
-
-void MainWindow::onBinningChanged(int index) {
-  Q_UNUSED(index);
-  // TODO: Map binning to camera parameters when API details are clarified
-}
-
-void MainWindow::onContrastSliderChanged(int value) {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-  m_cameraController->setContrast(kind, value);
-}
-
-void MainWindow::onSaturationSliderChanged(int value) {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-  m_cameraController->setSaturation(kind, value);
-}
-
-void MainWindow::onSharpnessSliderChanged(int value) {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-  m_cameraController->setSharpness(kind, value);
-}
-
-void MainWindow::onHueSliderChanged(int value) {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-  m_cameraController->setHue(kind, value);
-}
-
-void MainWindow::onBrightnessSliderChanged(int value) {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-  m_cameraController->setBrightness(kind, value);
-}
-
-void MainWindow::onWbModeChanged(int index) {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-  m_cameraController->setWhiteBalanceMode(kind, index);
-}
-
-void MainWindow::onWbTemperatureChanged(int value) {
-  if (!m_cameraController)
-    return;
-  DwarfCameraController::CameraKind kind =
-      (m_mainStream == CameraStream::Tele)
-          ? DwarfCameraController::CameraKind::Tele
-          : DwarfCameraController::CameraKind::Wide;
-  m_cameraController->setWhiteBalanceByTemperature(kind, value);
 }
 
 void MainWindow::onMainViewPointClicked(const QPointF &normalizedPos) {

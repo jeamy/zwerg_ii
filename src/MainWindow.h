@@ -28,6 +28,7 @@ class DwarfMjpegView;
 class QPointF;
 class DwarfHttpClient;
 class DwarfFtpDownloader;
+class CameraSettingsPanel;
 
 class ClickableLabel : public QWidget {
   Q_OBJECT
@@ -74,8 +75,6 @@ private slots:
   void onPipStreamClicked();
   void onCameraSourceTele();
   void onCameraSourceWide();
-  void onCameraPhotoClicked();
-  void onCameraRecClicked();
   void onMotorLeftPressed();
   void onMotorLeftReleased();
   void onMotorRightPressed();
@@ -88,18 +87,6 @@ private slots:
   void onFocusPlusClicked();
   void onFocusAutoClicked();
   void onMotorSpeedSliderChanged(int value);
-  void onExposureModeChanged(int index);
-  void onShutterSliderChanged(int value);
-  void onGainSliderChanged(int value);
-  void onIrCutToggled(bool checked);
-  void onBinningChanged(int index);
-  void onContrastSliderChanged(int value);
-  void onSaturationSliderChanged(int value);
-  void onSharpnessSliderChanged(int value);
-  void onHueSliderChanged(int value);
-  void onBrightnessSliderChanged(int value);
-  void onWbModeChanged(int index);
-  void onWbTemperatureChanged(int value);
   void onMainViewPointClicked(const QPointF &normalizedPos);
   void onOpenGalleryClicked();
   void onMediaListReceived(const QJsonDocument &document);
@@ -148,25 +135,9 @@ private:
   void startStreaming(const QString &ip);
   void stopStreaming();
 
-  QPushButton *m_teleButton;
-  QPushButton *m_wideButton;
-  QPushButton *m_photoButton;
-  QPushButton *m_recButton;
-  QComboBox *m_exposureModeCombo;
-  QSlider *m_shutterSlider;
-  QSlider *m_gainSlider;
-  QCheckBox *m_irCutCheckBox;
-  QComboBox *m_binningCombo;
-  QSlider *m_contrastSlider;
-  QSlider *m_saturationSlider;
-  QSlider *m_sharpnessSlider;
-  QSlider *m_hueSlider;
-  QSlider *m_brightnessSlider;
+  CameraSettingsPanel *m_cameraSettingsPanel;
   QSlider *m_motorSpeedSlider;
   QLabel *m_motorSpeedValueLabel;
-  QComboBox *m_wbModeCombo;
-  QSlider *m_wbTemperatureSlider;
-  bool m_isRecording;
 
   DwarfMjpegStream *m_teleStream;
   DwarfMjpegStream *m_wideStream;

@@ -659,6 +659,30 @@ src/net/ProtobufHelper.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.s
 .PHONY : src/net/ProtobufHelper.cpp.s
 
+src/ui/CameraSettingsPanel.o: src/ui/CameraSettingsPanel.cpp.o
+.PHONY : src/ui/CameraSettingsPanel.o
+
+# target to build an object file
+src/ui/CameraSettingsPanel.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o
+.PHONY : src/ui/CameraSettingsPanel.cpp.o
+
+src/ui/CameraSettingsPanel.i: src/ui/CameraSettingsPanel.cpp.i
+.PHONY : src/ui/CameraSettingsPanel.i
+
+# target to preprocess a source file
+src/ui/CameraSettingsPanel.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.i
+.PHONY : src/ui/CameraSettingsPanel.cpp.i
+
+src/ui/CameraSettingsPanel.s: src/ui/CameraSettingsPanel.cpp.s
+.PHONY : src/ui/CameraSettingsPanel.s
+
+# target to generate assembly for a file
+src/ui/CameraSettingsPanel.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.s
+.PHONY : src/ui/CameraSettingsPanel.cpp.s
+
 src/ui/MediaLightbox.o: src/ui/MediaLightbox.cpp.o
 .PHONY : src/ui/MediaLightbox.o
 
@@ -805,6 +829,9 @@ help:
 	@echo "... src/net/ProtobufHelper.o"
 	@echo "... src/net/ProtobufHelper.i"
 	@echo "... src/net/ProtobufHelper.s"
+	@echo "... src/ui/CameraSettingsPanel.o"
+	@echo "... src/ui/CameraSettingsPanel.i"
+	@echo "... src/ui/CameraSettingsPanel.s"
 	@echo "... src/ui/MediaLightbox.o"
 	@echo "... src/ui/MediaLightbox.i"
 	@echo "... src/ui/MediaLightbox.s"

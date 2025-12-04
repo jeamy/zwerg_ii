@@ -624,6 +624,12 @@
 			null
 		],
 		[
+			"/home/lux/programming/pydwarf/src/ui/CameraSettingsPanel.h",
+			"MU",
+			"YPKJ5OE7LN/moc_CameraSettingsPanel.cpp",
+			null
+		],
+		[
 			"/home/lux/programming/pydwarf/src/ui/MediaLightbox.h",
 			"MU",
 			"YPKJ5OE7LN/moc_MediaLightbox.cpp",
@@ -766,6 +772,11 @@
 		],
 		[
 			"/home/lux/programming/pydwarf/src/net/ProtobufHelper.cpp",
+			"MU",
+			null
+		],
+		[
+			"/home/lux/programming/pydwarf/src/ui/CameraSettingsPanel.cpp",
 			"MU",
 			null
 		],

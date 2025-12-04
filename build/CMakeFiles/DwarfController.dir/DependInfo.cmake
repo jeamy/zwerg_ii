@@ -30,6 +30,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/lux/programming/pydwarf/src/net/DwarfMotorController.cpp" "CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o" "gcc" "CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o.d"
   "/home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.cpp" "CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o" "gcc" "CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o.d"
   "/home/lux/programming/pydwarf/src/net/ProtobufHelper.cpp" "CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o" "gcc" "CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o.d"
+  "/home/lux/programming/pydwarf/src/ui/CameraSettingsPanel.cpp" "CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o" "gcc" "CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o.d"
   "/home/lux/programming/pydwarf/src/ui/MediaLightbox.cpp" "CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o" "gcc" "CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o.d"
   "/home/lux/programming/pydwarf/build/system.pb.cc" "CMakeFiles/DwarfController.dir/system.pb.cc.o" "gcc" "CMakeFiles/DwarfController.dir/system.pb.cc.o.d"
   "/home/lux/programming/pydwarf/build/tracking.pb.cc" "CMakeFiles/DwarfController.dir/tracking.pb.cc.o" "gcc" "CMakeFiles/DwarfController.dir/tracking.pb.cc.o.d"

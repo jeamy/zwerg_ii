@@ -56,3 +56,82 @@ QLabel#pipStreamView {
 QLabel#pipStreamView:hover {
     border-color: #AAAAAA;
 }
+
+/* Camera Settings Panel */
+CameraSettingsPanel QPushButton#photoButton {
+    background-color: #27ae60;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+CameraSettingsPanel QPushButton#photoButton:hover {
+    background-color: #2ecc71;
+}
+
+CameraSettingsPanel QPushButton#photoButton:pressed {
+    background-color: #1e8449;
+}
+
+CameraSettingsPanel QPushButton#recButton {
+    background-color: #7f8c8d;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+CameraSettingsPanel QPushButton#recButton:hover {
+    background-color: #95a5a6;
+}
+
+CameraSettingsPanel QPushButton#recButton:disabled {
+    background-color: #555555;
+    color: #888888;
+}
+
+CameraSettingsPanel QGroupBox {
+    font-weight: bold;
+    border: 1px solid #555555;
+    border-radius: 4px;
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+CameraSettingsPanel QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 4px;
+    color: #3498db;
+}
+
+CameraSettingsPanel QSlider::groove:horizontal {
+    border: 1px solid #444444;
+    height: 6px;
+    background: #333333;
+    border-radius: 3px;
+}
+
+CameraSettingsPanel QSlider::handle:horizontal {
+    background: #3498db;
+    border: 1px solid #2980b9;
+    width: 14px;
+    margin: -4px 0;
+    border-radius: 7px;
+}
+
+CameraSettingsPanel QSlider::handle:horizontal:hover {
+    background: #5dade2;
+}
+
+CameraSettingsPanel QSlider::handle:horizontal:disabled {
+    background: #555555;
+}
+
+CameraSettingsPanel QSlider::sub-page:horizontal {
+    background: #3498db;
+    border-radius: 3px;
+}
+
+CameraSettingsPanel QLabel {
+    color: #E0E0E0;
+}

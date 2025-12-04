@@ -55,6 +55,8 @@ set(SOURCES
     src/net/DwarfFtpClient.h
     src/ui/MediaLightbox.cpp
     src/ui/MediaLightbox.h
+    src/ui/CameraSettingsPanel.cpp
+    src/ui/CameraSettingsPanel.h
     ${PROTO_SRCS}
     ${PROTO_HDRS}
 )

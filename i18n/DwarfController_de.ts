@@ -287,4 +287,107 @@
       <translation>%1 / %2</translation>
     </message>
   </context>
+  <context>
+    <name>CameraSettingsPanel</name>
+    <message>
+      <source>TELE</source>
+      <translation>TELE</translation>
+    </message>
+    <message>
+      <source>WIDE</source>
+      <translation>WIDE</translation>
+    </message>
+    <message>
+      <source>📷 PHOTO</source>
+      <translation>📷 FOTO</translation>
+    </message>
+    <message>
+      <source>⏺ REC</source>
+      <translation>⏺ AUFN</translation>
+    </message>
+    <message>
+      <source>⏹ STOP</source>
+      <translation>⏹ STOP</translation>
+    </message>
+    <message>
+      <source>Exposure</source>
+      <translation>Belichtung</translation>
+    </message>
+    <message>
+      <source>Mode:</source>
+      <translation>Modus:</translation>
+    </message>
+    <message>
+      <source>Auto</source>
+      <translation>Auto</translation>
+    </message>
+    <message>
+      <source>Manual</source>
+      <translation>Manuell</translation>
+    </message>
+    <message>
+      <source>Shutter:</source>
+      <translation>Verschluss:</translation>
+    </message>
+    <message>
+      <source>Gain Mode:</source>
+      <translation>Gain-Modus:</translation>
+    </message>
+    <message>
+      <source>Gain:</source>
+      <translation>Gain:</translation>
+    </message>
+    <message>
+      <source>Image</source>
+      <translation>Bild</translation>
+    </message>
+    <message>
+      <source>IR-Cut (Day mode)</source>
+      <translation>IR-Cut (Tagmodus)</translation>
+    </message>
+    <message>
+      <source>Resolution:</source>
+      <translation>Auflösung:</translation>
+    </message>
+    <message>
+      <source>4K (No Binning)</source>
+      <translation>4K (kein Binning)</translation>
+    </message>
+    <message>
+      <source>2K (2x2 Binning)</source>
+      <translation>2K (2x2 Binning)</translation>
+    </message>
+    <message>
+      <source>Brightness:</source>
+      <translation>Helligkeit:</translation>
+    </message>
+    <message>
+      <source>Contrast:</source>
+      <translation>Kontrast:</translation>
+    </message>
+    <message>
+      <source>Saturation:</source>
+      <translation>Sättigung:</translation>
+    </message>
+    <message>
+      <source>Sharpness:</source>
+      <translation>Schärfe:</translation>
+    </message>
+    <message>
+      <source>Hue:</source>
+      <translation>Farbton:</translation>
+    </message>
+    <message>
+      <source>White Balance</source>
+      <translation>Weißabgleich</translation>
+    </message>
+    <message>
+      <source>Color Temp:</source>
+      <translation>Farbtemperatur:</translation>
+    </message>
+    <message>
+      <source>Video recording only available on TELE camera</source>
+      <translation>Videoaufnahme nur mit TELE-Kamera verfügbar</translation>
+    </message>
+  </context>
 </TS>
