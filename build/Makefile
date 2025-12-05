@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/lux/programming/pydwarf
+CMAKE_SOURCE_DIR = /media/data/programming/pydwarf
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/lux/programming/pydwarf/build
+CMAKE_BINARY_DIR = /media/data/programming/pydwarf/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/lux/programming/pydwarf/build/CMakeFiles /home/lux/programming/pydwarf/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /media/data/programming/pydwarf/build/CMakeFiles /media/data/programming/pydwarf/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/lux/programming/pydwarf/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /media/data/programming/pydwarf/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -299,6 +299,30 @@ motor.pb.cc.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/motor.pb.cc.s
 .PHONY : motor.pb.cc.s
 
+notify.pb.o: notify.pb.cc.o
+.PHONY : notify.pb.o
+
+# target to build an object file
+notify.pb.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/notify.pb.cc.o
+.PHONY : notify.pb.cc.o
+
+notify.pb.i: notify.pb.cc.i
+.PHONY : notify.pb.i
+
+# target to preprocess a source file
+notify.pb.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/notify.pb.cc.i
+.PHONY : notify.pb.cc.i
+
+notify.pb.s: notify.pb.cc.s
+.PHONY : notify.pb.s
+
+# target to generate assembly for a file
+notify.pb.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/notify.pb.cc.s
+.PHONY : notify.pb.cc.s
+
 panorama.pb.o: panorama.pb.cc.o
 .PHONY : panorama.pb.o
 
@@ -370,6 +394,30 @@ src/main.s: src/main.cpp.s
 src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
+
+src/net/DwarfAstroController.o: src/net/DwarfAstroController.cpp.o
+.PHONY : src/net/DwarfAstroController.o
+
+# target to build an object file
+src/net/DwarfAstroController.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o
+.PHONY : src/net/DwarfAstroController.cpp.o
+
+src/net/DwarfAstroController.i: src/net/DwarfAstroController.cpp.i
+.PHONY : src/net/DwarfAstroController.i
+
+# target to preprocess a source file
+src/net/DwarfAstroController.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.i
+.PHONY : src/net/DwarfAstroController.cpp.i
+
+src/net/DwarfAstroController.s: src/net/DwarfAstroController.cpp.s
+.PHONY : src/net/DwarfAstroController.s
+
+# target to generate assembly for a file
+src/net/DwarfAstroController.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.s
+.PHONY : src/net/DwarfAstroController.cpp.s
 
 src/net/DwarfCameraController.o: src/net/DwarfCameraController.cpp.o
 .PHONY : src/net/DwarfCameraController.o
@@ -659,6 +707,30 @@ src/net/ProtobufHelper.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.s
 .PHONY : src/net/ProtobufHelper.cpp.s
 
+src/ui/AstroNavigationPanel.o: src/ui/AstroNavigationPanel.cpp.o
+.PHONY : src/ui/AstroNavigationPanel.o
+
+# target to build an object file
+src/ui/AstroNavigationPanel.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o
+.PHONY : src/ui/AstroNavigationPanel.cpp.o
+
+src/ui/AstroNavigationPanel.i: src/ui/AstroNavigationPanel.cpp.i
+.PHONY : src/ui/AstroNavigationPanel.i
+
+# target to preprocess a source file
+src/ui/AstroNavigationPanel.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.i
+.PHONY : src/ui/AstroNavigationPanel.cpp.i
+
+src/ui/AstroNavigationPanel.s: src/ui/AstroNavigationPanel.cpp.s
+.PHONY : src/ui/AstroNavigationPanel.s
+
+# target to generate assembly for a file
+src/ui/AstroNavigationPanel.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.s
+.PHONY : src/ui/AstroNavigationPanel.cpp.s
+
 src/ui/CameraSettingsPanel.o: src/ui/CameraSettingsPanel.cpp.o
 .PHONY : src/ui/CameraSettingsPanel.o
 
@@ -683,6 +755,30 @@ src/ui/CameraSettingsPanel.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.s
 .PHONY : src/ui/CameraSettingsPanel.cpp.s
 
+src/ui/ImageSettingsWidget.o: src/ui/ImageSettingsWidget.cpp.o
+.PHONY : src/ui/ImageSettingsWidget.o
+
+# target to build an object file
+src/ui/ImageSettingsWidget.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o
+.PHONY : src/ui/ImageSettingsWidget.cpp.o
+
+src/ui/ImageSettingsWidget.i: src/ui/ImageSettingsWidget.cpp.i
+.PHONY : src/ui/ImageSettingsWidget.i
+
+# target to preprocess a source file
+src/ui/ImageSettingsWidget.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.i
+.PHONY : src/ui/ImageSettingsWidget.cpp.i
+
+src/ui/ImageSettingsWidget.s: src/ui/ImageSettingsWidget.cpp.s
+.PHONY : src/ui/ImageSettingsWidget.s
+
+# target to generate assembly for a file
+src/ui/ImageSettingsWidget.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.s
+.PHONY : src/ui/ImageSettingsWidget.cpp.s
+
 src/ui/MediaLightbox.o: src/ui/MediaLightbox.cpp.o
 .PHONY : src/ui/MediaLightbox.o
 
@@ -706,6 +802,30 @@ src/ui/MediaLightbox.s: src/ui/MediaLightbox.cpp.s
 src/ui/MediaLightbox.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.s
 .PHONY : src/ui/MediaLightbox.cpp.s
+
+src/ui/StarMapWidget.o: src/ui/StarMapWidget.cpp.o
+.PHONY : src/ui/StarMapWidget.o
+
+# target to build an object file
+src/ui/StarMapWidget.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o
+.PHONY : src/ui/StarMapWidget.cpp.o
+
+src/ui/StarMapWidget.i: src/ui/StarMapWidget.cpp.i
+.PHONY : src/ui/StarMapWidget.i
+
+# target to preprocess a source file
+src/ui/StarMapWidget.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.i
+.PHONY : src/ui/StarMapWidget.cpp.i
+
+src/ui/StarMapWidget.s: src/ui/StarMapWidget.cpp.s
+.PHONY : src/ui/StarMapWidget.s
+
+# target to generate assembly for a file
+src/ui/StarMapWidget.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/DwarfController.dir/build.make CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.s
+.PHONY : src/ui/StarMapWidget.cpp.s
 
 system.pb.o: system.pb.cc.o
 .PHONY : system.pb.o
@@ -784,6 +904,9 @@ help:
 	@echo "... motor.pb.o"
 	@echo "... motor.pb.i"
 	@echo "... motor.pb.s"
+	@echo "... notify.pb.o"
+	@echo "... notify.pb.i"
+	@echo "... notify.pb.s"
 	@echo "... panorama.pb.o"
 	@echo "... panorama.pb.i"
 	@echo "... panorama.pb.s"
@@ -793,6 +916,9 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/net/DwarfAstroController.o"
+	@echo "... src/net/DwarfAstroController.i"
+	@echo "... src/net/DwarfAstroController.s"
 	@echo "... src/net/DwarfCameraController.o"
 	@echo "... src/net/DwarfCameraController.i"
 	@echo "... src/net/DwarfCameraController.s"
@@ -829,12 +955,21 @@ help:
 	@echo "... src/net/ProtobufHelper.o"
 	@echo "... src/net/ProtobufHelper.i"
 	@echo "... src/net/ProtobufHelper.s"
+	@echo "... src/ui/AstroNavigationPanel.o"
+	@echo "... src/ui/AstroNavigationPanel.i"
+	@echo "... src/ui/AstroNavigationPanel.s"
 	@echo "... src/ui/CameraSettingsPanel.o"
 	@echo "... src/ui/CameraSettingsPanel.i"
 	@echo "... src/ui/CameraSettingsPanel.s"
+	@echo "... src/ui/ImageSettingsWidget.o"
+	@echo "... src/ui/ImageSettingsWidget.i"
+	@echo "... src/ui/ImageSettingsWidget.s"
 	@echo "... src/ui/MediaLightbox.o"
 	@echo "... src/ui/MediaLightbox.i"
 	@echo "... src/ui/MediaLightbox.s"
+	@echo "... src/ui/StarMapWidget.o"
+	@echo "... src/ui/StarMapWidget.i"
+	@echo "... src/ui/StarMapWidget.s"
 	@echo "... system.pb.o"
 	@echo "... system.pb.i"
 	@echo "... system.pb.s"

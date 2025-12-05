@@ -10,6 +10,8 @@ file(REMOVE_RECURSE
   "focus.pb.h"
   "motor.pb.cc"
   "motor.pb.h"
+  "notify.pb.cc"
+  "notify.pb.h"
   "panorama.pb.cc"
   "panorama.pb.h"
   "system.pb.cc"

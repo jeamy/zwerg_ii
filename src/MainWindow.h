@@ -24,6 +24,7 @@
 class DwarfCameraController;
 class DwarfMotorController;
 class DwarfFocusController;
+class DwarfAstroController;
 class DwarfMjpegStream;
 class MediaLightbox;
 class DwarfMjpegView;
@@ -31,6 +32,7 @@ class QPointF;
 class DwarfHttpClient;
 class DwarfFtpDownloader;
 class CameraSettingsPanel;
+class AstroNavigationPanel;
 
 class ClickableLabel : public QWidget {
   Q_OBJECT
@@ -123,6 +125,7 @@ private:
   DwarfCameraController *m_cameraController;
   DwarfMotorController *m_motorController;
   DwarfFocusController *m_focusController;
+  DwarfAstroController *m_astroController;
 
   enum class CameraStream { Tele, Wide };
 
@@ -139,6 +142,7 @@ private:
   void stopStreaming();
 
   CameraSettingsPanel *m_cameraSettingsPanel;
+  AstroNavigationPanel *m_astroPanel;
   QSlider *m_motorSpeedSlider;
   QLabel *m_motorSpeedValueLabel;
 

@@ -1,7 +1,7 @@
 CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o: \
- /home/lux/programming/pydwarf/src/net/DwarfFinder.cpp \
+ /media/data/programming/pydwarf/src/net/DwarfFinder.cpp \
  /usr/include/stdc-predef.h \
- /home/lux/programming/pydwarf/src/net/DwarfFinder.h \
+ /media/data/programming/pydwarf/src/net/DwarfFinder.h \
  /usr/include/qt6/QtNetwork/QHostAddress \
  /usr/include/qt6/QtNetwork/qhostaddress.h \
  /usr/include/qt6/QtNetwork/qtnetworkglobal.h \

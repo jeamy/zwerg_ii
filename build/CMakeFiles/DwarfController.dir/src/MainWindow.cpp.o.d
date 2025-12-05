@@ -1,8 +1,8 @@
 CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o: \
- /home/lux/programming/pydwarf/src/MainWindow.cpp \
+ /media/data/programming/pydwarf/src/MainWindow.cpp \
  /usr/include/stdc-predef.h \
- /home/lux/programming/pydwarf/src/MainWindow.h \
- /home/lux/programming/pydwarf/src/net/DwarfFinder.h \
+ /media/data/programming/pydwarf/src/MainWindow.h \
+ /media/data/programming/pydwarf/src/net/DwarfFinder.h \
  /usr/include/qt6/QtNetwork/QHostAddress \
  /usr/include/qt6/QtNetwork/qhostaddress.h \
  /usr/include/qt6/QtNetwork/qtnetworkglobal.h \
@@ -345,10 +345,10 @@ CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o: \
  /usr/include/qt6/QtCore/QObject /usr/include/qt6/QtCore/QString \
  /usr/include/qt6/QtNetwork/QTcpSocket \
  /usr/include/qt6/QtNetwork/qtcpsocket.h \
- /home/lux/programming/pydwarf/src/net/DwarfMessageDispatcher.h \
+ /media/data/programming/pydwarf/src/net/DwarfMessageDispatcher.h \
  /usr/include/qt6/QtCore/QByteArray /usr/include/qt6/QtCore/qbytearray.h \
- /home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.h \
- /home/lux/programming/pydwarf/build/base.pb.h \
+ /media/data/programming/pydwarf/src/net/DwarfWebSocketClient.h \
+ /media/data/programming/pydwarf/build/base.pb.h \
  /usr/include/google/protobuf/port_def.inc \
  /usr/include/google/protobuf/port_undef.inc \
  /usr/include/google/protobuf/io/coded_stream.h \
@@ -518,24 +518,24 @@ CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o: \
  /usr/include/qt6/QtMultimediaWidgets/qtmultimediawidgetsglobal.h \
  /usr/include/qt6/QtMultimediaWidgets/qtmultimediawidgetsexports.h \
  /usr/include/qt6/QtWidgets/QWidget /usr/include/qt6/QtWidgets/qwidget.h \
- /home/lux/programming/pydwarf/src/net/DwarfCameraController.h \
- /home/lux/programming/pydwarf/build/camera.pb.h \
+ /media/data/programming/pydwarf/src/net/DwarfCameraController.h \
+ /media/data/programming/pydwarf/build/camera.pb.h \
  /usr/include/google/protobuf/generated_message_bases.h \
  /usr/include/google/protobuf/io/zero_copy_stream_impl.h \
- /home/lux/programming/pydwarf/src/net/DwarfMotorController.h \
- /home/lux/programming/pydwarf/build/motor.pb.h \
- /home/lux/programming/pydwarf/src/net/DwarfFocusController.h \
- /home/lux/programming/pydwarf/build/focus.pb.h \
- /home/lux/programming/pydwarf/src/net/DwarfMjpegStream.h \
+ /media/data/programming/pydwarf/src/net/DwarfMotorController.h \
+ /media/data/programming/pydwarf/build/motor.pb.h \
+ /media/data/programming/pydwarf/src/net/DwarfFocusController.h \
+ /media/data/programming/pydwarf/build/focus.pb.h \
+ /media/data/programming/pydwarf/src/net/DwarfMjpegStream.h \
  /usr/include/qt6/QtGui/QImage /usr/include/qt6/QtGui/qimage.h \
  /usr/include/qt6/QtCore/QUrl \
- /home/lux/programming/pydwarf/src/net/DwarfMjpegView.h \
- /home/lux/programming/pydwarf/src/net/DwarfHttpClient.h \
+ /media/data/programming/pydwarf/src/net/DwarfMjpegView.h \
+ /media/data/programming/pydwarf/src/net/DwarfHttpClient.h \
  /usr/include/qt6/QtCore/QJsonDocument \
  /usr/include/qt6/QtCore/qjsondocument.h \
  /usr/include/qt6/QtCore/qjsonparseerror.h \
- /home/lux/programming/pydwarf/src/net/DwarfFtpDownloader.h \
- /home/lux/programming/pydwarf/src/ui/MediaLightbox.h \
+ /media/data/programming/pydwarf/src/net/DwarfFtpDownloader.h \
+ /media/data/programming/pydwarf/src/ui/MediaLightbox.h \
  /usr/include/qt6/QtWidgets/QDialog /usr/include/qt6/QtWidgets/qdialog.h \
  /usr/include/qt6/QtCore/QJsonObject \
  /usr/include/qt6/QtCore/qjsonobject.h \
@@ -545,8 +545,28 @@ CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o: \
  /usr/include/qt6/QtCore/qjsondocument.h /usr/include/qt6/QtGui/QKeyEvent \
  /usr/include/qt6/QtGui/QPixmap /usr/include/qt6/QtGui/qpixmap.h \
  /usr/include/qt6/QtCore/QVector /usr/include/qt6/QtCore/qvector.h \
- /home/lux/programming/pydwarf/src/ui/CameraSettingsPanel.h \
+ /media/data/programming/pydwarf/src/ui/CameraSettingsPanel.h \
  /usr/include/qt6/QtCore/QPair /usr/include/qt6/QtCore/qpair.h \
+ /media/data/programming/pydwarf/src/ui/AstroNavigationPanel.h \
+ /usr/include/qt6/QtWidgets/QSpinBox \
+ /usr/include/qt6/QtWidgets/qspinbox.h \
+ /usr/include/qt6/QtWidgets/QDoubleSpinBox \
+ /usr/include/qt6/QtWidgets/QProgressBar \
+ /usr/include/qt6/QtWidgets/qprogressbar.h \
+ /media/data/programming/pydwarf/src/ui/StarMapWidget.h \
+ /usr/include/qt6/QtWidgets/QGraphicsView \
+ /usr/include/qt6/QtWidgets/qgraphicsview.h \
+ /usr/include/qt6/QtGui/qpainter.h \
+ /usr/include/qt6/QtWidgets/qscrollarea.h \
+ /usr/include/qt6/QtWidgets/qgraphicsscene.h \
+ /usr/include/qt6/QtWidgets/QGraphicsScene \
+ /usr/include/qt6/QtWidgets/qgraphicsscene.h \
+ /usr/include/qt6/QtWidgets/QGraphicsEllipseItem \
+ /usr/include/qt6/QtWidgets/qgraphicsitem.h \
+ /usr/include/qt6/QtGui/qpainterpath.h /usr/include/qt6/QtCore/QDateTime \
+ /usr/include/qt6/QtCore/qdatetime.h /usr/include/qt6/QtCore/QPointF \
+ /usr/include/qt6/QtCore/qpoint.h \
+ /media/data/programming/pydwarf/src/net/DwarfAstroController.h \
  /usr/include/qt6/QtCore/qnamespace.h /usr/include/qt6/QtCore/QDebug \
  /usr/include/qt6/QtCore/qdebug.h /usr/include/qt6/QtWidgets/QDockWidget \
  /usr/include/qt6/QtWidgets/qdockwidget.h \
@@ -588,6 +608,5 @@ CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o: \
  /usr/include/qt6/QtCore/QStandardPaths \
  /usr/include/qt6/QtCore/qstandardpaths.h \
  /usr/include/qt6/QtWidgets/QListView \
- /usr/include/qt6/QtWidgets/qlistview.h /usr/include/qt6/QtCore/QDateTime \
- /usr/include/qt6/QtCore/qdatetime.h \
- /home/lux/programming/pydwarf/build/system.pb.h
+ /usr/include/qt6/QtWidgets/qlistview.h \
+ /media/data/programming/pydwarf/build/system.pb.h

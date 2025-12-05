@@ -8,6 +8,8 @@
 #include "net/DwarfFtpDownloader.h"
 #include "ui/MediaLightbox.h"
 #include "ui/CameraSettingsPanel.h"
+#include "ui/AstroNavigationPanel.h"
+#include "net/DwarfAstroController.h"
 #include "qnamespace.h"
 #include <QDebug>
 #include <QDockWidget>
@@ -502,12 +504,20 @@ void MainWindow::setupUi() {
 
   updateCameraStreamViews();
 
-  QWidget *astroTab = new QWidget(this);
-  QVBoxLayout *astroLayout = new QVBoxLayout(astroTab);
-  QLabel *astroLabel = new QLabel(tr("Astro & Navigation (TODO)"), astroTab);
-  astroLabel->setAlignment(Qt::AlignCenter);
-  astroLayout->addWidget(astroLabel);
-  astroTab->setLayout(astroLayout);
+  // Astro Controller
+  m_astroController = new DwarfAstroController(this);
+  m_astroController->setClient(m_wsClient);
+  
+  // Connect notification messages to astro controller
+  connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage,
+          m_astroController, &DwarfAstroController::handleNotification);
+  
+  // Astro & Navigation Panel
+  m_astroPanel = new AstroNavigationPanel(this);
+  m_astroPanel->setWebSocketClient(m_wsClient);
+  m_astroPanel->setCameraController(m_cameraController);
+  m_astroPanel->setAstroController(m_astroController);
+  // Location will be auto-detected or set by user in Settings tab
 
   QWidget *motorFocusTab = new QWidget(this);
   QVBoxLayout *motorFocusLayout = new QVBoxLayout(motorFocusTab);
@@ -596,7 +606,7 @@ void MainWindow::setupUi() {
   m_tabWidget->addTab(systemMediaTab, tr("System & Media"));
   m_tabWidget->addTab(motorFocusTab, tr("Motor & Focus"));
   m_tabWidget->addTab(m_cameraSettingsPanel, tr("Camera & Capture"));
-  m_tabWidget->addTab(astroTab, tr("Astro & Navigation"));
+  m_tabWidget->addTab(m_astroPanel, tr("Astro & Navigation"));
 
   m_tabWidget->setTabPosition(QTabWidget::East);
 
@@ -754,6 +764,9 @@ void MainWindow::onConnectClicked() {
     if (m_focusController) {
       m_focusController->setClient(nullptr);
     }
+    if (m_astroController) {
+      m_astroController->setClient(nullptr);
+    }
     stopStreaming();
   } else {
     m_wsClient = new DwarfWebSocketClient(ip, this);
@@ -780,6 +793,9 @@ void MainWindow::onConnectClicked() {
     }
     if (m_focusController) {
       m_focusController->setClient(m_wsClient);
+    }
+    if (m_astroController) {
+      m_astroController->setClient(m_wsClient);
     }
 
     m_wsClient->connectToDevice();

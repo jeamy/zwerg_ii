@@ -11,7 +11,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 # Find Qt6
-find_package(Qt6 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWidgets WebSockets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWidgets WebSockets Sql)
 
 # Find Protobuf
 find_package(Protobuf REQUIRED)
@@ -45,6 +45,8 @@ set(SOURCES
     src/net/DwarfMotorController.h
     src/net/DwarfFocusController.cpp
     src/net/DwarfFocusController.h
+    src/net/DwarfAstroController.cpp
+    src/net/DwarfAstroController.h
     src/net/DwarfMjpegStream.cpp
     src/net/DwarfMjpegStream.h
     src/net/DwarfMjpegView.cpp
@@ -57,6 +59,12 @@ set(SOURCES
     src/ui/MediaLightbox.h
     src/ui/CameraSettingsPanel.cpp
     src/ui/CameraSettingsPanel.h
+    src/ui/StarMapWidget.cpp
+    src/ui/StarMapWidget.h
+    src/ui/AstroNavigationPanel.cpp
+    src/ui/AstroNavigationPanel.h
+    src/ui/ImageSettingsWidget.cpp
+    src/ui/ImageSettingsWidget.h
     ${PROTO_SRCS}
     ${PROTO_HDRS}
 )
@@ -71,6 +79,7 @@ target_link_libraries(DwarfController PRIVATE
     Qt6::Multimedia
     Qt6::MultimediaWidgets
     Qt6::WebSockets
+    Qt6::Sql
     ${Protobuf_LIBRARIES}
 )
 

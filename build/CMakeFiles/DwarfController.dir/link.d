@@ -13,12 +13,16 @@ DwarfController: \
   CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o \
   CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o \
   CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o \
+  CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o \
   CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o \
   CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o \
   CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o \
   CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o \
   CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o \
   CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o \
+  CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o \
+  CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o \
+  CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o \
   CMakeFiles/DwarfController.dir/astro.pb.cc.o \
   CMakeFiles/DwarfController.dir/base.pb.cc.o \
   CMakeFiles/DwarfController.dir/camera.pb.cc.o \
@@ -29,6 +33,7 @@ DwarfController: \
   CMakeFiles/DwarfController.dir/tracking.pb.cc.o \
   /usr/lib64/libQt6MultimediaWidgets.so.6.10.1 \
   /usr/lib64/libQt6WebSockets.so.6.10.1 \
+  /usr/lib64/libQt6Sql.so.6.10.1 \
   /usr/lib64/libprotobuf.so \
   /usr/lib64/libQt6Widgets.so.6.10.1 \
   /usr/lib64/libQt6Multimedia.so.6.10.1 \
@@ -171,6 +176,8 @@ CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o:
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o:
 
+CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o:
+
 CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o:
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o:
@@ -182,6 +189,12 @@ CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o:
 CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o:
 
 CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o:
+
+CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o:
+
+CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o:
+
+CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o:
 
 CMakeFiles/DwarfController.dir/astro.pb.cc.o:
 
@@ -202,6 +215,8 @@ CMakeFiles/DwarfController.dir/tracking.pb.cc.o:
 /usr/lib64/libQt6MultimediaWidgets.so.6.10.1:
 
 /usr/lib64/libQt6WebSockets.so.6.10.1:
+
+/usr/lib64/libQt6Sql.so.6.10.1:
 
 /usr/lib64/libprotobuf.so:
 

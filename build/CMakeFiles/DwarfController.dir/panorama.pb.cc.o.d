@@ -1,7 +1,7 @@
 CMakeFiles/DwarfController.dir/panorama.pb.cc.o: \
- /home/lux/programming/pydwarf/build/panorama.pb.cc \
+ /media/data/programming/pydwarf/build/panorama.pb.cc \
  /usr/include/stdc-predef.h \
- /home/lux/programming/pydwarf/build/panorama.pb.h \
+ /media/data/programming/pydwarf/build/panorama.pb.h \
  /usr/include/c++/15/limits \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
  /usr/include/bits/wordsize.h \
