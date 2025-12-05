@@ -77,6 +77,7 @@ private:
     SendingType,
     SendingPasv,
     SendingRetr,
+    SendingCwdForDelete,
     SendingDele,
     Downloading,
     Done
@@ -86,8 +87,9 @@ private:
 
   struct Job {
     QString host;
-    QString remotePath;
-    QString localPath; // empty for memory download
+    QString remotePath; // for delete: just the file name
+    QString localPath;  // empty for memory download
+    QString deleteDir;  // for delete jobs: directory to CWD into
     std::function<void(const QByteArray &)> memoryCallback;
     std::function<void(bool, const QString &)> deleteCallback;
     JobType type;

@@ -53,8 +53,7 @@ DwarfController_autogen/timestamp: /home/lux/programming/pydwarf/CMakeLists.txt 
   /home/lux/programming/pydwarf/src/ui/MediaLightbox.cpp \
   /home/lux/programming/pydwarf/src/ui/MediaLightbox.h \
   base.pb.h \
-  /home/lux/programming/pydwarf/src/net/DwarfFinder.h \
-  /home/lux/programming/pydwarf/src/net/DwarfMessageDispatcher.h \
+  camera.pb.h \
   /home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.h \
   /usr/bin/cmake \
   /usr/include/alloca.h \
@@ -394,6 +393,7 @@ DwarfController_autogen/timestamp: /home/lux/programming/pydwarf/CMakeLists.txt 
   /usr/include/locale.h \
   /usr/include/pthread.h \
   /usr/include/qt6/QtCore/QByteArray \
+  /usr/include/qt6/QtCore/QElapsedTimer \
   /usr/include/qt6/QtCore/QFlags \
   /usr/include/qt6/QtCore/QIODevice \
   /usr/include/qt6/QtCore/QJsonDocument \
@@ -464,6 +464,7 @@ DwarfController_autogen/timestamp: /home/lux/programming/pydwarf/CMakeLists.txt 
   /usr/include/qt6/QtCore/qdatetime.h \
   /usr/include/qt6/QtCore/qdeadlinetimer.h \
   /usr/include/qt6/QtCore/qdebug.h \
+  /usr/include/qt6/QtCore/qelapsedtimer.h \
   /usr/include/qt6/QtCore/qendian.h \
   /usr/include/qt6/QtCore/qeventloop.h \
   /usr/include/qt6/QtCore/qexceptionhandling.h \
@@ -1464,6 +1465,7 @@ CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o: D
   /usr/include/math.h \
   /usr/include/pthread.h \
   /usr/include/qt6/QtCore/QByteArray \
+  /usr/include/qt6/QtCore/QElapsedTimer \
   /usr/include/qt6/QtCore/QFlags \
   /usr/include/qt6/QtCore/QIODevice \
   /usr/include/qt6/QtCore/QJsonDocument \
@@ -1535,6 +1537,7 @@ CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o: D
   /usr/include/qt6/QtCore/qdatetime.h \
   /usr/include/qt6/QtCore/qdeadlinetimer.h \
   /usr/include/qt6/QtCore/qdebug.h \
+  /usr/include/qt6/QtCore/qelapsedtimer.h \
   /usr/include/qt6/QtCore/qendian.h \
   /usr/include/qt6/QtCore/qeventloop.h \
   /usr/include/qt6/QtCore/qexceptionhandling.h \
@@ -4196,6 +4199,7 @@ CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o: /home/lux/programming/pydwa
   /usr/include/qt6/QtCore/QByteArray \
   /usr/include/qt6/QtCore/QDebug \
   /usr/include/qt6/QtCore/QDir \
+  /usr/include/qt6/QtCore/QElapsedTimer \
   /usr/include/qt6/QtCore/QFileInfo \
   /usr/include/qt6/QtCore/QFlags \
   /usr/include/qt6/QtCore/QIODevice \
@@ -4271,6 +4275,7 @@ CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o: /home/lux/programming/pydwa
   /usr/include/qt6/QtCore/qdebug.h \
   /usr/include/qt6/QtCore/qdir.h \
   /usr/include/qt6/QtCore/qdirlisting.h \
+  /usr/include/qt6/QtCore/qelapsedtimer.h \
   /usr/include/qt6/QtCore/qendian.h \
   /usr/include/qt6/QtCore/qeventloop.h \
   /usr/include/qt6/QtCore/qexceptionhandling.h \
@@ -4923,6 +4928,7 @@ CMakeFiles/DwarfController.dir/src/main.cpp.o: /home/lux/programming/pydwarf/src
   /usr/include/math.h \
   /usr/include/pthread.h \
   /usr/include/qt6/QtCore/QByteArray \
+  /usr/include/qt6/QtCore/QElapsedTimer \
   /usr/include/qt6/QtCore/QFile \
   /usr/include/qt6/QtCore/QFlags \
   /usr/include/qt6/QtCore/QIODevice \
@@ -4992,6 +4998,7 @@ CMakeFiles/DwarfController.dir/src/main.cpp.o: /home/lux/programming/pydwarf/src
   /usr/include/qt6/QtCore/qdatetime.h \
   /usr/include/qt6/QtCore/qdeadlinetimer.h \
   /usr/include/qt6/QtCore/qdebug.h \
+  /usr/include/qt6/QtCore/qelapsedtimer.h \
   /usr/include/qt6/QtCore/qendian.h \
   /usr/include/qt6/QtCore/qeventloop.h \
   /usr/include/qt6/QtCore/qexceptionhandling.h \
@@ -13366,6 +13373,8 @@ CMakeFiles/DwarfController.dir/tracking.pb.cc.o:
 
 /usr/include/google/protobuf/wire_format.h:
 
+/usr/lib/gcc/x86_64-redhat-linux/15/include/syslimits.h:
+
 /usr/include/qt6/QtCore/qtconfigmacros.h:
 
 /usr/include/gnu/stubs.h:
@@ -13477,6 +13486,8 @@ DwarfController_autogen/7OIUYE7PDQ/moc_DwarfMessageDispatcher.cpp:
 /usr/include/qt6/QtCore/qfunctionaltools_impl.h:
 
 /usr/include/qt6/QtGui/qpolygon.h:
+
+/usr/include/qt6/QtCore/qelapsedtimer.h:
 
 /usr/include/qt6/QtCore/qdebug.h:
 
@@ -13945,10 +13956,6 @@ camera.pb.h:
 /usr/lib64/cmake/Qt6/QtPublicSbomPurlHelpers.cmake:
 
 /usr/lib64/cmake/Qt6Gui/Qt6QOffscreenIntegrationPluginTargets-relwithdebinfo.cmake:
-
-/usr/include/c++/15/cstddef:
-
-/usr/include/bits/thread-shared-types.h:
 
 /usr/include/c++/15/bits/stl_algo.h:
 
@@ -14606,6 +14613,10 @@ CMakeFiles/3.31.6/CMakeCXXCompiler.cmake:
 
 /usr/include/errno.h:
 
+/usr/include/bits/thread-shared-types.h:
+
+/usr/include/c++/15/cstddef:
+
 /usr/include/c++/15/bits/ios_base.h:
 
 /usr/include/c++/15/bits/istream.tcc:
@@ -14771,6 +14782,8 @@ CMakeFiles/3.31.6/CMakeSystem.cmake:
 /usr/lib64/libEGL.so.1:
 
 /usr/include/c++/15/cmath:
+
+/usr/include/qt6/QtCore/QElapsedTimer:
 
 /usr/include/c++/15/ctime:
 
@@ -15156,6 +15169,12 @@ base.pb.cc:
 
 /usr/include/sys/types.h:
 
+/usr/lib/gcc/x86_64-redhat-linux/15/include/stdint.h:
+
+/usr/lib64/cmake/Qt6Gui/Qt6GuiVersionlessAliasTargets.cmake:
+
+/usr/include/wctype.h:
+
 /usr/include/bits/types/timer_t.h:
 
 /usr/lib/gcc/x86_64-redhat-linux/15/include/stdarg.h:
@@ -15207,8 +15226,6 @@ base.pb.cc:
 /usr/lib64/cmake/Qt6Gui/Qt6QLibInputPluginConfig.cmake:
 
 /usr/lib64/cmake/Qt6/QtPublicFinalizerHelpers.cmake:
-
-/usr/lib/gcc/x86_64-redhat-linux/15/include/syslimits.h:
 
 /usr/include/google/protobuf/stubs/hash.h:
 
@@ -15741,9 +15758,3 @@ DwarfController_autogen/YPKJ5OE7LN/moc_MediaLightbox.cpp:
 /usr/include/qt6/QtCore/q20algorithm.h:
 
 /usr/include/qt6/QtCore/qtmocconstants.h:
-
-/usr/lib64/cmake/Qt6Gui/Qt6GuiVersionlessAliasTargets.cmake:
-
-/usr/include/wctype.h:
-
-/usr/lib/gcc/x86_64-redhat-linux/15/include/stdint.h:

@@ -4,6 +4,7 @@
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QTimer>
 
 // Exposure times in microseconds for Tele camera
 // Based on DWARF II protocol: indices 0-27
@@ -259,6 +260,8 @@ void CameraSettingsPanel::setupUi() {
 
 void CameraSettingsPanel::setCameraController(DwarfCameraController *controller) {
   m_controller = controller;
+  // Initialize UI from controller state so Auto modes still show a value
+  syncFromController();
 }
 
 void CameraSettingsPanel::setCameraMode(CameraMode mode) {
@@ -268,6 +271,8 @@ void CameraSettingsPanel::setCameraMode(CameraMode mode) {
   m_cameraMode = mode;
   updateRangesForMode();
   updateButtonStates();
+  // When switching Tele/Wide, refresh values from controller
+  syncFromController();
   emit cameraModeChanged(mode);
 }
 
@@ -306,6 +311,36 @@ void CameraSettingsPanel::updateButtonStates() {
 
   m_teleButton->setStyleSheet(m_cameraMode == CameraMode::Tele ? activeStyle : inactiveStyle);
   m_wideButton->setStyleSheet(m_cameraMode == CameraMode::Wide ? activeStyle : inactiveStyle);
+}
+
+void CameraSettingsPanel::syncFromController() {
+  if (!m_controller)
+    return;
+
+  auto kind = (m_cameraMode == CameraMode::Tele)
+                  ? DwarfCameraController::CameraKind::Tele
+                  : DwarfCameraController::CameraKind::Wide;
+
+  // Exposure
+  int expMode = m_controller->exposureMode(kind);
+  setExposureMode(expMode);
+  int expIndex = m_controller->exposureIndex(kind);
+  setExposureIndex(expIndex);
+
+  // Gain
+  int gainMode = m_controller->gainMode(kind);
+  setGainMode(gainMode);
+  int gainIndex = m_controller->gainIndex(kind);
+  setGainIndex(gainIndex);
+
+  // White balance (temperature mode only)
+  int wbMode = m_controller->whiteBalanceMode(kind);
+  setWhiteBalanceMode(wbMode);
+  int wbIndex = m_controller->whiteBalanceTemperatureIndex(kind);
+  setWhiteBalanceTemperature(wbIndex);
+
+  // Other sliders (brightness/contrast/etc.) bleiben wie initial gesetzt,
+  // da es aktuell keine Getter im Controller gibt.
 }
 
 void CameraSettingsPanel::updateValueLabels() {
@@ -380,6 +415,9 @@ void CameraSettingsPanel::onPhotoClicked() {
                     : DwarfCameraController::CameraKind::Wide;
     m_controller->takePhoto(kind);
   }
+  m_photoButton->setStyleSheet("background-color: #27ae60; color: white; font-weight: bold; border-radius: 4px;");
+  QTimer::singleShot(500, this,
+                     [this]() { m_photoButton->setStyleSheet(""); });
   emit photoRequested();
 }
 
@@ -402,7 +440,7 @@ void CameraSettingsPanel::onRecordClicked() {
     m_recButton->setText(tr("⏹ STOP"));
     m_recButton->setStyleSheet("background-color: #e74c3c; color: white;");
   }
-  emit recordRequested();
+  emit recordRequested(m_isRecording);
 }
 
 void CameraSettingsPanel::onExposureModeChanged(int index) {
@@ -422,8 +460,13 @@ void CameraSettingsPanel::onExposureModeChanged(int index) {
 void CameraSettingsPanel::onExposureSliderChanged(int value) {
   m_exposureValueLabel->setText(formatExposureValue(value));
 
-  if (!m_controller)
+  qWarning() << "[CameraSettingsPanel] onExposureSliderChanged" << value
+             << "m_controller=" << m_controller;
+
+  if (!m_controller) {
+    qWarning() << "[CameraSettingsPanel] ERROR: m_controller is null!";
     return;
+  }
 
   auto kind = (m_cameraMode == CameraMode::Tele)
                   ? DwarfCameraController::CameraKind::Tele
@@ -475,8 +518,13 @@ void CameraSettingsPanel::onBinningChanged(int index) {
 void CameraSettingsPanel::onBrightnessChanged(int value) {
   m_brightnessValueLabel->setText(QString::number(value));
 
-  if (!m_controller)
+  qWarning() << "[CameraSettingsPanel] onBrightnessChanged" << value
+             << "m_controller=" << m_controller;
+
+  if (!m_controller) {
+    qWarning() << "[CameraSettingsPanel] ERROR: m_controller is null!";
     return;
+  }
 
   auto kind = (m_cameraMode == CameraMode::Tele)
                   ? DwarfCameraController::CameraKind::Tele

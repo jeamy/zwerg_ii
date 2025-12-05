@@ -16,6 +16,8 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QTabWidget>
+#include <QTimer>
+#include <QElapsedTimer>
 #include <QVideoWidget>
 #include <QWidget>
 
@@ -141,6 +143,9 @@ private:
 
   DwarfMjpegStream *m_teleStream;
   DwarfMjpegStream *m_wideStream;
+
+  QTimer *m_recordTimer;
+  QElapsedTimer m_recordElapsed;
 
   DwarfHttpClient *m_httpClient;
   QPushButton *m_openGalleryButton;

@@ -512,6 +512,8 @@ CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o: \
  /usr/include/qt6/QtWidgets/QSlider /usr/include/qt6/QtWidgets/qslider.h \
  /usr/include/qt6/QtWidgets/QTabWidget \
  /usr/include/qt6/QtWidgets/qtabwidget.h \
+ /usr/include/qt6/QtCore/QElapsedTimer \
+ /usr/include/qt6/QtCore/qelapsedtimer.h \
  /usr/include/qt6/QtMultimediaWidgets/QVideoWidget \
  /usr/include/qt6/QtMultimediaWidgets/qvideowidget.h \
  /usr/include/qt6/QtMultimediaWidgets/qtmultimediawidgetsglobal.h \

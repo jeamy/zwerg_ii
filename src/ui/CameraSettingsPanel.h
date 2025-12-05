@@ -45,7 +45,7 @@ public:
 
 signals:
   void photoRequested();
-  void recordRequested();
+  void recordRequested(bool recording);
   void cameraModeChanged(CameraMode mode);
 
 private slots:
@@ -72,6 +72,7 @@ private:
   void updateRangesForMode();
   void updateValueLabels();
   void updateButtonStates();
+  void syncFromController();
   QString formatExposureValue(int index) const;
   QString formatGainValue(int index) const;
 

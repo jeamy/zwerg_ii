@@ -58,21 +58,7 @@ QLabel#pipStreamView:hover {
 }
 
 /* Camera Settings Panel */
-CameraSettingsPanel QPushButton#photoButton {
-    background-color: #27ae60;
-    color: white;
-    font-weight: bold;
-    border-radius: 4px;
-}
-
-CameraSettingsPanel QPushButton#photoButton:hover {
-    background-color: #2ecc71;
-}
-
-CameraSettingsPanel QPushButton#photoButton:pressed {
-    background-color: #1e8449;
-}
-
+CameraSettingsPanel QPushButton#photoButton,
 CameraSettingsPanel QPushButton#recButton {
     background-color: #7f8c8d;
     color: white;
@@ -80,6 +66,7 @@ CameraSettingsPanel QPushButton#recButton {
     border-radius: 4px;
 }
 
+CameraSettingsPanel QPushButton#photoButton:hover,
 CameraSettingsPanel QPushButton#recButton:hover {
     background-color: #95a5a6;
 }
@@ -124,6 +111,10 @@ CameraSettingsPanel QSlider::handle:horizontal:hover {
 }
 
 CameraSettingsPanel QSlider::handle:horizontal:disabled {
+    background: #555555;
+}
+
+CameraSettingsPanel QSlider::sub-page:horizontal:disabled {
     background: #555555;
 }
 

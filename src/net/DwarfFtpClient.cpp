@@ -67,12 +67,15 @@ void DwarfFtpClient::deleteFile(
     std::function<void(bool success, const QString &error)> callback) {
   Job job;
   job.host = host;
-  job.remotePath = remotePath;
+  QFileInfo fi(remotePath);
+  job.remotePath = fi.fileName();
+  job.deleteDir = fi.path();
   job.deleteCallback = callback;
   job.type = JobType::Delete;
 
   m_queue.enqueue(job);
   qDebug() << "[FtpClient] Queued file delete:" << remotePath
+           << "dir:" << job.deleteDir << "name:" << job.remotePath
            << "queue size:" << m_queue.size() << "state:" << static_cast<int>(m_state);
 
   tryStartNextJob();
@@ -109,8 +112,11 @@ void DwarfFtpClient::startNextJob() {
   m_controlBuffer.clear();
   m_fileSize = -1;
 
-  qDebug() << "[FtpClient] Starting download:" << m_currentJob.remotePath;
-  emit downloadStarted(m_currentJob.remotePath);
+  qDebug() << "[FtpClient] Starting job:" << m_currentJob.remotePath
+           << "type" << static_cast<int>(m_currentJob.type);
+  if (m_currentJob.type == JobType::Download) {
+    emit downloadStarted(m_currentJob.remotePath);
+  }
 
   m_state = State::Connecting;
   m_controlSocket->connectToHost(m_currentJob.host, FTP_PORT);
@@ -199,16 +205,32 @@ void DwarfFtpClient::handleResponse(int code, const QString &line) {
 
   case State::SendingType:
     if (code == 200) {
-      // For delete, we don't need data connection
       if (m_currentJob.type == JobType::Delete) {
-        m_state = State::SendingDele;
-        sendCommand(QString("DELE %1").arg(m_currentJob.remotePath));
+        // For delete, first change into the absolute directory, then delete
+        m_state = State::SendingCwdForDelete;
+        QString dir = m_currentJob.deleteDir;
+        if (dir.isEmpty())
+          dir = QStringLiteral("/");
+        // Ensure absolute path starting with '/'
+        if (!dir.startsWith('/'))
+          dir.prepend('/');
+        sendCommand(QString("CWD %1").arg(dir));
       } else {
         m_state = State::SendingPasv;
         sendCommand("PASV");
       }
     } else {
       finishDownload(false, tr("TYPE failed: %1").arg(line));
+    }
+    break;
+
+  case State::SendingCwdForDelete:
+    if (code == 250) {
+      // Directory change ok, now delete file by name
+      m_state = State::SendingDele;
+      sendCommand(QString("DELE %1").arg(m_currentJob.remotePath));
+    } else {
+      finishDownload(false, tr("CWD failed: %1").arg(line));
     }
     break;
 

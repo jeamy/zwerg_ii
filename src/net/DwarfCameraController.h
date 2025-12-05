@@ -35,6 +35,14 @@ public:
   void setSaturation(CameraKind kind, int value);
   void setSharpness(CameraKind kind, int value);
 
+  // Current parameter getters (used by UI to sync state)
+  int exposureMode(CameraKind kind) const;
+  int exposureIndex(CameraKind kind) const;
+  int gainMode(CameraKind kind) const;
+  int gainIndex(CameraKind kind) const;
+  int whiteBalanceMode(CameraKind kind) const;
+  int whiteBalanceTemperatureIndex(CameraKind kind) const;
+
 signals:
   void errorOccurred(const QString &message);
 
@@ -45,6 +53,7 @@ private:
   dwarf::ReqSetAllParams m_wideParams;
 
   void sendSetAllParams(CameraKind kind);
+  void sendSingleInt32(CameraKind kind, quint32 cmd, int value);
   quint32 moduleIdFor(CameraKind kind) const;
   quint32 cmdSetAllParamsFor(CameraKind kind) const;
   quint32 cmdOpenCameraFor(CameraKind kind) const;
@@ -52,4 +61,12 @@ private:
   quint32 cmdPhotoFor(CameraKind kind) const;
   quint32 cmdStartRecordFor(CameraKind kind) const;
   quint32 cmdStopRecordFor(CameraKind kind) const;
+  // Individual parameter commands
+  quint32 cmdSetExpFor(CameraKind kind) const;
+  quint32 cmdSetGainFor(CameraKind kind) const;
+  quint32 cmdSetBrightnessFor(CameraKind kind) const;
+  quint32 cmdSetContrastFor(CameraKind kind) const;
+  quint32 cmdSetSaturationFor(CameraKind kind) const;
+  quint32 cmdSetHueFor(CameraKind kind) const;
+  quint32 cmdSetSharpnessFor(CameraKind kind) const;
 };

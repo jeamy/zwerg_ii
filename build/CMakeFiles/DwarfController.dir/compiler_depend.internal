@@ -54,8 +54,7 @@
  /home/lux/programming/pydwarf/src/ui/MediaLightbox.cpp
  /home/lux/programming/pydwarf/src/ui/MediaLightbox.h
  /home/lux/programming/pydwarf/build/base.pb.h
- /home/lux/programming/pydwarf/src/net/DwarfFinder.h
- /home/lux/programming/pydwarf/src/net/DwarfMessageDispatcher.h
+ /home/lux/programming/pydwarf/build/camera.pb.h
  /home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.h
  /usr/bin/cmake
  /usr/include/alloca.h
@@ -395,6 +394,7 @@
  /usr/include/locale.h
  /usr/include/pthread.h
  /usr/include/qt6/QtCore/QByteArray
+ /usr/include/qt6/QtCore/QElapsedTimer
  /usr/include/qt6/QtCore/QFlags
  /usr/include/qt6/QtCore/QIODevice
  /usr/include/qt6/QtCore/QJsonDocument
@@ -465,6 +465,7 @@
  /usr/include/qt6/QtCore/qdatetime.h
  /usr/include/qt6/QtCore/qdeadlinetimer.h
  /usr/include/qt6/QtCore/qdebug.h
+ /usr/include/qt6/QtCore/qelapsedtimer.h
  /usr/include/qt6/QtCore/qendian.h
  /usr/include/qt6/QtCore/qeventloop.h
  /usr/include/qt6/QtCore/qexceptionhandling.h
@@ -1466,6 +1467,7 @@ CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o
  /usr/include/math.h
  /usr/include/pthread.h
  /usr/include/qt6/QtCore/QByteArray
+ /usr/include/qt6/QtCore/QElapsedTimer
  /usr/include/qt6/QtCore/QFlags
  /usr/include/qt6/QtCore/QIODevice
  /usr/include/qt6/QtCore/QJsonDocument
@@ -1537,6 +1539,7 @@ CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o
  /usr/include/qt6/QtCore/qdatetime.h
  /usr/include/qt6/QtCore/qdeadlinetimer.h
  /usr/include/qt6/QtCore/qdebug.h
+ /usr/include/qt6/QtCore/qelapsedtimer.h
  /usr/include/qt6/QtCore/qendian.h
  /usr/include/qt6/QtCore/qeventloop.h
  /usr/include/qt6/QtCore/qexceptionhandling.h
@@ -4205,6 +4208,7 @@ CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o
  /usr/include/qt6/QtCore/QByteArray
  /usr/include/qt6/QtCore/QDebug
  /usr/include/qt6/QtCore/QDir
+ /usr/include/qt6/QtCore/QElapsedTimer
  /usr/include/qt6/QtCore/QFileInfo
  /usr/include/qt6/QtCore/QFlags
  /usr/include/qt6/QtCore/QIODevice
@@ -4280,6 +4284,7 @@ CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o
  /usr/include/qt6/QtCore/qdebug.h
  /usr/include/qt6/QtCore/qdir.h
  /usr/include/qt6/QtCore/qdirlisting.h
+ /usr/include/qt6/QtCore/qelapsedtimer.h
  /usr/include/qt6/QtCore/qendian.h
  /usr/include/qt6/QtCore/qeventloop.h
  /usr/include/qt6/QtCore/qexceptionhandling.h
@@ -4933,6 +4938,7 @@ CMakeFiles/DwarfController.dir/src/main.cpp.o
  /usr/include/math.h
  /usr/include/pthread.h
  /usr/include/qt6/QtCore/QByteArray
+ /usr/include/qt6/QtCore/QElapsedTimer
  /usr/include/qt6/QtCore/QFile
  /usr/include/qt6/QtCore/QFlags
  /usr/include/qt6/QtCore/QIODevice
@@ -5002,6 +5008,7 @@ CMakeFiles/DwarfController.dir/src/main.cpp.o
  /usr/include/qt6/QtCore/qdatetime.h
  /usr/include/qt6/QtCore/qdeadlinetimer.h
  /usr/include/qt6/QtCore/qdebug.h
+ /usr/include/qt6/QtCore/qelapsedtimer.h
  /usr/include/qt6/QtCore/qendian.h
  /usr/include/qt6/QtCore/qeventloop.h
  /usr/include/qt6/QtCore/qexceptionhandling.h

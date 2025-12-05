@@ -144,9 +144,12 @@ void DwarfCameraController::setExposureMode(CameraKind kind, int mode) {
 }
 
 void DwarfCameraController::setExposureIndex(CameraKind kind, int index) {
+  qWarning() << "[DwarfCameraController] setExposureIndex" << index
+             << "for" << (kind == CameraKind::Tele ? "Tele" : "Wide");
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   p.set_exp_index(index);
-  sendSetAllParams(kind);
+  // Use individual command for immediate effect
+  sendSingleInt32(kind, cmdSetExpFor(kind), index);
 }
 
 void DwarfCameraController::setGainMode(CameraKind kind, int mode) {
@@ -157,9 +160,12 @@ void DwarfCameraController::setGainMode(CameraKind kind, int mode) {
 }
 
 void DwarfCameraController::setGainIndex(CameraKind kind, int index) {
+  qWarning() << "[DwarfCameraController] setGainIndex" << index
+             << "for" << (kind == CameraKind::Tele ? "Tele" : "Wide");
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   p.set_gain_index(index);
-  sendSetAllParams(kind);
+  // Use individual command for immediate effect
+  sendSingleInt32(kind, cmdSetGainFor(kind), index);
 }
 
 void DwarfCameraController::setIrCut(CameraKind kind, int value) {
@@ -185,38 +191,91 @@ void DwarfCameraController::setWhiteBalanceByTemperature(CameraKind kind,
 }
 
 void DwarfCameraController::setBrightness(CameraKind kind, int value) {
+  qWarning() << "[DwarfCameraController] setBrightness" << value
+             << "for" << (kind == CameraKind::Tele ? "Tele" : "Wide");
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  p.set_brightness(scale01To255(value));
-  sendSetAllParams(kind);
+  int scaledValue = scale01To255(value);
+  p.set_brightness(scaledValue);
+  // Use individual command for immediate effect
+  sendSingleInt32(kind, cmdSetBrightnessFor(kind), scaledValue);
 }
 
 void DwarfCameraController::setContrast(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  p.set_contrast(scale01To255(value));
-  sendSetAllParams(kind);
+  int scaledValue = scale01To255(value);
+  p.set_contrast(scaledValue);
+  // Use individual command for immediate effect
+  sendSingleInt32(kind, cmdSetContrastFor(kind), scaledValue);
 }
 
 void DwarfCameraController::setHue(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  p.set_hue(scale01To255(value));
-  sendSetAllParams(kind);
+  int scaledValue = scale01To255(value);
+  p.set_hue(scaledValue);
+  // Use individual command for immediate effect
+  sendSingleInt32(kind, cmdSetHueFor(kind), scaledValue);
 }
 
 void DwarfCameraController::setSaturation(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  p.set_saturation(scale01To255(value));
-  sendSetAllParams(kind);
+  int scaledValue = scale01To255(value);
+  p.set_saturation(scaledValue);
+  // Use individual command for immediate effect
+  sendSingleInt32(kind, cmdSetSaturationFor(kind), scaledValue);
 }
 
 void DwarfCameraController::setSharpness(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   value = clampInt(value, 0, 100);
   p.set_sharpness(value);
-  sendSetAllParams(kind);
+  // Use individual command for immediate effect
+  sendSingleInt32(kind, cmdSetSharpnessFor(kind), value);
+}
+
+int DwarfCameraController::exposureMode(CameraKind kind) const {
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+  return p.exp_mode();
+}
+
+int DwarfCameraController::exposureIndex(CameraKind kind) const {
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+  return p.exp_index();
+}
+
+int DwarfCameraController::gainMode(CameraKind kind) const {
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+  return p.gain_mode();
+}
+
+int DwarfCameraController::gainIndex(CameraKind kind) const {
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+  return p.gain_index();
+}
+
+int DwarfCameraController::whiteBalanceMode(CameraKind kind) const {
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+  return p.wb_mode();
+}
+
+int DwarfCameraController::whiteBalanceTemperatureIndex(CameraKind kind) const {
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+  return p.wb_index();
 }
 
 void DwarfCameraController::sendSetAllParams(CameraKind kind) {
+  qWarning() << "[DwarfCameraController] sendSetAllParams called for"
+             << (kind == CameraKind::Tele ? "Tele" : "Wide")
+             << "m_client=" << m_client
+             << "isConnected=" << (m_client ? m_client->isConnected() : false);
+
   if (!m_client || !m_client->isConnected()) {
+    qWarning() << "[DwarfCameraController] ERROR: Camera client not connected!";
     emit errorOccurred("Camera client not connected");
     return;
   }
@@ -225,6 +284,9 @@ void DwarfCameraController::sendSetAllParams(CameraKind kind) {
       (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
 
   QByteArray data = ProtobufHelper::serialize(p);
+  qWarning() << "[DwarfCameraController] Sending SetAllParams module="
+             << moduleIdFor(kind) << "cmd=" << cmdSetAllParamsFor(kind)
+             << "dataSize=" << data.size();
   m_client->sendCommand(moduleIdFor(kind), cmdSetAllParamsFor(kind), data);
 }
 
@@ -254,4 +316,59 @@ quint32 DwarfCameraController::cmdStartRecordFor(CameraKind kind) const {
 
 quint32 DwarfCameraController::cmdStopRecordFor(CameraKind kind) const {
   return (kind == CameraKind::Tele) ? 10006u : 0u;
+}
+
+// Individual parameter command IDs
+quint32 DwarfCameraController::cmdSetExpFor(CameraKind kind) const {
+  return (kind == CameraKind::Tele) ? 10010u : 12004u;
+}
+
+quint32 DwarfCameraController::cmdSetGainFor(CameraKind kind) const {
+  return (kind == CameraKind::Tele) ? 10014u : 12006u;
+}
+
+quint32 DwarfCameraController::cmdSetBrightnessFor(CameraKind kind) const {
+  return (kind == CameraKind::Tele) ? 10016u : 12008u;
+}
+
+quint32 DwarfCameraController::cmdSetContrastFor(CameraKind kind) const {
+  return (kind == CameraKind::Tele) ? 10018u : 12010u;
+}
+
+quint32 DwarfCameraController::cmdSetSaturationFor(CameraKind kind) const {
+  return (kind == CameraKind::Tele) ? 10020u : 12012u;
+}
+
+quint32 DwarfCameraController::cmdSetHueFor(CameraKind kind) const {
+  return (kind == CameraKind::Tele) ? 10022u : 12014u;
+}
+
+quint32 DwarfCameraController::cmdSetSharpnessFor(CameraKind kind) const {
+  return (kind == CameraKind::Tele) ? 10024u : 12016u;
+}
+
+void DwarfCameraController::sendSingleInt32(CameraKind kind, quint32 cmd, int value) {
+  if (!m_client || !m_client->isConnected()) {
+    qWarning() << "[DwarfCameraController] ERROR: Camera client not connected!";
+    emit errorOccurred("Camera client not connected");
+    return;
+  }
+
+  // Create a simple protobuf message with just an int32 value field
+  // The DWARF API expects: message { int32 value = 1; }
+  QByteArray data;
+  // Protobuf encoding: field 1, wire type 0 (varint) = 0x08, then varint value
+  data.append(static_cast<char>(0x08)); // field 1, varint
+  // Encode value as varint
+  uint32_t uval = static_cast<uint32_t>(value);
+  while (uval >= 0x80) {
+    data.append(static_cast<char>((uval & 0x7F) | 0x80));
+    uval >>= 7;
+  }
+  data.append(static_cast<char>(uval));
+
+  qWarning() << "[DwarfCameraController] Sending single param module="
+             << moduleIdFor(kind) << "cmd=" << cmd << "value=" << value
+             << "dataSize=" << data.size();
+  m_client->sendCommand(moduleIdFor(kind), cmd, data);
 }

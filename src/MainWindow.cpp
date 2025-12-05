@@ -39,6 +39,7 @@ MainWindow::MainWindow(QWidget *parent)
       m_mainVideoWidget(nullptr), m_pipVideoWidget(nullptr),
       m_cameraSettingsPanel(nullptr),
       m_teleStream(nullptr), m_wideStream(nullptr),
+      m_recordTimer(nullptr),
       m_httpClient(nullptr), m_openGalleryButton(nullptr),
       m_mediaTabs(nullptr), m_mediaPhotoList(nullptr),
       m_mediaVideoList(nullptr), m_mediaBurstList(nullptr),
@@ -47,6 +48,9 @@ MainWindow::MainWindow(QWidget *parent)
       m_ftpDownloader(nullptr), m_thumbnailsLoading(0) {
   m_mainStreamView = nullptr;
   m_pipStreamView = nullptr;
+
+  m_recordTimer = new QTimer(this);
+  m_recordTimer->setInterval(500);
   m_mainStream = CameraStream::Tele;
   m_pipStream = CameraStream::Wide;
   m_cameraController = new DwarfCameraController(this);
@@ -429,6 +433,44 @@ void MainWindow::setupUi() {
               onCameraSourceTele();
             } else {
               onCameraSourceWide();
+            }
+          });
+
+  // Photo feedback
+  connect(m_cameraSettingsPanel, &CameraSettingsPanel::photoRequested, this,
+          [this]() {
+            statusBar()->showMessage(tr("Photo captured"), 3000);
+          });
+
+  // Video recording feedback with elapsed time
+  connect(m_cameraSettingsPanel, &CameraSettingsPanel::recordRequested, this,
+          [this](bool recording) {
+            if (!m_recordTimer)
+              return;
+
+            if (recording) {
+              m_recordElapsed.restart();
+              m_recordTimer->start();
+              // Initial message
+              statusBar()->showMessage(tr("Recording video... 00:00"), 0);
+
+              connect(m_recordTimer, &QTimer::timeout, this,
+                      [this]() {
+                        qint64 secs = m_recordElapsed.elapsed() / 1000;
+                        int minutes = static_cast<int>(secs / 60);
+                        int seconds = static_cast<int>(secs % 60);
+                        QString timeStr =
+                            QStringLiteral("%1:%2")
+                                .arg(minutes, 2, 10, QLatin1Char('0'))
+                                .arg(seconds, 2, 10, QLatin1Char('0'));
+                        statusBar()->showMessage(
+                            tr("Recording video... %1").arg(timeStr), 0);
+                      });
+            } else {
+              m_recordTimer->stop();
+              statusBar()->showMessage(tr("Video recording stopped"), 3000);
+              // Disconnect timeout connections to avoid duplicates
+              m_recordTimer->disconnect(this);
             }
           });
 
