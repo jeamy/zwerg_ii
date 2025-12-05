@@ -4,6 +4,7 @@
 #include <QComboBox>
 #include <QGroupBox>
 #include <QLabel>
+#include <QPair>
 #include <QPushButton>
 #include <QSlider>
 #include <QWidget>
@@ -34,7 +35,6 @@ public:
   void setGainMode(int mode);
   void setGainIndex(int index);
   void setIrCut(bool enabled);
-  void setBinning(int index);
   void setBrightness(int value);
   void setContrast(int value);
   void setSaturation(int value);
@@ -61,7 +61,6 @@ private slots:
   void onGainModeChanged(int index);
   void onGainSliderChanged(int value);
   void onIrCutToggled(bool checked);
-  void onBinningChanged(int index);
   void onBrightnessChanged(int value);
   void onContrastChanged(int value);
   void onSaturationChanged(int value);
@@ -102,7 +101,6 @@ private:
   // Image parameters group
   QGroupBox *m_imageGroup;
   QCheckBox *m_irCutCheckBox;
-  QComboBox *m_binningCombo;
   QSlider *m_brightnessSlider;
   QLabel *m_brightnessValueLabel;
   QSlider *m_contrastSlider;
@@ -120,14 +118,14 @@ private:
   QSlider *m_wbTemperatureSlider;
   QLabel *m_wbTemperatureValueLabel;
 
-  // Exposure time values in microseconds for Tele camera (index -> value)
-  static const QVector<int> s_teleExposureValues;
-  // Exposure time values for Wide camera
-  static const QVector<int> s_wideExposureValues;
-  // Gain values for Tele camera
-  static const QVector<int> s_teleGainValues;
-  // Gain values for Wide camera
-  static const QVector<int> s_wideGainValues;
+  // Exposure values: {api_index, display_name} for Tele camera
+  static const QVector<QPair<int, QString>> s_teleExposureValues;
+  // Exposure values: {api_index, display_name} for Wide camera
+  static const QVector<QPair<int, QString>> s_wideExposureValues;
+  // Gain values: {api_index, gain_value} for Tele camera
+  static const QVector<QPair<int, int>> s_teleGainValues;
+  // Gain values: {api_index, gain_value} for Wide camera
+  static const QVector<QPair<int, int>> s_wideGainValues;
   // White balance color temperature values (Kelvin)
   static const QVector<int> s_wbTemperatureValues;
 };

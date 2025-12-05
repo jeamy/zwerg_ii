@@ -6,28 +6,47 @@
 #include <QVBoxLayout>
 #include <QTimer>
 
-// Exposure times in microseconds for Tele camera
-// Based on DWARF II protocol: indices 0-27
-const QVector<int> CameraSettingsPanel::s_teleExposureValues = {
-    100,     200,     500,     1000,    2000,    5000,    10000,
-    20000,   50000,   100000,  200000,  500000,  1000000, 2000000,
-    3000000, 4000000, 5000000, 6000000, 7000000, 8000000, 9000000,
-    10000000, 12000000, 15000000, 20000000, 25000000, 30000000, 60000000};
+// Exposure index values for Tele camera (DWARF II API)
+// Format: {api_index, display_name} - API uses indices 0,3,6,9,...,156
+const QVector<QPair<int, QString>> CameraSettingsPanel::s_teleExposureValues = {
+    {0, "1/10000"}, {3, "1/8000"}, {6, "1/6400"}, {9, "1/5000"},
+    {12, "1/4000"}, {15, "1/3200"}, {18, "1/2500"}, {21, "1/2000"},
+    {24, "1/1600"}, {27, "1/1250"}, {30, "1/1000"}, {33, "1/800"},
+    {36, "1/640"}, {39, "1/500"}, {42, "1/400"}, {45, "1/320"},
+    {48, "1/250"}, {51, "1/200"}, {54, "1/160"}, {57, "1/125"},
+    {60, "1/100"}, {63, "1/80"}, {66, "1/60"}, {69, "1/50"},
+    {72, "1/40"}, {75, "1/30"}, {78, "1/25"}, {81, "1/20"},
+    {84, "1/15"}, {87, "1/13"}, {90, "1/10"}, {93, "1/8"},
+    {96, "1/6"}, {99, "1/5"}, {102, "1/4"}, {105, "1/3"},
+    {108, "0.4s"}, {111, "0.5s"}, {114, "0.6s"}, {117, "0.8s"},
+    {120, "1s"}, {123, "1.3s"}, {126, "1.6s"}, {129, "2s"},
+    {132, "2.5s"}, {135, "3.2s"}, {138, "4s"}, {141, "5s"},
+    {144, "6s"}, {147, "8s"}, {150, "10s"}, {153, "13s"}, {156, "15s"}};
 
-// Exposure times for Wide camera (different range)
-// Based on DWARF II protocol: indices 0-15
-const QVector<int> CameraSettingsPanel::s_wideExposureValues = {
-    100,   200,   500,   1000,  2000,   5000,   10000,  20000,
-    33333, 50000, 66666, 100000, 125000, 166666, 200000, 250000};
+// Exposure index values for Wide camera (DWARF II API)
+// Wide camera has shorter max exposure (1s)
+const QVector<QPair<int, QString>> CameraSettingsPanel::s_wideExposureValues = {
+    {0, "3/10000"}, {3, "1/2500"}, {6, "1/2000"}, {9, "1/1600"},
+    {12, "1/1250"}, {15, "1/1000"}, {18, "1/800"}, {21, "1/640"},
+    {24, "1/500"}, {27, "1/400"}, {30, "1/320"}, {33, "1/250"},
+    {36, "1/160"}, {39, "1/200"}, {42, "1/125"}, {45, "1/100"},
+    {48, "1/80"}, {51, "1/60"}, {54, "1/50"}, {57, "1/40"},
+    {60, "1/30"}, {63, "1/25"}, {66, "1/20"}, {69, "1/15"},
+    {72, "1/13"}, {75, "1/10"}, {78, "1/8"}, {81, "1/6"},
+    {84, "1/5"}, {87, "1/4"}, {90, "1/4"}, {93, "0.4s"},
+    {96, "0.5s"}, {99, "0.6s"}, {102, "0.8s"}, {105, "1s"}};
 
-// Gain values for Tele camera (0-300 in steps)
-const QVector<int> CameraSettingsPanel::s_teleGainValues = {
-    0,  10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150,
-    160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300};
+// Gain index values for Tele camera (DWARF II API)
+// Format: {api_index, gain_value} - Gain 0-240 in steps of 10
+const QVector<QPair<int, int>> CameraSettingsPanel::s_teleGainValues = {
+    {0, 0}, {3, 10}, {6, 20}, {9, 30}, {12, 40}, {15, 50}, {18, 60},
+    {21, 70}, {24, 80}, {27, 90}, {30, 100}, {33, 110}, {36, 120}};
 
-// Gain values for Wide camera (0-100)
-const QVector<int> CameraSettingsPanel::s_wideGainValues = {
-    0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+// Gain index values for Wide camera (DWARF II API)
+// Wide camera gain starts at 60 and goes to 160
+const QVector<QPair<int, int>> CameraSettingsPanel::s_wideGainValues = {
+    {0, 60}, {18, 60}, {21, 70}, {24, 80}, {27, 90}, {30, 100},
+    {33, 110}, {36, 120}};
 
 // White balance color temperatures in Kelvin
 const QVector<int> CameraSettingsPanel::s_wbTemperatureValues = {
@@ -140,14 +159,6 @@ void CameraSettingsPanel::setupUi() {
   m_irCutCheckBox = new QCheckBox(tr("IR-Cut (Day mode)"), m_imageGroup);
   imageLayout->addWidget(m_irCutCheckBox, 0, 0, 1, 3);
 
-  // Binning
-  QLabel *binningLabel = new QLabel(tr("Resolution:"), m_imageGroup);
-  m_binningCombo = new QComboBox(m_imageGroup);
-  m_binningCombo->addItem(tr("4K (No Binning)"));
-  m_binningCombo->addItem(tr("2K (2x2 Binning)"));
-  imageLayout->addWidget(binningLabel, 1, 0);
-  imageLayout->addWidget(m_binningCombo, 1, 1, 1, 2);
-
   // Brightness
   QLabel *brightnessLabel = new QLabel(tr("Brightness:"), m_imageGroup);
   m_brightnessSlider = new QSlider(Qt::Horizontal, m_imageGroup);
@@ -156,9 +167,9 @@ void CameraSettingsPanel::setupUi() {
   m_brightnessValueLabel = new QLabel("50", m_imageGroup);
   m_brightnessValueLabel->setMinimumWidth(40);
   m_brightnessValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-  imageLayout->addWidget(brightnessLabel, 2, 0);
-  imageLayout->addWidget(m_brightnessSlider, 2, 1);
-  imageLayout->addWidget(m_brightnessValueLabel, 2, 2);
+  imageLayout->addWidget(brightnessLabel, 1, 0);
+  imageLayout->addWidget(m_brightnessSlider, 1, 1);
+  imageLayout->addWidget(m_brightnessValueLabel, 1, 2);
 
   // Contrast
   QLabel *contrastLabel = new QLabel(tr("Contrast:"), m_imageGroup);
@@ -168,9 +179,9 @@ void CameraSettingsPanel::setupUi() {
   m_contrastValueLabel = new QLabel("50", m_imageGroup);
   m_contrastValueLabel->setMinimumWidth(40);
   m_contrastValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-  imageLayout->addWidget(contrastLabel, 3, 0);
-  imageLayout->addWidget(m_contrastSlider, 3, 1);
-  imageLayout->addWidget(m_contrastValueLabel, 3, 2);
+  imageLayout->addWidget(contrastLabel, 2, 0);
+  imageLayout->addWidget(m_contrastSlider, 2, 1);
+  imageLayout->addWidget(m_contrastValueLabel, 2, 2);
 
   // Saturation
   QLabel *saturationLabel = new QLabel(tr("Saturation:"), m_imageGroup);
@@ -180,9 +191,9 @@ void CameraSettingsPanel::setupUi() {
   m_saturationValueLabel = new QLabel("50", m_imageGroup);
   m_saturationValueLabel->setMinimumWidth(40);
   m_saturationValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-  imageLayout->addWidget(saturationLabel, 4, 0);
-  imageLayout->addWidget(m_saturationSlider, 4, 1);
-  imageLayout->addWidget(m_saturationValueLabel, 4, 2);
+  imageLayout->addWidget(saturationLabel, 3, 0);
+  imageLayout->addWidget(m_saturationSlider, 3, 1);
+  imageLayout->addWidget(m_saturationValueLabel, 3, 2);
 
   // Sharpness
   QLabel *sharpnessLabel = new QLabel(tr("Sharpness:"), m_imageGroup);
@@ -192,9 +203,9 @@ void CameraSettingsPanel::setupUi() {
   m_sharpnessValueLabel = new QLabel("50", m_imageGroup);
   m_sharpnessValueLabel->setMinimumWidth(40);
   m_sharpnessValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-  imageLayout->addWidget(sharpnessLabel, 5, 0);
-  imageLayout->addWidget(m_sharpnessSlider, 5, 1);
-  imageLayout->addWidget(m_sharpnessValueLabel, 5, 2);
+  imageLayout->addWidget(sharpnessLabel, 4, 0);
+  imageLayout->addWidget(m_sharpnessSlider, 4, 1);
+  imageLayout->addWidget(m_sharpnessValueLabel, 4, 2);
 
   // Hue
   QLabel *hueLabel = new QLabel(tr("Hue:"), m_imageGroup);
@@ -204,16 +215,14 @@ void CameraSettingsPanel::setupUi() {
   m_hueValueLabel = new QLabel("50", m_imageGroup);
   m_hueValueLabel->setMinimumWidth(40);
   m_hueValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-  imageLayout->addWidget(hueLabel, 6, 0);
-  imageLayout->addWidget(m_hueSlider, 6, 1);
-  imageLayout->addWidget(m_hueValueLabel, 6, 2);
+  imageLayout->addWidget(hueLabel, 5, 0);
+  imageLayout->addWidget(m_hueSlider, 5, 1);
+  imageLayout->addWidget(m_hueValueLabel, 5, 2);
 
   mainLayout->addWidget(m_imageGroup);
 
   connect(m_irCutCheckBox, &QCheckBox::toggled, this,
           &CameraSettingsPanel::onIrCutToggled);
-  connect(m_binningCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-          this, &CameraSettingsPanel::onBinningChanged);
   connect(m_brightnessSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onBrightnessChanged);
   connect(m_contrastSlider, &QSlider::valueChanged, this,
@@ -284,15 +293,19 @@ void CameraSettingsPanel::updateRangesForMode() {
   if (m_cameraMode == CameraMode::Tele) {
     m_exposureSlider->setRange(0, s_teleExposureValues.size() - 1);
     m_gainSlider->setRange(0, s_teleGainValues.size() - 1);
-    // Video recording only available on Tele
+    // Video recording and IR-Cut only available on Tele
     m_recButton->setEnabled(true);
     m_recButton->setToolTip(QString());
+    m_irCutCheckBox->setEnabled(true);
+    m_irCutCheckBox->setVisible(true);
   } else {
     m_exposureSlider->setRange(0, s_wideExposureValues.size() - 1);
     m_gainSlider->setRange(0, s_wideGainValues.size() - 1);
-    // Video recording not available on Wide
+    // Video recording and IR-Cut not available on Wide
     m_recButton->setEnabled(false);
     m_recButton->setToolTip(tr("Video recording only available on TELE camera"));
+    m_irCutCheckBox->setEnabled(false);
+    m_irCutCheckBox->setVisible(false);
   }
 
   m_exposureSlider->blockSignals(false);
@@ -359,43 +372,26 @@ void CameraSettingsPanel::updateValueLabels() {
   }
 }
 
-QString CameraSettingsPanel::formatExposureValue(int index) const {
-  const QVector<int> &values = (m_cameraMode == CameraMode::Tele)
-                                   ? s_teleExposureValues
-                                   : s_wideExposureValues;
+QString CameraSettingsPanel::formatExposureValue(int sliderIndex) const {
+  const auto &values = (m_cameraMode == CameraMode::Tele)
+                           ? s_teleExposureValues
+                           : s_wideExposureValues;
 
-  if (index < 0 || index >= values.size())
+  if (sliderIndex < 0 || sliderIndex >= values.size())
     return "---";
 
-  int us = values[index];
-
-  // Format as fraction of a second or seconds
-  if (us < 1000) {
-    return QString("1/%1s").arg(1000000 / us);
-  } else if (us < 1000000) {
-    int denom = 1000000 / us;
-    if (denom > 1)
-      return QString("1/%1s").arg(denom);
-    else
-      return QString("%1ms").arg(us / 1000);
-  } else {
-    double sec = us / 1000000.0;
-    if (sec == (int)sec)
-      return QString("%1s").arg((int)sec);
-    else
-      return QString("%1s").arg(sec, 0, 'f', 1);
-  }
+  return values[sliderIndex].second;
 }
 
-QString CameraSettingsPanel::formatGainValue(int index) const {
-  const QVector<int> &values = (m_cameraMode == CameraMode::Tele)
-                                   ? s_teleGainValues
-                                   : s_wideGainValues;
+QString CameraSettingsPanel::formatGainValue(int sliderIndex) const {
+  const auto &values = (m_cameraMode == CameraMode::Tele)
+                           ? s_teleGainValues
+                           : s_wideGainValues;
 
-  if (index < 0 || index >= values.size())
+  if (sliderIndex < 0 || sliderIndex >= values.size())
     return "---";
 
-  return QString::number(values[index]);
+  return QString::number(values[sliderIndex].second);
 }
 
 // === Slots ===
@@ -461,21 +457,29 @@ void CameraSettingsPanel::onExposureModeChanged(int index) {
   m_exposureSlider->setEnabled(manual);
 }
 
-void CameraSettingsPanel::onExposureSliderChanged(int value) {
-  m_exposureValueLabel->setText(formatExposureValue(value));
-
-  qWarning() << "[CameraSettingsPanel] onExposureSliderChanged" << value
-             << "m_controller=" << m_controller;
+void CameraSettingsPanel::onExposureSliderChanged(int sliderIndex) {
+  m_exposureValueLabel->setText(formatExposureValue(sliderIndex));
 
   if (!m_controller) {
     qWarning() << "[CameraSettingsPanel] ERROR: m_controller is null!";
     return;
   }
 
+  // Convert slider index to API index
+  const auto &values = (m_cameraMode == CameraMode::Tele)
+                           ? s_teleExposureValues
+                           : s_wideExposureValues;
+  if (sliderIndex < 0 || sliderIndex >= values.size())
+    return;
+
+  int apiIndex = values[sliderIndex].first;
+  qWarning() << "[CameraSettingsPanel] onExposureSliderChanged slider=" << sliderIndex
+             << "apiIndex=" << apiIndex;
+
   auto kind = (m_cameraMode == CameraMode::Tele)
                   ? DwarfCameraController::CameraKind::Tele
                   : DwarfCameraController::CameraKind::Wide;
-  m_controller->setExposureIndex(kind, value);
+  m_controller->setExposureIndex(kind, apiIndex);
 }
 
 void CameraSettingsPanel::onGainModeChanged(int index) {
@@ -495,31 +499,35 @@ void CameraSettingsPanel::onGainModeChanged(int index) {
   m_controller->fetchAllParams(kind);
 }
 
-void CameraSettingsPanel::onGainSliderChanged(int value) {
-  m_gainValueLabel->setText(formatGainValue(value));
+void CameraSettingsPanel::onGainSliderChanged(int sliderIndex) {
+  m_gainValueLabel->setText(formatGainValue(sliderIndex));
 
   if (!m_controller)
     return;
 
+  // Convert slider index to API index
+  const auto &values = (m_cameraMode == CameraMode::Tele)
+                           ? s_teleGainValues
+                           : s_wideGainValues;
+  if (sliderIndex < 0 || sliderIndex >= values.size())
+    return;
+
+  int apiIndex = values[sliderIndex].first;
+  qWarning() << "[CameraSettingsPanel] onGainSliderChanged slider=" << sliderIndex
+             << "apiIndex=" << apiIndex << "gainValue=" << values[sliderIndex].second;
+
   auto kind = (m_cameraMode == CameraMode::Tele)
                   ? DwarfCameraController::CameraKind::Tele
                   : DwarfCameraController::CameraKind::Wide;
-  m_controller->setGainIndex(kind, value);
+  m_controller->setGainIndex(kind, apiIndex);
 }
 
 void CameraSettingsPanel::onIrCutToggled(bool checked) {
-  if (!m_controller)
+  if (!m_controller || m_cameraMode != CameraMode::Tele)
     return;
 
-  auto kind = (m_cameraMode == CameraMode::Tele)
-                  ? DwarfCameraController::CameraKind::Tele
-                  : DwarfCameraController::CameraKind::Wide;
-  m_controller->setIrCut(kind, checked ? 1 : 0);
-}
-
-void CameraSettingsPanel::onBinningChanged(int index) {
-  // Binning requires camera restart - handled by MainWindow
-  Q_UNUSED(index);
+  // IR-Cut only available on Tele camera
+  m_controller->setIrCut(DwarfCameraController::CameraKind::Tele, checked ? 1 : 0);
 }
 
 void CameraSettingsPanel::onBrightnessChanged(int value) {
@@ -625,11 +633,27 @@ void CameraSettingsPanel::setExposureMode(int mode) {
   m_exposureSlider->setEnabled(mode == 1);
 }
 
-void CameraSettingsPanel::setExposureIndex(int index) {
+void CameraSettingsPanel::setExposureIndex(int apiIndex) {
+  // Convert API index to slider index
+  const auto &values = (m_cameraMode == CameraMode::Tele)
+                           ? s_teleExposureValues
+                           : s_wideExposureValues;
+  int sliderIndex = 0;
+  for (int i = 0; i < values.size(); ++i) {
+    if (values[i].first == apiIndex) {
+      sliderIndex = i;
+      break;
+    }
+    // Find closest match if exact not found
+    if (values[i].first <= apiIndex) {
+      sliderIndex = i;
+    }
+  }
+
   m_exposureSlider->blockSignals(true);
-  m_exposureSlider->setValue(index);
+  m_exposureSlider->setValue(sliderIndex);
   m_exposureSlider->blockSignals(false);
-  m_exposureValueLabel->setText(formatExposureValue(index));
+  m_exposureValueLabel->setText(formatExposureValue(sliderIndex));
 }
 
 void CameraSettingsPanel::setGainMode(int mode) {
@@ -639,23 +663,33 @@ void CameraSettingsPanel::setGainMode(int mode) {
   m_gainSlider->setEnabled(mode == 1);
 }
 
-void CameraSettingsPanel::setGainIndex(int index) {
+void CameraSettingsPanel::setGainIndex(int apiIndex) {
+  // Convert API index to slider index
+  const auto &values = (m_cameraMode == CameraMode::Tele)
+                           ? s_teleGainValues
+                           : s_wideGainValues;
+  int sliderIndex = 0;
+  for (int i = 0; i < values.size(); ++i) {
+    if (values[i].first == apiIndex) {
+      sliderIndex = i;
+      break;
+    }
+    // Find closest match if exact not found
+    if (values[i].first <= apiIndex) {
+      sliderIndex = i;
+    }
+  }
+
   m_gainSlider->blockSignals(true);
-  m_gainSlider->setValue(index);
+  m_gainSlider->setValue(sliderIndex);
   m_gainSlider->blockSignals(false);
-  m_gainValueLabel->setText(formatGainValue(index));
+  m_gainValueLabel->setText(formatGainValue(sliderIndex));
 }
 
 void CameraSettingsPanel::setIrCut(bool enabled) {
   m_irCutCheckBox->blockSignals(true);
   m_irCutCheckBox->setChecked(enabled);
   m_irCutCheckBox->blockSignals(false);
-}
-
-void CameraSettingsPanel::setBinning(int index) {
-  m_binningCombo->blockSignals(true);
-  m_binningCombo->setCurrentIndex(index);
-  m_binningCombo->blockSignals(false);
 }
 
 void CameraSettingsPanel::setBrightness(int value) {

@@ -79,4 +79,5 @@ private:
   quint32 cmdSetSaturationFor(CameraKind kind) const;
   quint32 cmdSetHueFor(CameraKind kind) const;
   quint32 cmdSetSharpnessFor(CameraKind kind) const;
+  quint32 cmdSetIrCutFor(CameraKind kind) const;
 };

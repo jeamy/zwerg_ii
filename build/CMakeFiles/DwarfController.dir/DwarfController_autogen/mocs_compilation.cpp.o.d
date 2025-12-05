@@ -554,6 +554,7 @@ CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o: \
  /home/lux/programming/pydwarf/build/DwarfController_autogen/7OIUYE7PDQ/moc_DwarfWebSocketClient.cpp \
  /home/lux/programming/pydwarf/build/DwarfController_autogen/YPKJ5OE7LN/moc_CameraSettingsPanel.cpp \
  /home/lux/programming/pydwarf/build/DwarfController_autogen/YPKJ5OE7LN/../../../src/ui/CameraSettingsPanel.h \
+ /usr/include/qt6/QtCore/QPair /usr/include/qt6/QtCore/qpair.h \
  /home/lux/programming/pydwarf/build/DwarfController_autogen/YPKJ5OE7LN/moc_MediaLightbox.cpp \
  /home/lux/programming/pydwarf/build/DwarfController_autogen/YPKJ5OE7LN/../../../src/ui/MediaLightbox.h \
  /usr/include/qt6/QtWidgets/QDialog /usr/include/qt6/QtWidgets/qdialog.h \

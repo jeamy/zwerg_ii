@@ -201,7 +201,7 @@ void DwarfCameraController::setIrCut(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   value = clampInt(value, 0, 1);
   p.set_ircut_value(value);
-  sendSetAllParams(kind);
+  sendSingleInt32(kind, cmdSetIrCutFor(kind), value);
 }
 
 void DwarfCameraController::setWhiteBalanceMode(CameraKind kind, int mode) {
@@ -475,6 +475,10 @@ quint32 DwarfCameraController::cmdSetHueFor(CameraKind kind) const {
 
 quint32 DwarfCameraController::cmdSetSharpnessFor(CameraKind kind) const {
   return (kind == CameraKind::Tele) ? 10023u : 12016u;  // SET_SHARPNESS
+}
+
+quint32 DwarfCameraController::cmdSetIrCutFor(CameraKind kind) const {
+  return (kind == CameraKind::Tele) ? 10031u : 12018u;  // SET_IRCUT
 }
 
 void DwarfCameraController::sendSingleInt32(CameraKind kind, quint32 cmd, int value) {

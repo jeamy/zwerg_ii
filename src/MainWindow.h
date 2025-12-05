@@ -104,6 +104,7 @@ private:
   void setupUi();
   void loadThumbnails();
   void setItemThumbnail(QListWidgetItem *item, const QByteArray &data);
+  void syncTimeWithDevice();
 
   QLineEdit *m_ipInput;
   QLineEdit *m_subnetInput;

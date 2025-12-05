@@ -30,7 +30,10 @@
 #include <QImage>
 #include <QListView>
 #include <QVector>
+#include <QDateTime>
 #include <cmath>
+
+#include "system.pb.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), m_wsClient(nullptr), m_dispatcher(nullptr),
@@ -826,9 +829,31 @@ void MainWindow::onWebSocketConnected() {
   updateStatusStyle("ok");
   statusBar()->showMessage(tr("Connected to DWARF II"));
 
+  // Sync time with DWARF device
+  syncTimeWithDevice();
+
   // Start streaming now that we are connected
   QString ip = m_ipInput->text().trimmed();
   startStreaming(ip);
+}
+
+void MainWindow::syncTimeWithDevice() {
+  if (!m_wsClient || !m_wsClient->isConnected()) {
+    return;
+  }
+
+  // CMD_SYSTEM_SET_TIME = 13000, MODULE_SYSTEM = 4
+  // Send current Unix timestamp
+  qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+  qWarning() << "[MainWindow] Syncing time with DWARF, timestamp:" << timestamp;
+
+  // Create ReqSetTime protobuf message
+  dwarf::ReqSetTime req;
+  req.set_timestamp(static_cast<uint64_t>(timestamp));
+  QByteArray data(req.ByteSizeLong(), '\0');
+  req.SerializeToArray(data.data(), data.size());
+
+  m_wsClient->sendCommand(4, 13000, data);  // MODULE_SYSTEM=4, CMD_SYSTEM_SET_TIME=13000
 }
 
 void MainWindow::onWebSocketDisconnected() {
