@@ -436,6 +436,19 @@ void MainWindow::setupUi() {
             }
           });
 
+  // Refresh media list when photo is taken
+  connect(m_cameraController, &DwarfCameraController::photoTaken, this,
+          [this](DwarfCameraController::CameraKind kind) {
+            qWarning() << "[MainWindow] Photo taken, refreshing media list";
+            Q_UNUSED(kind);
+            // Delay refresh slightly to allow DWARF to save the file
+            QTimer::singleShot(1500, this, [this]() {
+              if (m_httpClient) {
+                m_httpClient->fetchMediaList();
+              }
+            });
+          });
+
   // Connect camera mode changes to stream switching
   connect(m_cameraSettingsPanel, &CameraSettingsPanel::cameraModeChanged, this,
           [this](CameraSettingsPanel::CameraMode mode) {

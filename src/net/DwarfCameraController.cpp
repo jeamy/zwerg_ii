@@ -313,6 +313,14 @@ void DwarfCameraController::handleCameraMessage(quint32 moduleId, quint32 cmd,
   // Determine camera kind from module ID
   CameraKind kind = (moduleId == 1) ? CameraKind::Tele : CameraKind::Wide;
   
+  // Handle PHOTO response (10002 for Tele, 12022 for Wide)
+  if ((moduleId == 1 && cmd == 10002) || (moduleId == 2 && cmd == 12022)) {
+    qWarning() << "[DwarfCameraController] Photo taken for"
+               << (kind == CameraKind::Tele ? "Tele" : "Wide");
+    emit photoTaken(kind);
+    return;
+  }
+  
   // Handle GET_ALL_PARAMS response (10036 for Tele, 12029 for Wide)
   if ((moduleId == 1 && cmd == 10036) || (moduleId == 2 && cmd == 12029)) {
     dwarf::ResGetAllParams response;

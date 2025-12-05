@@ -52,6 +52,7 @@ public:
 signals:
   void errorOccurred(const QString &message);
   void allParamsReceived(CameraKind kind);  // Emitted when GET_ALL_PARAMS response arrives
+  void photoTaken(CameraKind kind);  // Emitted when photo is successfully taken
 
 private:
   DwarfWebSocketClient *m_client;
