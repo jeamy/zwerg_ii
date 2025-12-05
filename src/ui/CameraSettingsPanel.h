@@ -43,6 +43,9 @@ public:
   void setWhiteBalanceMode(int mode);
   void setWhiteBalanceTemperature(int index);
 
+  // Update all controls from the attached DwarfCameraController
+  void syncFromController();
+
 signals:
   void photoRequested();
   void recordRequested(bool recording);
@@ -72,7 +75,6 @@ private:
   void updateRangesForMode();
   void updateValueLabels();
   void updateButtonStates();
-  void syncFromController();
   QString formatExposureValue(int index) const;
   QString formatGainValue(int index) const;
 

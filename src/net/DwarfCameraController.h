@@ -43,8 +43,15 @@ public:
   int whiteBalanceMode(CameraKind kind) const;
   int whiteBalanceTemperatureIndex(CameraKind kind) const;
 
+  // Fetch all parameters from device (async, emits allParamsReceived when done)
+  void fetchAllParams(CameraKind kind);
+
+  // Handle incoming camera messages from WebSocket
+  void handleCameraMessage(quint32 moduleId, quint32 cmd, const QByteArray &data);
+
 signals:
   void errorOccurred(const QString &message);
+  void allParamsReceived(CameraKind kind);  // Emitted when GET_ALL_PARAMS response arrives
 
 private:
   DwarfWebSocketClient *m_client;
@@ -62,7 +69,9 @@ private:
   quint32 cmdStartRecordFor(CameraKind kind) const;
   quint32 cmdStopRecordFor(CameraKind kind) const;
   // Individual parameter commands
+  quint32 cmdSetExpModeFor(CameraKind kind) const;
   quint32 cmdSetExpFor(CameraKind kind) const;
+  quint32 cmdSetGainModeFor(CameraKind kind) const;
   quint32 cmdSetGainFor(CameraKind kind) const;
   quint32 cmdSetBrightnessFor(CameraKind kind) const;
   quint32 cmdSetContrastFor(CameraKind kind) const;

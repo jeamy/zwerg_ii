@@ -426,6 +426,16 @@ void MainWindow::setupUi() {
   m_cameraSettingsPanel = new CameraSettingsPanel(this);
   m_cameraSettingsPanel->setCameraController(m_cameraController);
 
+  // Sync UI when camera parameters are fetched from device
+  connect(m_cameraController, &DwarfCameraController::allParamsReceived, this,
+          [this](DwarfCameraController::CameraKind kind) {
+            qWarning() << "[MainWindow] allParamsReceived for"
+                       << (kind == DwarfCameraController::CameraKind::Tele ? "Tele" : "Wide");
+            if (m_cameraSettingsPanel) {
+              m_cameraSettingsPanel->syncFromController();
+            }
+          });
+
   // Connect camera mode changes to stream switching
   connect(m_cameraSettingsPanel, &CameraSettingsPanel::cameraModeChanged, this,
           [this](CameraSettingsPanel::CameraMode mode) {
@@ -1481,6 +1491,12 @@ void MainWindow::onPipStreamClicked() {
 void MainWindow::onCameraTeleMessage(uint32_t cmd, const QByteArray &data) {
   qWarning() << "[MainWindow] onCameraTeleMessage cmd" << cmd << "data size"
              << data.size();
+  
+  // Forward to camera controller for parameter handling
+  if (m_cameraController) {
+    m_cameraController->handleCameraMessage(1, cmd, data);
+  }
+  
   if (cmd == 10000) { // CMD_CAMERA_TELE_OPEN_CAMERA
     dwarf::ComResponse res;
     if (res.ParseFromArray(data.data(), data.size())) {
@@ -1501,6 +1517,11 @@ void MainWindow::onCameraTeleMessage(uint32_t cmd, const QByteArray &data) {
           m_streamNameOverlay->raise();
         if (m_pipStreamView)
           m_pipStreamView->raise();
+        
+        // Fetch current camera parameters to sync UI
+        if (m_cameraController) {
+          m_cameraController->fetchAllParams(DwarfCameraController::CameraKind::Tele);
+        }
       } else {
         qWarning() << "Failed to open Tele camera, code:" << res.code();
       }
@@ -1514,6 +1535,12 @@ void MainWindow::onCameraTeleMessage(uint32_t cmd, const QByteArray &data) {
 void MainWindow::onCameraWideMessage(uint32_t cmd, const QByteArray &data) {
   qWarning() << "[MainWindow] onCameraWideMessage cmd" << cmd << "data size"
              << data.size();
+  
+  // Forward to camera controller for parameter handling
+  if (m_cameraController) {
+    m_cameraController->handleCameraMessage(2, cmd, data);
+  }
+  
   if (cmd == 12000) { // CMD_CAMERA_WIDE_OPEN_CAMERA
     dwarf::ComResponse res;
     if (res.ParseFromArray(data.data(), data.size())) {
@@ -1533,6 +1560,11 @@ void MainWindow::onCameraWideMessage(uint32_t cmd, const QByteArray &data) {
           m_streamNameOverlay->raise();
         if (m_pipStreamView)
           m_pipStreamView->raise();
+        
+        // Fetch current camera parameters to sync UI
+        if (m_cameraController) {
+          m_cameraController->fetchAllParams(DwarfCameraController::CameraKind::Wide);
+        }
       } else {
         qWarning() << "Failed to open Wide camera, code:" << res.code();
       }

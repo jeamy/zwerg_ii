@@ -52,9 +52,6 @@ DwarfController_autogen/timestamp: /home/lux/programming/pydwarf/CMakeLists.txt 
   /home/lux/programming/pydwarf/src/ui/CameraSettingsPanel.h \
   /home/lux/programming/pydwarf/src/ui/MediaLightbox.cpp \
   /home/lux/programming/pydwarf/src/ui/MediaLightbox.h \
-  base.pb.h \
-  camera.pb.h \
-  /home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.h \
   /usr/bin/cmake \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \

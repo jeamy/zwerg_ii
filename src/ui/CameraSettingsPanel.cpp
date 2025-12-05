@@ -452,6 +452,10 @@ void CameraSettingsPanel::onExposureModeChanged(int index) {
                   : DwarfCameraController::CameraKind::Wide;
   m_controller->setExposureMode(kind, index);
 
+  // After switching Auto/Manual, fetch current parameters from camera so
+  // the GUI reflects whatever the device actually chose/clamped.
+  m_controller->fetchAllParams(kind);
+
   // Enable/disable manual controls
   bool manual = (index == 1);
   m_exposureSlider->setEnabled(manual);
@@ -486,6 +490,9 @@ void CameraSettingsPanel::onGainModeChanged(int index) {
   // Enable/disable manual controls
   bool manual = (index == 1);
   m_gainSlider->setEnabled(manual);
+
+  // Also refresh from camera after changing gain mode
+  m_controller->fetchAllParams(kind);
 }
 
 void CameraSettingsPanel::onGainSliderChanged(int value) {

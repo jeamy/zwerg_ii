@@ -47,23 +47,65 @@ message ReqSetAllParams {
 message ReqGetAllParams {
 }
 
-// Response mit allen Parametern
+// Einzelner Parameter in der Antwort
+message CommonParam {
+  bool has_auto = 1;      // Hat automatischen Modus
+  int32 auto_mode = 2;    // 0: Auto, 1: Manuell
+  int32 id = 3;           // Parameter-ID
+  int32 mode_index = 4;   // Modus-Index
+  int32 index = 5;        // Wert-Index
+  double continue_value = 6; // Kontinuierlicher Wert
+}
+
+// Response mit allen Parametern (offizielles Format)
 message ResGetAllParams {
-  int32 exp_mode = 1;
-  int32 exp_index = 2;
-  int32 gain_mode = 3;
-  int32 gain_index = 4;
-  int32 ircut_value = 5;
-  int32 wb_mode = 6;
-  int32 wb_index_type = 7;
-  int32 wb_index = 8;
-  int32 brightness = 9;
-  int32 contrast = 10;
-  int32 hue = 11;
-  int32 saturation = 12;
-  int32 sharpness = 13;
-  int32 jpg_quality = 14;
-  int32 code = 15;
+  repeated CommonParam all_params = 1;
+  int32 code = 2;
+}
+
+// Einzelne Parameter-Setter
+message ReqSetExpMode {
+  int32 mode = 1;  // 0: Auto, 1: Manual
+}
+
+message ReqSetExp {
+  int32 index = 1;  // Exposure index
+}
+
+message ReqSetGainMode {
+  int32 mode = 1;  // 0: Auto, 1: Manual
+}
+
+message ReqSetGain {
+  int32 index = 1;  // Gain index
+}
+
+message ReqSetBrightness {
+  int32 value = 1;  // B = (A + 100) * 255.0 / 200
+}
+
+message ReqSetContrast {
+  int32 value = 1;  // B = (A + 100) * 255.0 / 200
+}
+
+message ReqSetSaturation {
+  int32 value = 1;  // B = (A + 100) * 255.0 / 200
+}
+
+message ReqSetHue {
+  int32 value = 1;  // B = (A + 180) * 255.0 / 360
+}
+
+message ReqSetSharpness {
+  int32 value = 1;  // 0-100
+}
+
+message ReqSetIRCut {
+  int32 value = 1;  // 0: CUT, 1: PASS
+}
+
+message ReqSetWBMode {
+  int32 mode = 1;  // 0: Auto, 1: Manual
 }
 
 // Zeitraffer starten

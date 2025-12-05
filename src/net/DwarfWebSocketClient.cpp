@@ -57,9 +57,11 @@ void DwarfWebSocketClient::sendCommand(uint32_t moduleId, uint32_t cmd,
   }
 
   QByteArray packet = createPacket(moduleId, cmd, data);
-  m_webSocket.sendBinaryMessage(packet);
-  qDebug() << "Sent command - Module:" << moduleId << "Cmd:" << cmd
-           << "Size:" << packet.size();
+  qint64 bytesSent = m_webSocket.sendBinaryMessage(packet);
+  qWarning() << "[DwarfWebSocketClient] Sent command - Module:" << moduleId 
+             << "Cmd:" << cmd << "PacketSize:" << packet.size() 
+             << "BytesSent:" << bytesSent
+             << "PayloadHex:" << data.toHex();
 }
 
 void DwarfWebSocketClient::onConnected() {
@@ -81,9 +83,9 @@ void DwarfWebSocketClient::onBinaryMessageReceived(const QByteArray &message) {
     return;
   }
 
-  qDebug() << "Received - Module:" << packet.module_id()
-           << "Cmd:" << packet.cmd() << "Type:" << packet.type()
-           << "Data size:" << packet.data().size();
+  qWarning() << "[DwarfWebSocketClient] Received - Module:" << packet.module_id()
+             << "Cmd:" << packet.cmd() << "Type:" << packet.type()
+             << "Data size:" << packet.data().size();
 
   QByteArray data(packet.data().data(), packet.data().size());
   emit messageReceived(packet.module_id(), packet.cmd(), data);

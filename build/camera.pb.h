@@ -47,7 +47,7 @@ struct TableStruct_camera_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxiliaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[10]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[22]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -55,6 +55,9 @@ struct TableStruct_camera_2eproto {
 };
 extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_camera_2eproto;
 namespace dwarf {
+class CommonParam;
+struct CommonParamDefaultTypeInternal;
+extern CommonParamDefaultTypeInternal _CommonParam_default_instance_;
 class ReqBurst;
 struct ReqBurstDefaultTypeInternal;
 extern ReqBurstDefaultTypeInternal _ReqBurst_default_instance_;
@@ -70,6 +73,39 @@ extern ReqPhotoDefaultTypeInternal _ReqPhoto_default_instance_;
 class ReqSetAllParams;
 struct ReqSetAllParamsDefaultTypeInternal;
 extern ReqSetAllParamsDefaultTypeInternal _ReqSetAllParams_default_instance_;
+class ReqSetBrightness;
+struct ReqSetBrightnessDefaultTypeInternal;
+extern ReqSetBrightnessDefaultTypeInternal _ReqSetBrightness_default_instance_;
+class ReqSetContrast;
+struct ReqSetContrastDefaultTypeInternal;
+extern ReqSetContrastDefaultTypeInternal _ReqSetContrast_default_instance_;
+class ReqSetExp;
+struct ReqSetExpDefaultTypeInternal;
+extern ReqSetExpDefaultTypeInternal _ReqSetExp_default_instance_;
+class ReqSetExpMode;
+struct ReqSetExpModeDefaultTypeInternal;
+extern ReqSetExpModeDefaultTypeInternal _ReqSetExpMode_default_instance_;
+class ReqSetGain;
+struct ReqSetGainDefaultTypeInternal;
+extern ReqSetGainDefaultTypeInternal _ReqSetGain_default_instance_;
+class ReqSetGainMode;
+struct ReqSetGainModeDefaultTypeInternal;
+extern ReqSetGainModeDefaultTypeInternal _ReqSetGainMode_default_instance_;
+class ReqSetHue;
+struct ReqSetHueDefaultTypeInternal;
+extern ReqSetHueDefaultTypeInternal _ReqSetHue_default_instance_;
+class ReqSetIRCut;
+struct ReqSetIRCutDefaultTypeInternal;
+extern ReqSetIRCutDefaultTypeInternal _ReqSetIRCut_default_instance_;
+class ReqSetSaturation;
+struct ReqSetSaturationDefaultTypeInternal;
+extern ReqSetSaturationDefaultTypeInternal _ReqSetSaturation_default_instance_;
+class ReqSetSharpness;
+struct ReqSetSharpnessDefaultTypeInternal;
+extern ReqSetSharpnessDefaultTypeInternal _ReqSetSharpness_default_instance_;
+class ReqSetWBMode;
+struct ReqSetWBModeDefaultTypeInternal;
+extern ReqSetWBModeDefaultTypeInternal _ReqSetWBMode_default_instance_;
 class ReqStartRecord;
 struct ReqStartRecordDefaultTypeInternal;
 extern ReqStartRecordDefaultTypeInternal _ReqStartRecord_default_instance_;
@@ -87,11 +123,23 @@ struct ResSystemWorkingStateDefaultTypeInternal;
 extern ResSystemWorkingStateDefaultTypeInternal _ResSystemWorkingState_default_instance_;
 }  // namespace dwarf
 PROTOBUF_NAMESPACE_OPEN
+template<> ::dwarf::CommonParam* Arena::CreateMaybeMessage<::dwarf::CommonParam>(Arena*);
 template<> ::dwarf::ReqBurst* Arena::CreateMaybeMessage<::dwarf::ReqBurst>(Arena*);
 template<> ::dwarf::ReqGetAllParams* Arena::CreateMaybeMessage<::dwarf::ReqGetAllParams>(Arena*);
 template<> ::dwarf::ReqOpenCamera* Arena::CreateMaybeMessage<::dwarf::ReqOpenCamera>(Arena*);
 template<> ::dwarf::ReqPhoto* Arena::CreateMaybeMessage<::dwarf::ReqPhoto>(Arena*);
 template<> ::dwarf::ReqSetAllParams* Arena::CreateMaybeMessage<::dwarf::ReqSetAllParams>(Arena*);
+template<> ::dwarf::ReqSetBrightness* Arena::CreateMaybeMessage<::dwarf::ReqSetBrightness>(Arena*);
+template<> ::dwarf::ReqSetContrast* Arena::CreateMaybeMessage<::dwarf::ReqSetContrast>(Arena*);
+template<> ::dwarf::ReqSetExp* Arena::CreateMaybeMessage<::dwarf::ReqSetExp>(Arena*);
+template<> ::dwarf::ReqSetExpMode* Arena::CreateMaybeMessage<::dwarf::ReqSetExpMode>(Arena*);
+template<> ::dwarf::ReqSetGain* Arena::CreateMaybeMessage<::dwarf::ReqSetGain>(Arena*);
+template<> ::dwarf::ReqSetGainMode* Arena::CreateMaybeMessage<::dwarf::ReqSetGainMode>(Arena*);
+template<> ::dwarf::ReqSetHue* Arena::CreateMaybeMessage<::dwarf::ReqSetHue>(Arena*);
+template<> ::dwarf::ReqSetIRCut* Arena::CreateMaybeMessage<::dwarf::ReqSetIRCut>(Arena*);
+template<> ::dwarf::ReqSetSaturation* Arena::CreateMaybeMessage<::dwarf::ReqSetSaturation>(Arena*);
+template<> ::dwarf::ReqSetSharpness* Arena::CreateMaybeMessage<::dwarf::ReqSetSharpness>(Arena*);
+template<> ::dwarf::ReqSetWBMode* Arena::CreateMaybeMessage<::dwarf::ReqSetWBMode>(Arena*);
 template<> ::dwarf::ReqStartRecord* Arena::CreateMaybeMessage<::dwarf::ReqStartRecord>(Arena*);
 template<> ::dwarf::ReqStartTimelapsePhoto* Arena::CreateMaybeMessage<::dwarf::ReqStartTimelapsePhoto>(Arena*);
 template<> ::dwarf::ReqStopRecord* Arena::CreateMaybeMessage<::dwarf::ReqStopRecord>(Arena*);
@@ -1166,6 +1214,207 @@ class ReqGetAllParams final :
 };
 // -------------------------------------------------------------------
 
+class CommonParam final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.CommonParam) */ {
+ public:
+  inline CommonParam() : CommonParam(nullptr) {}
+  ~CommonParam() override;
+  explicit constexpr CommonParam(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  CommonParam(const CommonParam& from);
+  CommonParam(CommonParam&& from) noexcept
+    : CommonParam() {
+    *this = ::std::move(from);
+  }
+
+  inline CommonParam& operator=(const CommonParam& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline CommonParam& operator=(CommonParam&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const CommonParam& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const CommonParam* internal_default_instance() {
+    return reinterpret_cast<const CommonParam*>(
+               &_CommonParam_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    7;
+
+  friend void swap(CommonParam& a, CommonParam& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(CommonParam* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(CommonParam* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  CommonParam* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<CommonParam>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const CommonParam& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const CommonParam& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(CommonParam* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "dwarf.CommonParam";
+  }
+  protected:
+  explicit CommonParam(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kHasAutoFieldNumber = 1,
+    kAutoModeFieldNumber = 2,
+    kIdFieldNumber = 3,
+    kModeIndexFieldNumber = 4,
+    kContinueValueFieldNumber = 6,
+    kIndexFieldNumber = 5,
+  };
+  // bool has_auto = 1;
+  void clear_has_auto();
+  bool has_auto() const;
+  void set_has_auto(bool value);
+  private:
+  bool _internal_has_auto() const;
+  void _internal_set_has_auto(bool value);
+  public:
+
+  // int32 auto_mode = 2;
+  void clear_auto_mode();
+  int32_t auto_mode() const;
+  void set_auto_mode(int32_t value);
+  private:
+  int32_t _internal_auto_mode() const;
+  void _internal_set_auto_mode(int32_t value);
+  public:
+
+  // int32 id = 3;
+  void clear_id();
+  int32_t id() const;
+  void set_id(int32_t value);
+  private:
+  int32_t _internal_id() const;
+  void _internal_set_id(int32_t value);
+  public:
+
+  // int32 mode_index = 4;
+  void clear_mode_index();
+  int32_t mode_index() const;
+  void set_mode_index(int32_t value);
+  private:
+  int32_t _internal_mode_index() const;
+  void _internal_set_mode_index(int32_t value);
+  public:
+
+  // double continue_value = 6;
+  void clear_continue_value();
+  double continue_value() const;
+  void set_continue_value(double value);
+  private:
+  double _internal_continue_value() const;
+  void _internal_set_continue_value(double value);
+  public:
+
+  // int32 index = 5;
+  void clear_index();
+  int32_t index() const;
+  void set_index(int32_t value);
+  private:
+  int32_t _internal_index() const;
+  void _internal_set_index(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:dwarf.CommonParam)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  bool has_auto_;
+  int32_t auto_mode_;
+  int32_t id_;
+  int32_t mode_index_;
+  double continue_value_;
+  int32_t index_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_camera_2eproto;
+};
+// -------------------------------------------------------------------
+
 class ResGetAllParams final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.ResGetAllParams) */ {
  public:
@@ -1214,7 +1463,7 @@ class ResGetAllParams final :
                &_ResGetAllParams_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    8;
 
   friend void swap(ResGetAllParams& a, ResGetAllParams& b) {
     a.Swap(&b);
@@ -1288,149 +1537,28 @@ class ResGetAllParams final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kExpModeFieldNumber = 1,
-    kExpIndexFieldNumber = 2,
-    kGainModeFieldNumber = 3,
-    kGainIndexFieldNumber = 4,
-    kIrcutValueFieldNumber = 5,
-    kWbModeFieldNumber = 6,
-    kWbIndexTypeFieldNumber = 7,
-    kWbIndexFieldNumber = 8,
-    kBrightnessFieldNumber = 9,
-    kContrastFieldNumber = 10,
-    kHueFieldNumber = 11,
-    kSaturationFieldNumber = 12,
-    kSharpnessFieldNumber = 13,
-    kJpgQualityFieldNumber = 14,
-    kCodeFieldNumber = 15,
+    kAllParamsFieldNumber = 1,
+    kCodeFieldNumber = 2,
   };
-  // int32 exp_mode = 1;
-  void clear_exp_mode();
-  int32_t exp_mode() const;
-  void set_exp_mode(int32_t value);
+  // repeated .dwarf.CommonParam all_params = 1;
+  int all_params_size() const;
   private:
-  int32_t _internal_exp_mode() const;
-  void _internal_set_exp_mode(int32_t value);
+  int _internal_all_params_size() const;
   public:
-
-  // int32 exp_index = 2;
-  void clear_exp_index();
-  int32_t exp_index() const;
-  void set_exp_index(int32_t value);
+  void clear_all_params();
+  ::dwarf::CommonParam* mutable_all_params(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::dwarf::CommonParam >*
+      mutable_all_params();
   private:
-  int32_t _internal_exp_index() const;
-  void _internal_set_exp_index(int32_t value);
+  const ::dwarf::CommonParam& _internal_all_params(int index) const;
+  ::dwarf::CommonParam* _internal_add_all_params();
   public:
+  const ::dwarf::CommonParam& all_params(int index) const;
+  ::dwarf::CommonParam* add_all_params();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::dwarf::CommonParam >&
+      all_params() const;
 
-  // int32 gain_mode = 3;
-  void clear_gain_mode();
-  int32_t gain_mode() const;
-  void set_gain_mode(int32_t value);
-  private:
-  int32_t _internal_gain_mode() const;
-  void _internal_set_gain_mode(int32_t value);
-  public:
-
-  // int32 gain_index = 4;
-  void clear_gain_index();
-  int32_t gain_index() const;
-  void set_gain_index(int32_t value);
-  private:
-  int32_t _internal_gain_index() const;
-  void _internal_set_gain_index(int32_t value);
-  public:
-
-  // int32 ircut_value = 5;
-  void clear_ircut_value();
-  int32_t ircut_value() const;
-  void set_ircut_value(int32_t value);
-  private:
-  int32_t _internal_ircut_value() const;
-  void _internal_set_ircut_value(int32_t value);
-  public:
-
-  // int32 wb_mode = 6;
-  void clear_wb_mode();
-  int32_t wb_mode() const;
-  void set_wb_mode(int32_t value);
-  private:
-  int32_t _internal_wb_mode() const;
-  void _internal_set_wb_mode(int32_t value);
-  public:
-
-  // int32 wb_index_type = 7;
-  void clear_wb_index_type();
-  int32_t wb_index_type() const;
-  void set_wb_index_type(int32_t value);
-  private:
-  int32_t _internal_wb_index_type() const;
-  void _internal_set_wb_index_type(int32_t value);
-  public:
-
-  // int32 wb_index = 8;
-  void clear_wb_index();
-  int32_t wb_index() const;
-  void set_wb_index(int32_t value);
-  private:
-  int32_t _internal_wb_index() const;
-  void _internal_set_wb_index(int32_t value);
-  public:
-
-  // int32 brightness = 9;
-  void clear_brightness();
-  int32_t brightness() const;
-  void set_brightness(int32_t value);
-  private:
-  int32_t _internal_brightness() const;
-  void _internal_set_brightness(int32_t value);
-  public:
-
-  // int32 contrast = 10;
-  void clear_contrast();
-  int32_t contrast() const;
-  void set_contrast(int32_t value);
-  private:
-  int32_t _internal_contrast() const;
-  void _internal_set_contrast(int32_t value);
-  public:
-
-  // int32 hue = 11;
-  void clear_hue();
-  int32_t hue() const;
-  void set_hue(int32_t value);
-  private:
-  int32_t _internal_hue() const;
-  void _internal_set_hue(int32_t value);
-  public:
-
-  // int32 saturation = 12;
-  void clear_saturation();
-  int32_t saturation() const;
-  void set_saturation(int32_t value);
-  private:
-  int32_t _internal_saturation() const;
-  void _internal_set_saturation(int32_t value);
-  public:
-
-  // int32 sharpness = 13;
-  void clear_sharpness();
-  int32_t sharpness() const;
-  void set_sharpness(int32_t value);
-  private:
-  int32_t _internal_sharpness() const;
-  void _internal_set_sharpness(int32_t value);
-  public:
-
-  // int32 jpg_quality = 14;
-  void clear_jpg_quality();
-  int32_t jpg_quality() const;
-  void set_jpg_quality(int32_t value);
-  private:
-  int32_t _internal_jpg_quality() const;
-  void _internal_set_jpg_quality(int32_t value);
-  public:
-
-  // int32 code = 15;
+  // int32 code = 2;
   void clear_code();
   int32_t code() const;
   void set_code(int32_t value);
@@ -1446,21 +1574,1614 @@ class ResGetAllParams final :
   template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
-  int32_t exp_mode_;
-  int32_t exp_index_;
-  int32_t gain_mode_;
-  int32_t gain_index_;
-  int32_t ircut_value_;
-  int32_t wb_mode_;
-  int32_t wb_index_type_;
-  int32_t wb_index_;
-  int32_t brightness_;
-  int32_t contrast_;
-  int32_t hue_;
-  int32_t saturation_;
-  int32_t sharpness_;
-  int32_t jpg_quality_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::dwarf::CommonParam > all_params_;
   int32_t code_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_camera_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ReqSetExpMode final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.ReqSetExpMode) */ {
+ public:
+  inline ReqSetExpMode() : ReqSetExpMode(nullptr) {}
+  ~ReqSetExpMode() override;
+  explicit constexpr ReqSetExpMode(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ReqSetExpMode(const ReqSetExpMode& from);
+  ReqSetExpMode(ReqSetExpMode&& from) noexcept
+    : ReqSetExpMode() {
+    *this = ::std::move(from);
+  }
+
+  inline ReqSetExpMode& operator=(const ReqSetExpMode& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ReqSetExpMode& operator=(ReqSetExpMode&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ReqSetExpMode& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ReqSetExpMode* internal_default_instance() {
+    return reinterpret_cast<const ReqSetExpMode*>(
+               &_ReqSetExpMode_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    9;
+
+  friend void swap(ReqSetExpMode& a, ReqSetExpMode& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ReqSetExpMode* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ReqSetExpMode* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ReqSetExpMode* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ReqSetExpMode>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ReqSetExpMode& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const ReqSetExpMode& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ReqSetExpMode* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "dwarf.ReqSetExpMode";
+  }
+  protected:
+  explicit ReqSetExpMode(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kModeFieldNumber = 1,
+  };
+  // int32 mode = 1;
+  void clear_mode();
+  int32_t mode() const;
+  void set_mode(int32_t value);
+  private:
+  int32_t _internal_mode() const;
+  void _internal_set_mode(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:dwarf.ReqSetExpMode)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  int32_t mode_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_camera_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ReqSetExp final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.ReqSetExp) */ {
+ public:
+  inline ReqSetExp() : ReqSetExp(nullptr) {}
+  ~ReqSetExp() override;
+  explicit constexpr ReqSetExp(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ReqSetExp(const ReqSetExp& from);
+  ReqSetExp(ReqSetExp&& from) noexcept
+    : ReqSetExp() {
+    *this = ::std::move(from);
+  }
+
+  inline ReqSetExp& operator=(const ReqSetExp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ReqSetExp& operator=(ReqSetExp&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ReqSetExp& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ReqSetExp* internal_default_instance() {
+    return reinterpret_cast<const ReqSetExp*>(
+               &_ReqSetExp_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    10;
+
+  friend void swap(ReqSetExp& a, ReqSetExp& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ReqSetExp* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ReqSetExp* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ReqSetExp* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ReqSetExp>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ReqSetExp& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const ReqSetExp& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ReqSetExp* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "dwarf.ReqSetExp";
+  }
+  protected:
+  explicit ReqSetExp(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kIndexFieldNumber = 1,
+  };
+  // int32 index = 1;
+  void clear_index();
+  int32_t index() const;
+  void set_index(int32_t value);
+  private:
+  int32_t _internal_index() const;
+  void _internal_set_index(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:dwarf.ReqSetExp)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  int32_t index_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_camera_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ReqSetGainMode final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.ReqSetGainMode) */ {
+ public:
+  inline ReqSetGainMode() : ReqSetGainMode(nullptr) {}
+  ~ReqSetGainMode() override;
+  explicit constexpr ReqSetGainMode(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ReqSetGainMode(const ReqSetGainMode& from);
+  ReqSetGainMode(ReqSetGainMode&& from) noexcept
+    : ReqSetGainMode() {
+    *this = ::std::move(from);
+  }
+
+  inline ReqSetGainMode& operator=(const ReqSetGainMode& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ReqSetGainMode& operator=(ReqSetGainMode&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ReqSetGainMode& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ReqSetGainMode* internal_default_instance() {
+    return reinterpret_cast<const ReqSetGainMode*>(
+               &_ReqSetGainMode_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    11;
+
+  friend void swap(ReqSetGainMode& a, ReqSetGainMode& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ReqSetGainMode* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ReqSetGainMode* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ReqSetGainMode* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ReqSetGainMode>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ReqSetGainMode& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const ReqSetGainMode& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ReqSetGainMode* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "dwarf.ReqSetGainMode";
+  }
+  protected:
+  explicit ReqSetGainMode(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kModeFieldNumber = 1,
+  };
+  // int32 mode = 1;
+  void clear_mode();
+  int32_t mode() const;
+  void set_mode(int32_t value);
+  private:
+  int32_t _internal_mode() const;
+  void _internal_set_mode(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:dwarf.ReqSetGainMode)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  int32_t mode_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_camera_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ReqSetGain final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.ReqSetGain) */ {
+ public:
+  inline ReqSetGain() : ReqSetGain(nullptr) {}
+  ~ReqSetGain() override;
+  explicit constexpr ReqSetGain(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ReqSetGain(const ReqSetGain& from);
+  ReqSetGain(ReqSetGain&& from) noexcept
+    : ReqSetGain() {
+    *this = ::std::move(from);
+  }
+
+  inline ReqSetGain& operator=(const ReqSetGain& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ReqSetGain& operator=(ReqSetGain&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ReqSetGain& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ReqSetGain* internal_default_instance() {
+    return reinterpret_cast<const ReqSetGain*>(
+               &_ReqSetGain_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    12;
+
+  friend void swap(ReqSetGain& a, ReqSetGain& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ReqSetGain* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ReqSetGain* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ReqSetGain* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ReqSetGain>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ReqSetGain& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const ReqSetGain& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ReqSetGain* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "dwarf.ReqSetGain";
+  }
+  protected:
+  explicit ReqSetGain(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kIndexFieldNumber = 1,
+  };
+  // int32 index = 1;
+  void clear_index();
+  int32_t index() const;
+  void set_index(int32_t value);
+  private:
+  int32_t _internal_index() const;
+  void _internal_set_index(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:dwarf.ReqSetGain)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  int32_t index_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_camera_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ReqSetBrightness final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.ReqSetBrightness) */ {
+ public:
+  inline ReqSetBrightness() : ReqSetBrightness(nullptr) {}
+  ~ReqSetBrightness() override;
+  explicit constexpr ReqSetBrightness(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ReqSetBrightness(const ReqSetBrightness& from);
+  ReqSetBrightness(ReqSetBrightness&& from) noexcept
+    : ReqSetBrightness() {
+    *this = ::std::move(from);
+  }
+
+  inline ReqSetBrightness& operator=(const ReqSetBrightness& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ReqSetBrightness& operator=(ReqSetBrightness&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ReqSetBrightness& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ReqSetBrightness* internal_default_instance() {
+    return reinterpret_cast<const ReqSetBrightness*>(
+               &_ReqSetBrightness_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    13;
+
+  friend void swap(ReqSetBrightness& a, ReqSetBrightness& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ReqSetBrightness* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ReqSetBrightness* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ReqSetBrightness* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ReqSetBrightness>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ReqSetBrightness& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const ReqSetBrightness& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ReqSetBrightness* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "dwarf.ReqSetBrightness";
+  }
+  protected:
+  explicit ReqSetBrightness(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kValueFieldNumber = 1,
+  };
+  // int32 value = 1;
+  void clear_value();
+  int32_t value() const;
+  void set_value(int32_t value);
+  private:
+  int32_t _internal_value() const;
+  void _internal_set_value(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:dwarf.ReqSetBrightness)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  int32_t value_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_camera_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ReqSetContrast final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.ReqSetContrast) */ {
+ public:
+  inline ReqSetContrast() : ReqSetContrast(nullptr) {}
+  ~ReqSetContrast() override;
+  explicit constexpr ReqSetContrast(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ReqSetContrast(const ReqSetContrast& from);
+  ReqSetContrast(ReqSetContrast&& from) noexcept
+    : ReqSetContrast() {
+    *this = ::std::move(from);
+  }
+
+  inline ReqSetContrast& operator=(const ReqSetContrast& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ReqSetContrast& operator=(ReqSetContrast&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ReqSetContrast& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ReqSetContrast* internal_default_instance() {
+    return reinterpret_cast<const ReqSetContrast*>(
+               &_ReqSetContrast_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    14;
+
+  friend void swap(ReqSetContrast& a, ReqSetContrast& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ReqSetContrast* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ReqSetContrast* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ReqSetContrast* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ReqSetContrast>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ReqSetContrast& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const ReqSetContrast& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ReqSetContrast* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "dwarf.ReqSetContrast";
+  }
+  protected:
+  explicit ReqSetContrast(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kValueFieldNumber = 1,
+  };
+  // int32 value = 1;
+  void clear_value();
+  int32_t value() const;
+  void set_value(int32_t value);
+  private:
+  int32_t _internal_value() const;
+  void _internal_set_value(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:dwarf.ReqSetContrast)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  int32_t value_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_camera_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ReqSetSaturation final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.ReqSetSaturation) */ {
+ public:
+  inline ReqSetSaturation() : ReqSetSaturation(nullptr) {}
+  ~ReqSetSaturation() override;
+  explicit constexpr ReqSetSaturation(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ReqSetSaturation(const ReqSetSaturation& from);
+  ReqSetSaturation(ReqSetSaturation&& from) noexcept
+    : ReqSetSaturation() {
+    *this = ::std::move(from);
+  }
+
+  inline ReqSetSaturation& operator=(const ReqSetSaturation& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ReqSetSaturation& operator=(ReqSetSaturation&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ReqSetSaturation& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ReqSetSaturation* internal_default_instance() {
+    return reinterpret_cast<const ReqSetSaturation*>(
+               &_ReqSetSaturation_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    15;
+
+  friend void swap(ReqSetSaturation& a, ReqSetSaturation& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ReqSetSaturation* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ReqSetSaturation* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ReqSetSaturation* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ReqSetSaturation>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ReqSetSaturation& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const ReqSetSaturation& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ReqSetSaturation* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "dwarf.ReqSetSaturation";
+  }
+  protected:
+  explicit ReqSetSaturation(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kValueFieldNumber = 1,
+  };
+  // int32 value = 1;
+  void clear_value();
+  int32_t value() const;
+  void set_value(int32_t value);
+  private:
+  int32_t _internal_value() const;
+  void _internal_set_value(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:dwarf.ReqSetSaturation)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  int32_t value_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_camera_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ReqSetHue final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.ReqSetHue) */ {
+ public:
+  inline ReqSetHue() : ReqSetHue(nullptr) {}
+  ~ReqSetHue() override;
+  explicit constexpr ReqSetHue(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ReqSetHue(const ReqSetHue& from);
+  ReqSetHue(ReqSetHue&& from) noexcept
+    : ReqSetHue() {
+    *this = ::std::move(from);
+  }
+
+  inline ReqSetHue& operator=(const ReqSetHue& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ReqSetHue& operator=(ReqSetHue&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ReqSetHue& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ReqSetHue* internal_default_instance() {
+    return reinterpret_cast<const ReqSetHue*>(
+               &_ReqSetHue_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    16;
+
+  friend void swap(ReqSetHue& a, ReqSetHue& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ReqSetHue* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ReqSetHue* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ReqSetHue* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ReqSetHue>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ReqSetHue& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const ReqSetHue& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ReqSetHue* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "dwarf.ReqSetHue";
+  }
+  protected:
+  explicit ReqSetHue(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kValueFieldNumber = 1,
+  };
+  // int32 value = 1;
+  void clear_value();
+  int32_t value() const;
+  void set_value(int32_t value);
+  private:
+  int32_t _internal_value() const;
+  void _internal_set_value(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:dwarf.ReqSetHue)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  int32_t value_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_camera_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ReqSetSharpness final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.ReqSetSharpness) */ {
+ public:
+  inline ReqSetSharpness() : ReqSetSharpness(nullptr) {}
+  ~ReqSetSharpness() override;
+  explicit constexpr ReqSetSharpness(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ReqSetSharpness(const ReqSetSharpness& from);
+  ReqSetSharpness(ReqSetSharpness&& from) noexcept
+    : ReqSetSharpness() {
+    *this = ::std::move(from);
+  }
+
+  inline ReqSetSharpness& operator=(const ReqSetSharpness& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ReqSetSharpness& operator=(ReqSetSharpness&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ReqSetSharpness& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ReqSetSharpness* internal_default_instance() {
+    return reinterpret_cast<const ReqSetSharpness*>(
+               &_ReqSetSharpness_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    17;
+
+  friend void swap(ReqSetSharpness& a, ReqSetSharpness& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ReqSetSharpness* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ReqSetSharpness* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ReqSetSharpness* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ReqSetSharpness>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ReqSetSharpness& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const ReqSetSharpness& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ReqSetSharpness* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "dwarf.ReqSetSharpness";
+  }
+  protected:
+  explicit ReqSetSharpness(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kValueFieldNumber = 1,
+  };
+  // int32 value = 1;
+  void clear_value();
+  int32_t value() const;
+  void set_value(int32_t value);
+  private:
+  int32_t _internal_value() const;
+  void _internal_set_value(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:dwarf.ReqSetSharpness)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  int32_t value_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_camera_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ReqSetIRCut final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.ReqSetIRCut) */ {
+ public:
+  inline ReqSetIRCut() : ReqSetIRCut(nullptr) {}
+  ~ReqSetIRCut() override;
+  explicit constexpr ReqSetIRCut(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ReqSetIRCut(const ReqSetIRCut& from);
+  ReqSetIRCut(ReqSetIRCut&& from) noexcept
+    : ReqSetIRCut() {
+    *this = ::std::move(from);
+  }
+
+  inline ReqSetIRCut& operator=(const ReqSetIRCut& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ReqSetIRCut& operator=(ReqSetIRCut&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ReqSetIRCut& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ReqSetIRCut* internal_default_instance() {
+    return reinterpret_cast<const ReqSetIRCut*>(
+               &_ReqSetIRCut_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    18;
+
+  friend void swap(ReqSetIRCut& a, ReqSetIRCut& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ReqSetIRCut* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ReqSetIRCut* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ReqSetIRCut* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ReqSetIRCut>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ReqSetIRCut& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const ReqSetIRCut& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ReqSetIRCut* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "dwarf.ReqSetIRCut";
+  }
+  protected:
+  explicit ReqSetIRCut(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kValueFieldNumber = 1,
+  };
+  // int32 value = 1;
+  void clear_value();
+  int32_t value() const;
+  void set_value(int32_t value);
+  private:
+  int32_t _internal_value() const;
+  void _internal_set_value(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:dwarf.ReqSetIRCut)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  int32_t value_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_camera_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ReqSetWBMode final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:dwarf.ReqSetWBMode) */ {
+ public:
+  inline ReqSetWBMode() : ReqSetWBMode(nullptr) {}
+  ~ReqSetWBMode() override;
+  explicit constexpr ReqSetWBMode(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ReqSetWBMode(const ReqSetWBMode& from);
+  ReqSetWBMode(ReqSetWBMode&& from) noexcept
+    : ReqSetWBMode() {
+    *this = ::std::move(from);
+  }
+
+  inline ReqSetWBMode& operator=(const ReqSetWBMode& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ReqSetWBMode& operator=(ReqSetWBMode&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ReqSetWBMode& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ReqSetWBMode* internal_default_instance() {
+    return reinterpret_cast<const ReqSetWBMode*>(
+               &_ReqSetWBMode_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    19;
+
+  friend void swap(ReqSetWBMode& a, ReqSetWBMode& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ReqSetWBMode* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ReqSetWBMode* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ReqSetWBMode* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ReqSetWBMode>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ReqSetWBMode& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const ReqSetWBMode& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ReqSetWBMode* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "dwarf.ReqSetWBMode";
+  }
+  protected:
+  explicit ReqSetWBMode(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kModeFieldNumber = 1,
+  };
+  // int32 mode = 1;
+  void clear_mode();
+  int32_t mode() const;
+  void set_mode(int32_t value);
+  private:
+  int32_t _internal_mode() const;
+  void _internal_set_mode(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:dwarf.ReqSetWBMode)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  int32_t mode_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_camera_2eproto;
 };
@@ -1514,7 +3235,7 @@ class ReqStartTimelapsePhoto final :
                &_ReqStartTimelapsePhoto_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    20;
 
   friend void swap(ReqStartTimelapsePhoto& a, ReqStartTimelapsePhoto& b) {
     a.Swap(&b);
@@ -1671,7 +3392,7 @@ class ResSystemWorkingState final :
                &_ResSystemWorkingState_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    21;
 
   friend void swap(ResSystemWorkingState& a, ResSystemWorkingState& b) {
     a.Swap(&b);
@@ -2155,289 +3876,173 @@ inline void ReqSetAllParams::set_jpg_quality(int32_t value) {
 
 // -------------------------------------------------------------------
 
+// CommonParam
+
+// bool has_auto = 1;
+inline void CommonParam::clear_has_auto() {
+  has_auto_ = false;
+}
+inline bool CommonParam::_internal_has_auto() const {
+  return has_auto_;
+}
+inline bool CommonParam::has_auto() const {
+  // @@protoc_insertion_point(field_get:dwarf.CommonParam.has_auto)
+  return _internal_has_auto();
+}
+inline void CommonParam::_internal_set_has_auto(bool value) {
+  
+  has_auto_ = value;
+}
+inline void CommonParam::set_has_auto(bool value) {
+  _internal_set_has_auto(value);
+  // @@protoc_insertion_point(field_set:dwarf.CommonParam.has_auto)
+}
+
+// int32 auto_mode = 2;
+inline void CommonParam::clear_auto_mode() {
+  auto_mode_ = 0;
+}
+inline int32_t CommonParam::_internal_auto_mode() const {
+  return auto_mode_;
+}
+inline int32_t CommonParam::auto_mode() const {
+  // @@protoc_insertion_point(field_get:dwarf.CommonParam.auto_mode)
+  return _internal_auto_mode();
+}
+inline void CommonParam::_internal_set_auto_mode(int32_t value) {
+  
+  auto_mode_ = value;
+}
+inline void CommonParam::set_auto_mode(int32_t value) {
+  _internal_set_auto_mode(value);
+  // @@protoc_insertion_point(field_set:dwarf.CommonParam.auto_mode)
+}
+
+// int32 id = 3;
+inline void CommonParam::clear_id() {
+  id_ = 0;
+}
+inline int32_t CommonParam::_internal_id() const {
+  return id_;
+}
+inline int32_t CommonParam::id() const {
+  // @@protoc_insertion_point(field_get:dwarf.CommonParam.id)
+  return _internal_id();
+}
+inline void CommonParam::_internal_set_id(int32_t value) {
+  
+  id_ = value;
+}
+inline void CommonParam::set_id(int32_t value) {
+  _internal_set_id(value);
+  // @@protoc_insertion_point(field_set:dwarf.CommonParam.id)
+}
+
+// int32 mode_index = 4;
+inline void CommonParam::clear_mode_index() {
+  mode_index_ = 0;
+}
+inline int32_t CommonParam::_internal_mode_index() const {
+  return mode_index_;
+}
+inline int32_t CommonParam::mode_index() const {
+  // @@protoc_insertion_point(field_get:dwarf.CommonParam.mode_index)
+  return _internal_mode_index();
+}
+inline void CommonParam::_internal_set_mode_index(int32_t value) {
+  
+  mode_index_ = value;
+}
+inline void CommonParam::set_mode_index(int32_t value) {
+  _internal_set_mode_index(value);
+  // @@protoc_insertion_point(field_set:dwarf.CommonParam.mode_index)
+}
+
+// int32 index = 5;
+inline void CommonParam::clear_index() {
+  index_ = 0;
+}
+inline int32_t CommonParam::_internal_index() const {
+  return index_;
+}
+inline int32_t CommonParam::index() const {
+  // @@protoc_insertion_point(field_get:dwarf.CommonParam.index)
+  return _internal_index();
+}
+inline void CommonParam::_internal_set_index(int32_t value) {
+  
+  index_ = value;
+}
+inline void CommonParam::set_index(int32_t value) {
+  _internal_set_index(value);
+  // @@protoc_insertion_point(field_set:dwarf.CommonParam.index)
+}
+
+// double continue_value = 6;
+inline void CommonParam::clear_continue_value() {
+  continue_value_ = 0;
+}
+inline double CommonParam::_internal_continue_value() const {
+  return continue_value_;
+}
+inline double CommonParam::continue_value() const {
+  // @@protoc_insertion_point(field_get:dwarf.CommonParam.continue_value)
+  return _internal_continue_value();
+}
+inline void CommonParam::_internal_set_continue_value(double value) {
+  
+  continue_value_ = value;
+}
+inline void CommonParam::set_continue_value(double value) {
+  _internal_set_continue_value(value);
+  // @@protoc_insertion_point(field_set:dwarf.CommonParam.continue_value)
+}
+
+// -------------------------------------------------------------------
+
 // ResGetAllParams
 
-// int32 exp_mode = 1;
-inline void ResGetAllParams::clear_exp_mode() {
-  exp_mode_ = 0;
+// repeated .dwarf.CommonParam all_params = 1;
+inline int ResGetAllParams::_internal_all_params_size() const {
+  return all_params_.size();
 }
-inline int32_t ResGetAllParams::_internal_exp_mode() const {
-  return exp_mode_;
+inline int ResGetAllParams::all_params_size() const {
+  return _internal_all_params_size();
 }
-inline int32_t ResGetAllParams::exp_mode() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.exp_mode)
-  return _internal_exp_mode();
+inline void ResGetAllParams::clear_all_params() {
+  all_params_.Clear();
 }
-inline void ResGetAllParams::_internal_set_exp_mode(int32_t value) {
-  
-  exp_mode_ = value;
+inline ::dwarf::CommonParam* ResGetAllParams::mutable_all_params(int index) {
+  // @@protoc_insertion_point(field_mutable:dwarf.ResGetAllParams.all_params)
+  return all_params_.Mutable(index);
 }
-inline void ResGetAllParams::set_exp_mode(int32_t value) {
-  _internal_set_exp_mode(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.exp_mode)
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::dwarf::CommonParam >*
+ResGetAllParams::mutable_all_params() {
+  // @@protoc_insertion_point(field_mutable_list:dwarf.ResGetAllParams.all_params)
+  return &all_params_;
 }
-
-// int32 exp_index = 2;
-inline void ResGetAllParams::clear_exp_index() {
-  exp_index_ = 0;
+inline const ::dwarf::CommonParam& ResGetAllParams::_internal_all_params(int index) const {
+  return all_params_.Get(index);
 }
-inline int32_t ResGetAllParams::_internal_exp_index() const {
-  return exp_index_;
+inline const ::dwarf::CommonParam& ResGetAllParams::all_params(int index) const {
+  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.all_params)
+  return _internal_all_params(index);
 }
-inline int32_t ResGetAllParams::exp_index() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.exp_index)
-  return _internal_exp_index();
+inline ::dwarf::CommonParam* ResGetAllParams::_internal_add_all_params() {
+  return all_params_.Add();
 }
-inline void ResGetAllParams::_internal_set_exp_index(int32_t value) {
-  
-  exp_index_ = value;
+inline ::dwarf::CommonParam* ResGetAllParams::add_all_params() {
+  ::dwarf::CommonParam* _add = _internal_add_all_params();
+  // @@protoc_insertion_point(field_add:dwarf.ResGetAllParams.all_params)
+  return _add;
 }
-inline void ResGetAllParams::set_exp_index(int32_t value) {
-  _internal_set_exp_index(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.exp_index)
-}
-
-// int32 gain_mode = 3;
-inline void ResGetAllParams::clear_gain_mode() {
-  gain_mode_ = 0;
-}
-inline int32_t ResGetAllParams::_internal_gain_mode() const {
-  return gain_mode_;
-}
-inline int32_t ResGetAllParams::gain_mode() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.gain_mode)
-  return _internal_gain_mode();
-}
-inline void ResGetAllParams::_internal_set_gain_mode(int32_t value) {
-  
-  gain_mode_ = value;
-}
-inline void ResGetAllParams::set_gain_mode(int32_t value) {
-  _internal_set_gain_mode(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.gain_mode)
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::dwarf::CommonParam >&
+ResGetAllParams::all_params() const {
+  // @@protoc_insertion_point(field_list:dwarf.ResGetAllParams.all_params)
+  return all_params_;
 }
 
-// int32 gain_index = 4;
-inline void ResGetAllParams::clear_gain_index() {
-  gain_index_ = 0;
-}
-inline int32_t ResGetAllParams::_internal_gain_index() const {
-  return gain_index_;
-}
-inline int32_t ResGetAllParams::gain_index() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.gain_index)
-  return _internal_gain_index();
-}
-inline void ResGetAllParams::_internal_set_gain_index(int32_t value) {
-  
-  gain_index_ = value;
-}
-inline void ResGetAllParams::set_gain_index(int32_t value) {
-  _internal_set_gain_index(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.gain_index)
-}
-
-// int32 ircut_value = 5;
-inline void ResGetAllParams::clear_ircut_value() {
-  ircut_value_ = 0;
-}
-inline int32_t ResGetAllParams::_internal_ircut_value() const {
-  return ircut_value_;
-}
-inline int32_t ResGetAllParams::ircut_value() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.ircut_value)
-  return _internal_ircut_value();
-}
-inline void ResGetAllParams::_internal_set_ircut_value(int32_t value) {
-  
-  ircut_value_ = value;
-}
-inline void ResGetAllParams::set_ircut_value(int32_t value) {
-  _internal_set_ircut_value(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.ircut_value)
-}
-
-// int32 wb_mode = 6;
-inline void ResGetAllParams::clear_wb_mode() {
-  wb_mode_ = 0;
-}
-inline int32_t ResGetAllParams::_internal_wb_mode() const {
-  return wb_mode_;
-}
-inline int32_t ResGetAllParams::wb_mode() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.wb_mode)
-  return _internal_wb_mode();
-}
-inline void ResGetAllParams::_internal_set_wb_mode(int32_t value) {
-  
-  wb_mode_ = value;
-}
-inline void ResGetAllParams::set_wb_mode(int32_t value) {
-  _internal_set_wb_mode(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.wb_mode)
-}
-
-// int32 wb_index_type = 7;
-inline void ResGetAllParams::clear_wb_index_type() {
-  wb_index_type_ = 0;
-}
-inline int32_t ResGetAllParams::_internal_wb_index_type() const {
-  return wb_index_type_;
-}
-inline int32_t ResGetAllParams::wb_index_type() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.wb_index_type)
-  return _internal_wb_index_type();
-}
-inline void ResGetAllParams::_internal_set_wb_index_type(int32_t value) {
-  
-  wb_index_type_ = value;
-}
-inline void ResGetAllParams::set_wb_index_type(int32_t value) {
-  _internal_set_wb_index_type(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.wb_index_type)
-}
-
-// int32 wb_index = 8;
-inline void ResGetAllParams::clear_wb_index() {
-  wb_index_ = 0;
-}
-inline int32_t ResGetAllParams::_internal_wb_index() const {
-  return wb_index_;
-}
-inline int32_t ResGetAllParams::wb_index() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.wb_index)
-  return _internal_wb_index();
-}
-inline void ResGetAllParams::_internal_set_wb_index(int32_t value) {
-  
-  wb_index_ = value;
-}
-inline void ResGetAllParams::set_wb_index(int32_t value) {
-  _internal_set_wb_index(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.wb_index)
-}
-
-// int32 brightness = 9;
-inline void ResGetAllParams::clear_brightness() {
-  brightness_ = 0;
-}
-inline int32_t ResGetAllParams::_internal_brightness() const {
-  return brightness_;
-}
-inline int32_t ResGetAllParams::brightness() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.brightness)
-  return _internal_brightness();
-}
-inline void ResGetAllParams::_internal_set_brightness(int32_t value) {
-  
-  brightness_ = value;
-}
-inline void ResGetAllParams::set_brightness(int32_t value) {
-  _internal_set_brightness(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.brightness)
-}
-
-// int32 contrast = 10;
-inline void ResGetAllParams::clear_contrast() {
-  contrast_ = 0;
-}
-inline int32_t ResGetAllParams::_internal_contrast() const {
-  return contrast_;
-}
-inline int32_t ResGetAllParams::contrast() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.contrast)
-  return _internal_contrast();
-}
-inline void ResGetAllParams::_internal_set_contrast(int32_t value) {
-  
-  contrast_ = value;
-}
-inline void ResGetAllParams::set_contrast(int32_t value) {
-  _internal_set_contrast(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.contrast)
-}
-
-// int32 hue = 11;
-inline void ResGetAllParams::clear_hue() {
-  hue_ = 0;
-}
-inline int32_t ResGetAllParams::_internal_hue() const {
-  return hue_;
-}
-inline int32_t ResGetAllParams::hue() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.hue)
-  return _internal_hue();
-}
-inline void ResGetAllParams::_internal_set_hue(int32_t value) {
-  
-  hue_ = value;
-}
-inline void ResGetAllParams::set_hue(int32_t value) {
-  _internal_set_hue(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.hue)
-}
-
-// int32 saturation = 12;
-inline void ResGetAllParams::clear_saturation() {
-  saturation_ = 0;
-}
-inline int32_t ResGetAllParams::_internal_saturation() const {
-  return saturation_;
-}
-inline int32_t ResGetAllParams::saturation() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.saturation)
-  return _internal_saturation();
-}
-inline void ResGetAllParams::_internal_set_saturation(int32_t value) {
-  
-  saturation_ = value;
-}
-inline void ResGetAllParams::set_saturation(int32_t value) {
-  _internal_set_saturation(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.saturation)
-}
-
-// int32 sharpness = 13;
-inline void ResGetAllParams::clear_sharpness() {
-  sharpness_ = 0;
-}
-inline int32_t ResGetAllParams::_internal_sharpness() const {
-  return sharpness_;
-}
-inline int32_t ResGetAllParams::sharpness() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.sharpness)
-  return _internal_sharpness();
-}
-inline void ResGetAllParams::_internal_set_sharpness(int32_t value) {
-  
-  sharpness_ = value;
-}
-inline void ResGetAllParams::set_sharpness(int32_t value) {
-  _internal_set_sharpness(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.sharpness)
-}
-
-// int32 jpg_quality = 14;
-inline void ResGetAllParams::clear_jpg_quality() {
-  jpg_quality_ = 0;
-}
-inline int32_t ResGetAllParams::_internal_jpg_quality() const {
-  return jpg_quality_;
-}
-inline int32_t ResGetAllParams::jpg_quality() const {
-  // @@protoc_insertion_point(field_get:dwarf.ResGetAllParams.jpg_quality)
-  return _internal_jpg_quality();
-}
-inline void ResGetAllParams::_internal_set_jpg_quality(int32_t value) {
-  
-  jpg_quality_ = value;
-}
-inline void ResGetAllParams::set_jpg_quality(int32_t value) {
-  _internal_set_jpg_quality(value);
-  // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.jpg_quality)
-}
-
-// int32 code = 15;
+// int32 code = 2;
 inline void ResGetAllParams::clear_code() {
   code_ = 0;
 }
@@ -2455,6 +4060,270 @@ inline void ResGetAllParams::_internal_set_code(int32_t value) {
 inline void ResGetAllParams::set_code(int32_t value) {
   _internal_set_code(value);
   // @@protoc_insertion_point(field_set:dwarf.ResGetAllParams.code)
+}
+
+// -------------------------------------------------------------------
+
+// ReqSetExpMode
+
+// int32 mode = 1;
+inline void ReqSetExpMode::clear_mode() {
+  mode_ = 0;
+}
+inline int32_t ReqSetExpMode::_internal_mode() const {
+  return mode_;
+}
+inline int32_t ReqSetExpMode::mode() const {
+  // @@protoc_insertion_point(field_get:dwarf.ReqSetExpMode.mode)
+  return _internal_mode();
+}
+inline void ReqSetExpMode::_internal_set_mode(int32_t value) {
+  
+  mode_ = value;
+}
+inline void ReqSetExpMode::set_mode(int32_t value) {
+  _internal_set_mode(value);
+  // @@protoc_insertion_point(field_set:dwarf.ReqSetExpMode.mode)
+}
+
+// -------------------------------------------------------------------
+
+// ReqSetExp
+
+// int32 index = 1;
+inline void ReqSetExp::clear_index() {
+  index_ = 0;
+}
+inline int32_t ReqSetExp::_internal_index() const {
+  return index_;
+}
+inline int32_t ReqSetExp::index() const {
+  // @@protoc_insertion_point(field_get:dwarf.ReqSetExp.index)
+  return _internal_index();
+}
+inline void ReqSetExp::_internal_set_index(int32_t value) {
+  
+  index_ = value;
+}
+inline void ReqSetExp::set_index(int32_t value) {
+  _internal_set_index(value);
+  // @@protoc_insertion_point(field_set:dwarf.ReqSetExp.index)
+}
+
+// -------------------------------------------------------------------
+
+// ReqSetGainMode
+
+// int32 mode = 1;
+inline void ReqSetGainMode::clear_mode() {
+  mode_ = 0;
+}
+inline int32_t ReqSetGainMode::_internal_mode() const {
+  return mode_;
+}
+inline int32_t ReqSetGainMode::mode() const {
+  // @@protoc_insertion_point(field_get:dwarf.ReqSetGainMode.mode)
+  return _internal_mode();
+}
+inline void ReqSetGainMode::_internal_set_mode(int32_t value) {
+  
+  mode_ = value;
+}
+inline void ReqSetGainMode::set_mode(int32_t value) {
+  _internal_set_mode(value);
+  // @@protoc_insertion_point(field_set:dwarf.ReqSetGainMode.mode)
+}
+
+// -------------------------------------------------------------------
+
+// ReqSetGain
+
+// int32 index = 1;
+inline void ReqSetGain::clear_index() {
+  index_ = 0;
+}
+inline int32_t ReqSetGain::_internal_index() const {
+  return index_;
+}
+inline int32_t ReqSetGain::index() const {
+  // @@protoc_insertion_point(field_get:dwarf.ReqSetGain.index)
+  return _internal_index();
+}
+inline void ReqSetGain::_internal_set_index(int32_t value) {
+  
+  index_ = value;
+}
+inline void ReqSetGain::set_index(int32_t value) {
+  _internal_set_index(value);
+  // @@protoc_insertion_point(field_set:dwarf.ReqSetGain.index)
+}
+
+// -------------------------------------------------------------------
+
+// ReqSetBrightness
+
+// int32 value = 1;
+inline void ReqSetBrightness::clear_value() {
+  value_ = 0;
+}
+inline int32_t ReqSetBrightness::_internal_value() const {
+  return value_;
+}
+inline int32_t ReqSetBrightness::value() const {
+  // @@protoc_insertion_point(field_get:dwarf.ReqSetBrightness.value)
+  return _internal_value();
+}
+inline void ReqSetBrightness::_internal_set_value(int32_t value) {
+  
+  value_ = value;
+}
+inline void ReqSetBrightness::set_value(int32_t value) {
+  _internal_set_value(value);
+  // @@protoc_insertion_point(field_set:dwarf.ReqSetBrightness.value)
+}
+
+// -------------------------------------------------------------------
+
+// ReqSetContrast
+
+// int32 value = 1;
+inline void ReqSetContrast::clear_value() {
+  value_ = 0;
+}
+inline int32_t ReqSetContrast::_internal_value() const {
+  return value_;
+}
+inline int32_t ReqSetContrast::value() const {
+  // @@protoc_insertion_point(field_get:dwarf.ReqSetContrast.value)
+  return _internal_value();
+}
+inline void ReqSetContrast::_internal_set_value(int32_t value) {
+  
+  value_ = value;
+}
+inline void ReqSetContrast::set_value(int32_t value) {
+  _internal_set_value(value);
+  // @@protoc_insertion_point(field_set:dwarf.ReqSetContrast.value)
+}
+
+// -------------------------------------------------------------------
+
+// ReqSetSaturation
+
+// int32 value = 1;
+inline void ReqSetSaturation::clear_value() {
+  value_ = 0;
+}
+inline int32_t ReqSetSaturation::_internal_value() const {
+  return value_;
+}
+inline int32_t ReqSetSaturation::value() const {
+  // @@protoc_insertion_point(field_get:dwarf.ReqSetSaturation.value)
+  return _internal_value();
+}
+inline void ReqSetSaturation::_internal_set_value(int32_t value) {
+  
+  value_ = value;
+}
+inline void ReqSetSaturation::set_value(int32_t value) {
+  _internal_set_value(value);
+  // @@protoc_insertion_point(field_set:dwarf.ReqSetSaturation.value)
+}
+
+// -------------------------------------------------------------------
+
+// ReqSetHue
+
+// int32 value = 1;
+inline void ReqSetHue::clear_value() {
+  value_ = 0;
+}
+inline int32_t ReqSetHue::_internal_value() const {
+  return value_;
+}
+inline int32_t ReqSetHue::value() const {
+  // @@protoc_insertion_point(field_get:dwarf.ReqSetHue.value)
+  return _internal_value();
+}
+inline void ReqSetHue::_internal_set_value(int32_t value) {
+  
+  value_ = value;
+}
+inline void ReqSetHue::set_value(int32_t value) {
+  _internal_set_value(value);
+  // @@protoc_insertion_point(field_set:dwarf.ReqSetHue.value)
+}
+
+// -------------------------------------------------------------------
+
+// ReqSetSharpness
+
+// int32 value = 1;
+inline void ReqSetSharpness::clear_value() {
+  value_ = 0;
+}
+inline int32_t ReqSetSharpness::_internal_value() const {
+  return value_;
+}
+inline int32_t ReqSetSharpness::value() const {
+  // @@protoc_insertion_point(field_get:dwarf.ReqSetSharpness.value)
+  return _internal_value();
+}
+inline void ReqSetSharpness::_internal_set_value(int32_t value) {
+  
+  value_ = value;
+}
+inline void ReqSetSharpness::set_value(int32_t value) {
+  _internal_set_value(value);
+  // @@protoc_insertion_point(field_set:dwarf.ReqSetSharpness.value)
+}
+
+// -------------------------------------------------------------------
+
+// ReqSetIRCut
+
+// int32 value = 1;
+inline void ReqSetIRCut::clear_value() {
+  value_ = 0;
+}
+inline int32_t ReqSetIRCut::_internal_value() const {
+  return value_;
+}
+inline int32_t ReqSetIRCut::value() const {
+  // @@protoc_insertion_point(field_get:dwarf.ReqSetIRCut.value)
+  return _internal_value();
+}
+inline void ReqSetIRCut::_internal_set_value(int32_t value) {
+  
+  value_ = value;
+}
+inline void ReqSetIRCut::set_value(int32_t value) {
+  _internal_set_value(value);
+  // @@protoc_insertion_point(field_set:dwarf.ReqSetIRCut.value)
+}
+
+// -------------------------------------------------------------------
+
+// ReqSetWBMode
+
+// int32 mode = 1;
+inline void ReqSetWBMode::clear_mode() {
+  mode_ = 0;
+}
+inline int32_t ReqSetWBMode::_internal_mode() const {
+  return mode_;
+}
+inline int32_t ReqSetWBMode::mode() const {
+  // @@protoc_insertion_point(field_get:dwarf.ReqSetWBMode.mode)
+  return _internal_mode();
+}
+inline void ReqSetWBMode::_internal_set_mode(int32_t value) {
+  
+  mode_ = value;
+}
+inline void ReqSetWBMode::set_mode(int32_t value) {
+  _internal_set_mode(value);
+  // @@protoc_insertion_point(field_set:dwarf.ReqSetWBMode.mode)
 }
 
 // -------------------------------------------------------------------
@@ -2548,6 +4417,30 @@ inline void ResSystemWorkingState::set_state(int32_t value) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
