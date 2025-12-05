@@ -19,6 +19,11 @@ public:
                 int speedRamping = 100, int resolutionLevel = 0);
   void stopMotor(Axis axis);
 
+  // Joystick Control
+  void startJoystick(double angle, double length, double speed);
+  void startJoystickFixedAngle(double angle, double length, double speed);
+  void stopJoystick();
+
 signals:
   void errorOccurred(const QString &message);
 
@@ -28,4 +33,8 @@ private:
   quint32 moduleId() const;
   quint32 cmdRun() const;
   quint32 cmdStop() const;
+
+  quint32 cmdJoystickStart() const;
+  quint32 cmdJoystickFixedAngle() const;
+  quint32 cmdJoystickStop() const;
 };
