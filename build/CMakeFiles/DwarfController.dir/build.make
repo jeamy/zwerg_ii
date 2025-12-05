@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /media/data/programming/pydwarf
+CMAKE_SOURCE_DIR = /home/lux/programming/pydwarf
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /media/data/programming/pydwarf/build
+CMAKE_BINARY_DIR = /home/lux/programming/pydwarf/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/DwarfController.dir/depend.make
@@ -69,74 +69,74 @@ include CMakeFiles/DwarfController.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/DwarfController.dir/flags.make
 
-astro.pb.h: /media/data/programming/pydwarf/src/proto/astro.proto
+astro.pb.h: /home/lux/programming/pydwarf/src/proto/astro.proto
 astro.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Running cpp protocol buffer compiler on /media/data/programming/pydwarf/src/proto/astro.proto"
-	/usr/bin/protoc --cpp_out :/media/data/programming/pydwarf/build -I /media/data/programming/pydwarf/src/proto /media/data/programming/pydwarf/src/proto/astro.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/astro.proto"
+	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/astro.proto
 
 astro.pb.cc: astro.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate astro.pb.cc
 
-base.pb.h: /media/data/programming/pydwarf/src/proto/base.proto
+base.pb.h: /home/lux/programming/pydwarf/src/proto/base.proto
 base.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Running cpp protocol buffer compiler on /media/data/programming/pydwarf/src/proto/base.proto"
-	/usr/bin/protoc --cpp_out :/media/data/programming/pydwarf/build -I /media/data/programming/pydwarf/src/proto /media/data/programming/pydwarf/src/proto/base.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/base.proto"
+	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/base.proto
 
 base.pb.cc: base.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate base.pb.cc
 
-camera.pb.h: /media/data/programming/pydwarf/src/proto/camera.proto
+camera.pb.h: /home/lux/programming/pydwarf/src/proto/camera.proto
 camera.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Running cpp protocol buffer compiler on /media/data/programming/pydwarf/src/proto/camera.proto"
-	/usr/bin/protoc --cpp_out :/media/data/programming/pydwarf/build -I /media/data/programming/pydwarf/src/proto /media/data/programming/pydwarf/src/proto/camera.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/camera.proto"
+	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/camera.proto
 
 camera.pb.cc: camera.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate camera.pb.cc
 
-focus.pb.h: /media/data/programming/pydwarf/src/proto/focus.proto
+focus.pb.h: /home/lux/programming/pydwarf/src/proto/focus.proto
 focus.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Running cpp protocol buffer compiler on /media/data/programming/pydwarf/src/proto/focus.proto"
-	/usr/bin/protoc --cpp_out :/media/data/programming/pydwarf/build -I /media/data/programming/pydwarf/src/proto /media/data/programming/pydwarf/src/proto/focus.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/focus.proto"
+	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/focus.proto
 
 focus.pb.cc: focus.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate focus.pb.cc
 
-motor.pb.h: /media/data/programming/pydwarf/src/proto/motor.proto
+motor.pb.h: /home/lux/programming/pydwarf/src/proto/motor.proto
 motor.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Running cpp protocol buffer compiler on /media/data/programming/pydwarf/src/proto/motor.proto"
-	/usr/bin/protoc --cpp_out :/media/data/programming/pydwarf/build -I /media/data/programming/pydwarf/src/proto /media/data/programming/pydwarf/src/proto/motor.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/motor.proto"
+	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/motor.proto
 
 motor.pb.cc: motor.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate motor.pb.cc
 
-notify.pb.h: /media/data/programming/pydwarf/src/proto/notify.proto
+notify.pb.h: /home/lux/programming/pydwarf/src/proto/notify.proto
 notify.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Running cpp protocol buffer compiler on /media/data/programming/pydwarf/src/proto/notify.proto"
-	/usr/bin/protoc --cpp_out :/media/data/programming/pydwarf/build -I /media/data/programming/pydwarf/src/proto /media/data/programming/pydwarf/src/proto/notify.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/notify.proto"
+	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/notify.proto
 
 notify.pb.cc: notify.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate notify.pb.cc
 
-panorama.pb.h: /media/data/programming/pydwarf/src/proto/panorama.proto
+panorama.pb.h: /home/lux/programming/pydwarf/src/proto/panorama.proto
 panorama.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Running cpp protocol buffer compiler on /media/data/programming/pydwarf/src/proto/panorama.proto"
-	/usr/bin/protoc --cpp_out :/media/data/programming/pydwarf/build -I /media/data/programming/pydwarf/src/proto /media/data/programming/pydwarf/src/proto/panorama.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/panorama.proto"
+	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/panorama.proto
 
 panorama.pb.cc: panorama.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate panorama.pb.cc
 
-system.pb.h: /media/data/programming/pydwarf/src/proto/system.proto
+system.pb.h: /home/lux/programming/pydwarf/src/proto/system.proto
 system.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Running cpp protocol buffer compiler on /media/data/programming/pydwarf/src/proto/system.proto"
-	/usr/bin/protoc --cpp_out :/media/data/programming/pydwarf/build -I /media/data/programming/pydwarf/src/proto /media/data/programming/pydwarf/src/proto/system.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/system.proto"
+	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/system.proto
 
 system.pb.cc: system.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate system.pb.cc
 
-tracking.pb.h: /media/data/programming/pydwarf/src/proto/tracking.proto
+tracking.pb.h: /home/lux/programming/pydwarf/src/proto/tracking.proto
 tracking.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Running cpp protocol buffer compiler on /media/data/programming/pydwarf/src/proto/tracking.proto"
-	/usr/bin/protoc --cpp_out :/media/data/programming/pydwarf/build -I /media/data/programming/pydwarf/src/proto /media/data/programming/pydwarf/src/proto/tracking.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/tracking.proto"
+	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/tracking.proto
 
 tracking.pb.cc: tracking.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate tracking.pb.cc
@@ -144,9 +144,9 @@ tracking.pb.cc: tracking.pb.h
 DwarfController_autogen/timestamp: /usr/lib64/qt6/libexec/moc
 DwarfController_autogen/timestamp: /usr/lib64/qt6/libexec/uic
 DwarfController_autogen/timestamp: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Automatic MOC and UIC for target DwarfController"
-	/usr/bin/cmake -E cmake_autogen /media/data/programming/pydwarf/build/CMakeFiles/DwarfController_autogen.dir/AutogenInfo.json Debug
-	/usr/bin/cmake -E touch /media/data/programming/pydwarf/build/DwarfController_autogen/timestamp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Automatic MOC and UIC for target DwarfController"
+	/usr/bin/cmake -E cmake_autogen /home/lux/programming/pydwarf/build/CMakeFiles/DwarfController_autogen.dir/AutogenInfo.json Debug
+	/usr/bin/cmake -E touch /home/lux/programming/pydwarf/build/DwarfController_autogen/timestamp
 
 CMakeFiles/DwarfController.dir/codegen:
 .PHONY : CMakeFiles/DwarfController.dir/codegen
@@ -154,422 +154,422 @@ CMakeFiles/DwarfController.dir/codegen:
 CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o: CMakeFiles/DwarfController.dir/flags.make
 CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o: DwarfController_autogen/mocs_compilation.cpp
 CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o -MF CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o.d -o CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o -c /media/data/programming/pydwarf/build/DwarfController_autogen/mocs_compilation.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o -MF CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o.d -o CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.o -c /home/lux/programming/pydwarf/build/DwarfController_autogen/mocs_compilation.cpp
 
 CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/build/DwarfController_autogen/mocs_compilation.cpp > CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/build/DwarfController_autogen/mocs_compilation.cpp > CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.i
 
 CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/build/DwarfController_autogen/mocs_compilation.cpp -o CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/build/DwarfController_autogen/mocs_compilation.cpp -o CMakeFiles/DwarfController.dir/DwarfController_autogen/mocs_compilation.cpp.s
 
 CMakeFiles/DwarfController.dir/src/main.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/main.cpp.o: /media/data/programming/pydwarf/src/main.cpp
+CMakeFiles/DwarfController.dir/src/main.cpp.o: /home/lux/programming/pydwarf/src/main.cpp
 CMakeFiles/DwarfController.dir/src/main.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/DwarfController.dir/src/main.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/main.cpp.o -MF CMakeFiles/DwarfController.dir/src/main.cpp.o.d -o CMakeFiles/DwarfController.dir/src/main.cpp.o -c /media/data/programming/pydwarf/src/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/DwarfController.dir/src/main.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/main.cpp.o -MF CMakeFiles/DwarfController.dir/src/main.cpp.o.d -o CMakeFiles/DwarfController.dir/src/main.cpp.o -c /home/lux/programming/pydwarf/src/main.cpp
 
 CMakeFiles/DwarfController.dir/src/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/main.cpp > CMakeFiles/DwarfController.dir/src/main.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/main.cpp > CMakeFiles/DwarfController.dir/src/main.cpp.i
 
 CMakeFiles/DwarfController.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/main.cpp -o CMakeFiles/DwarfController.dir/src/main.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/main.cpp -o CMakeFiles/DwarfController.dir/src/main.cpp.s
 
 CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o: /media/data/programming/pydwarf/src/MainWindow.cpp
+CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o: /home/lux/programming/pydwarf/src/MainWindow.cpp
 CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o -MF CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o.d -o CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o -c /media/data/programming/pydwarf/src/MainWindow.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o -MF CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o.d -o CMakeFiles/DwarfController.dir/src/MainWindow.cpp.o -c /home/lux/programming/pydwarf/src/MainWindow.cpp
 
 CMakeFiles/DwarfController.dir/src/MainWindow.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/MainWindow.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/MainWindow.cpp > CMakeFiles/DwarfController.dir/src/MainWindow.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/MainWindow.cpp > CMakeFiles/DwarfController.dir/src/MainWindow.cpp.i
 
 CMakeFiles/DwarfController.dir/src/MainWindow.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/MainWindow.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/MainWindow.cpp -o CMakeFiles/DwarfController.dir/src/MainWindow.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/MainWindow.cpp -o CMakeFiles/DwarfController.dir/src/MainWindow.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o: /media/data/programming/pydwarf/src/net/DwarfWebSocketClient.cpp
+CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o: /home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.cpp
 CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o -c /media/data/programming/pydwarf/src/net/DwarfWebSocketClient.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.o -c /home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.cpp
 
 CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/DwarfWebSocketClient.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/DwarfWebSocketClient.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfWebSocketClient.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o: /media/data/programming/pydwarf/src/net/DwarfFinder.cpp
+CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o: /home/lux/programming/pydwarf/src/net/DwarfFinder.cpp
 CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o -c /media/data/programming/pydwarf/src/net/DwarfFinder.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.o -c /home/lux/programming/pydwarf/src/net/DwarfFinder.cpp
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/DwarfFinder.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/DwarfFinder.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/DwarfFinder.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/DwarfFinder.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfFinder.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o: /media/data/programming/pydwarf/src/net/ProtobufHelper.cpp
+CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o: /home/lux/programming/pydwarf/src/net/ProtobufHelper.cpp
 CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o -c /media/data/programming/pydwarf/src/net/ProtobufHelper.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o -c /home/lux/programming/pydwarf/src/net/ProtobufHelper.cpp
 
 CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/ProtobufHelper.cpp > CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/ProtobufHelper.cpp > CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/ProtobufHelper.cpp -o CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/ProtobufHelper.cpp -o CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o: /media/data/programming/pydwarf/src/net/DwarfHttpClient.cpp
+CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o: /home/lux/programming/pydwarf/src/net/DwarfHttpClient.cpp
 CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o -c /media/data/programming/pydwarf/src/net/DwarfHttpClient.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o -c /home/lux/programming/pydwarf/src/net/DwarfHttpClient.cpp
 
 CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/DwarfHttpClient.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/DwarfHttpClient.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/DwarfHttpClient.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/DwarfHttpClient.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.o: /media/data/programming/pydwarf/src/net/DwarfMessageDispatcher.cpp
+CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.o: /home/lux/programming/pydwarf/src/net/DwarfMessageDispatcher.cpp
 CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.o -c /media/data/programming/pydwarf/src/net/DwarfMessageDispatcher.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.o -c /home/lux/programming/pydwarf/src/net/DwarfMessageDispatcher.cpp
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/DwarfMessageDispatcher.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/DwarfMessageDispatcher.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/DwarfMessageDispatcher.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/DwarfMessageDispatcher.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfMessageDispatcher.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o: /media/data/programming/pydwarf/src/net/DwarfCameraController.cpp
+CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o: /home/lux/programming/pydwarf/src/net/DwarfCameraController.cpp
 CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o -c /media/data/programming/pydwarf/src/net/DwarfCameraController.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o -c /home/lux/programming/pydwarf/src/net/DwarfCameraController.cpp
 
 CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/DwarfCameraController.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/DwarfCameraController.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/DwarfCameraController.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/DwarfCameraController.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o: /media/data/programming/pydwarf/src/net/DwarfMotorController.cpp
+CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o: /home/lux/programming/pydwarf/src/net/DwarfMotorController.cpp
 CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o -c /media/data/programming/pydwarf/src/net/DwarfMotorController.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.o -c /home/lux/programming/pydwarf/src/net/DwarfMotorController.cpp
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/DwarfMotorController.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/DwarfMotorController.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/DwarfMotorController.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/DwarfMotorController.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfMotorController.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o: /media/data/programming/pydwarf/src/net/DwarfFocusController.cpp
+CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o: /home/lux/programming/pydwarf/src/net/DwarfFocusController.cpp
 CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o -c /media/data/programming/pydwarf/src/net/DwarfFocusController.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.o -c /home/lux/programming/pydwarf/src/net/DwarfFocusController.cpp
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/DwarfFocusController.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/DwarfFocusController.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/DwarfFocusController.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/DwarfFocusController.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfFocusController.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o: /media/data/programming/pydwarf/src/net/DwarfAstroController.cpp
+CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o: /home/lux/programming/pydwarf/src/net/DwarfAstroController.cpp
 CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o -c /media/data/programming/pydwarf/src/net/DwarfAstroController.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.o -c /home/lux/programming/pydwarf/src/net/DwarfAstroController.cpp
 
 CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/DwarfAstroController.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/DwarfAstroController.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/DwarfAstroController.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/DwarfAstroController.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfAstroController.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o: /media/data/programming/pydwarf/src/net/DwarfMjpegStream.cpp
+CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o: /home/lux/programming/pydwarf/src/net/DwarfMjpegStream.cpp
 CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o -c /media/data/programming/pydwarf/src/net/DwarfMjpegStream.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.o -c /home/lux/programming/pydwarf/src/net/DwarfMjpegStream.cpp
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/DwarfMjpegStream.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/DwarfMjpegStream.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/DwarfMjpegStream.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/DwarfMjpegStream.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfMjpegStream.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o: /media/data/programming/pydwarf/src/net/DwarfMjpegView.cpp
+CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o: /home/lux/programming/pydwarf/src/net/DwarfMjpegView.cpp
 CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o -c /media/data/programming/pydwarf/src/net/DwarfMjpegView.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.o -c /home/lux/programming/pydwarf/src/net/DwarfMjpegView.cpp
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/DwarfMjpegView.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/DwarfMjpegView.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/DwarfMjpegView.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/DwarfMjpegView.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfMjpegView.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o: /media/data/programming/pydwarf/src/net/DwarfFtpDownloader.cpp
+CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o: /home/lux/programming/pydwarf/src/net/DwarfFtpDownloader.cpp
 CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o -c /media/data/programming/pydwarf/src/net/DwarfFtpDownloader.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.o -c /home/lux/programming/pydwarf/src/net/DwarfFtpDownloader.cpp
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/DwarfFtpDownloader.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/DwarfFtpDownloader.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/DwarfFtpDownloader.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/DwarfFtpDownloader.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfFtpDownloader.cpp.s
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o: /media/data/programming/pydwarf/src/net/DwarfFtpClient.cpp
+CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o: /home/lux/programming/pydwarf/src/net/DwarfFtpClient.cpp
 CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o -c /media/data/programming/pydwarf/src/net/DwarfFtpClient.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o -MF CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o.d -o CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.o -c /home/lux/programming/pydwarf/src/net/DwarfFtpClient.cpp
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/net/DwarfFtpClient.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/net/DwarfFtpClient.cpp > CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.i
 
 CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/net/DwarfFtpClient.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/net/DwarfFtpClient.cpp -o CMakeFiles/DwarfController.dir/src/net/DwarfFtpClient.cpp.s
 
 CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o: /media/data/programming/pydwarf/src/ui/MediaLightbox.cpp
+CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o: /home/lux/programming/pydwarf/src/ui/MediaLightbox.cpp
 CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o -MF CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o.d -o CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o -c /media/data/programming/pydwarf/src/ui/MediaLightbox.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o -MF CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o.d -o CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.o -c /home/lux/programming/pydwarf/src/ui/MediaLightbox.cpp
 
 CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/ui/MediaLightbox.cpp > CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/ui/MediaLightbox.cpp > CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.i
 
 CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/ui/MediaLightbox.cpp -o CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/ui/MediaLightbox.cpp -o CMakeFiles/DwarfController.dir/src/ui/MediaLightbox.cpp.s
 
 CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o: /media/data/programming/pydwarf/src/ui/CameraSettingsPanel.cpp
+CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o: /home/lux/programming/pydwarf/src/ui/CameraSettingsPanel.cpp
 CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o -MF CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o.d -o CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o -c /media/data/programming/pydwarf/src/ui/CameraSettingsPanel.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o -MF CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o.d -o CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.o -c /home/lux/programming/pydwarf/src/ui/CameraSettingsPanel.cpp
 
 CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/ui/CameraSettingsPanel.cpp > CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/ui/CameraSettingsPanel.cpp > CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.i
 
 CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/ui/CameraSettingsPanel.cpp -o CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/ui/CameraSettingsPanel.cpp -o CMakeFiles/DwarfController.dir/src/ui/CameraSettingsPanel.cpp.s
 
 CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o: /media/data/programming/pydwarf/src/ui/StarMapWidget.cpp
+CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o: /home/lux/programming/pydwarf/src/ui/StarMapWidget.cpp
 CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CXX object CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o -MF CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o.d -o CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o -c /media/data/programming/pydwarf/src/ui/StarMapWidget.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CXX object CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o -MF CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o.d -o CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.o -c /home/lux/programming/pydwarf/src/ui/StarMapWidget.cpp
 
 CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/ui/StarMapWidget.cpp > CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/ui/StarMapWidget.cpp > CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.i
 
 CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/ui/StarMapWidget.cpp -o CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/ui/StarMapWidget.cpp -o CMakeFiles/DwarfController.dir/src/ui/StarMapWidget.cpp.s
 
 CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o: /media/data/programming/pydwarf/src/ui/AstroNavigationPanel.cpp
+CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o: /home/lux/programming/pydwarf/src/ui/AstroNavigationPanel.cpp
 CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building CXX object CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o -MF CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o.d -o CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o -c /media/data/programming/pydwarf/src/ui/AstroNavigationPanel.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building CXX object CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o -MF CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o.d -o CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.o -c /home/lux/programming/pydwarf/src/ui/AstroNavigationPanel.cpp
 
 CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/ui/AstroNavigationPanel.cpp > CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/ui/AstroNavigationPanel.cpp > CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.i
 
 CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/ui/AstroNavigationPanel.cpp -o CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/ui/AstroNavigationPanel.cpp -o CMakeFiles/DwarfController.dir/src/ui/AstroNavigationPanel.cpp.s
 
 CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o: CMakeFiles/DwarfController.dir/flags.make
-CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o: /media/data/programming/pydwarf/src/ui/ImageSettingsWidget.cpp
+CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o: /home/lux/programming/pydwarf/src/ui/ImageSettingsWidget.cpp
 CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o -MF CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o.d -o CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o -c /media/data/programming/pydwarf/src/ui/ImageSettingsWidget.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o -MF CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o.d -o CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.o -c /home/lux/programming/pydwarf/src/ui/ImageSettingsWidget.cpp
 
 CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/src/ui/ImageSettingsWidget.cpp > CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/src/ui/ImageSettingsWidget.cpp > CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.i
 
 CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/src/ui/ImageSettingsWidget.cpp -o CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/src/ui/ImageSettingsWidget.cpp -o CMakeFiles/DwarfController.dir/src/ui/ImageSettingsWidget.cpp.s
 
 CMakeFiles/DwarfController.dir/astro.pb.cc.o: CMakeFiles/DwarfController.dir/flags.make
 CMakeFiles/DwarfController.dir/astro.pb.cc.o: astro.pb.cc
 CMakeFiles/DwarfController.dir/astro.pb.cc.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building CXX object CMakeFiles/DwarfController.dir/astro.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/astro.pb.cc.o -MF CMakeFiles/DwarfController.dir/astro.pb.cc.o.d -o CMakeFiles/DwarfController.dir/astro.pb.cc.o -c /media/data/programming/pydwarf/build/astro.pb.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building CXX object CMakeFiles/DwarfController.dir/astro.pb.cc.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/astro.pb.cc.o -MF CMakeFiles/DwarfController.dir/astro.pb.cc.o.d -o CMakeFiles/DwarfController.dir/astro.pb.cc.o -c /home/lux/programming/pydwarf/build/astro.pb.cc
 
 CMakeFiles/DwarfController.dir/astro.pb.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/astro.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/build/astro.pb.cc > CMakeFiles/DwarfController.dir/astro.pb.cc.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/build/astro.pb.cc > CMakeFiles/DwarfController.dir/astro.pb.cc.i
 
 CMakeFiles/DwarfController.dir/astro.pb.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/astro.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/build/astro.pb.cc -o CMakeFiles/DwarfController.dir/astro.pb.cc.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/build/astro.pb.cc -o CMakeFiles/DwarfController.dir/astro.pb.cc.s
 
 CMakeFiles/DwarfController.dir/base.pb.cc.o: CMakeFiles/DwarfController.dir/flags.make
 CMakeFiles/DwarfController.dir/base.pb.cc.o: base.pb.cc
 CMakeFiles/DwarfController.dir/base.pb.cc.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building CXX object CMakeFiles/DwarfController.dir/base.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/base.pb.cc.o -MF CMakeFiles/DwarfController.dir/base.pb.cc.o.d -o CMakeFiles/DwarfController.dir/base.pb.cc.o -c /media/data/programming/pydwarf/build/base.pb.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building CXX object CMakeFiles/DwarfController.dir/base.pb.cc.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/base.pb.cc.o -MF CMakeFiles/DwarfController.dir/base.pb.cc.o.d -o CMakeFiles/DwarfController.dir/base.pb.cc.o -c /home/lux/programming/pydwarf/build/base.pb.cc
 
 CMakeFiles/DwarfController.dir/base.pb.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/base.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/build/base.pb.cc > CMakeFiles/DwarfController.dir/base.pb.cc.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/build/base.pb.cc > CMakeFiles/DwarfController.dir/base.pb.cc.i
 
 CMakeFiles/DwarfController.dir/base.pb.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/base.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/build/base.pb.cc -o CMakeFiles/DwarfController.dir/base.pb.cc.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/build/base.pb.cc -o CMakeFiles/DwarfController.dir/base.pb.cc.s
 
 CMakeFiles/DwarfController.dir/camera.pb.cc.o: CMakeFiles/DwarfController.dir/flags.make
 CMakeFiles/DwarfController.dir/camera.pb.cc.o: camera.pb.cc
 CMakeFiles/DwarfController.dir/camera.pb.cc.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building CXX object CMakeFiles/DwarfController.dir/camera.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/camera.pb.cc.o -MF CMakeFiles/DwarfController.dir/camera.pb.cc.o.d -o CMakeFiles/DwarfController.dir/camera.pb.cc.o -c /media/data/programming/pydwarf/build/camera.pb.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building CXX object CMakeFiles/DwarfController.dir/camera.pb.cc.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/camera.pb.cc.o -MF CMakeFiles/DwarfController.dir/camera.pb.cc.o.d -o CMakeFiles/DwarfController.dir/camera.pb.cc.o -c /home/lux/programming/pydwarf/build/camera.pb.cc
 
 CMakeFiles/DwarfController.dir/camera.pb.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/camera.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/build/camera.pb.cc > CMakeFiles/DwarfController.dir/camera.pb.cc.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/build/camera.pb.cc > CMakeFiles/DwarfController.dir/camera.pb.cc.i
 
 CMakeFiles/DwarfController.dir/camera.pb.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/camera.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/build/camera.pb.cc -o CMakeFiles/DwarfController.dir/camera.pb.cc.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/build/camera.pb.cc -o CMakeFiles/DwarfController.dir/camera.pb.cc.s
 
 CMakeFiles/DwarfController.dir/focus.pb.cc.o: CMakeFiles/DwarfController.dir/flags.make
 CMakeFiles/DwarfController.dir/focus.pb.cc.o: focus.pb.cc
 CMakeFiles/DwarfController.dir/focus.pb.cc.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building CXX object CMakeFiles/DwarfController.dir/focus.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/focus.pb.cc.o -MF CMakeFiles/DwarfController.dir/focus.pb.cc.o.d -o CMakeFiles/DwarfController.dir/focus.pb.cc.o -c /media/data/programming/pydwarf/build/focus.pb.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building CXX object CMakeFiles/DwarfController.dir/focus.pb.cc.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/focus.pb.cc.o -MF CMakeFiles/DwarfController.dir/focus.pb.cc.o.d -o CMakeFiles/DwarfController.dir/focus.pb.cc.o -c /home/lux/programming/pydwarf/build/focus.pb.cc
 
 CMakeFiles/DwarfController.dir/focus.pb.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/focus.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/build/focus.pb.cc > CMakeFiles/DwarfController.dir/focus.pb.cc.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/build/focus.pb.cc > CMakeFiles/DwarfController.dir/focus.pb.cc.i
 
 CMakeFiles/DwarfController.dir/focus.pb.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/focus.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/build/focus.pb.cc -o CMakeFiles/DwarfController.dir/focus.pb.cc.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/build/focus.pb.cc -o CMakeFiles/DwarfController.dir/focus.pb.cc.s
 
 CMakeFiles/DwarfController.dir/motor.pb.cc.o: CMakeFiles/DwarfController.dir/flags.make
 CMakeFiles/DwarfController.dir/motor.pb.cc.o: motor.pb.cc
 CMakeFiles/DwarfController.dir/motor.pb.cc.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building CXX object CMakeFiles/DwarfController.dir/motor.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/motor.pb.cc.o -MF CMakeFiles/DwarfController.dir/motor.pb.cc.o.d -o CMakeFiles/DwarfController.dir/motor.pb.cc.o -c /media/data/programming/pydwarf/build/motor.pb.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building CXX object CMakeFiles/DwarfController.dir/motor.pb.cc.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/motor.pb.cc.o -MF CMakeFiles/DwarfController.dir/motor.pb.cc.o.d -o CMakeFiles/DwarfController.dir/motor.pb.cc.o -c /home/lux/programming/pydwarf/build/motor.pb.cc
 
 CMakeFiles/DwarfController.dir/motor.pb.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/motor.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/build/motor.pb.cc > CMakeFiles/DwarfController.dir/motor.pb.cc.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/build/motor.pb.cc > CMakeFiles/DwarfController.dir/motor.pb.cc.i
 
 CMakeFiles/DwarfController.dir/motor.pb.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/motor.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/build/motor.pb.cc -o CMakeFiles/DwarfController.dir/motor.pb.cc.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/build/motor.pb.cc -o CMakeFiles/DwarfController.dir/motor.pb.cc.s
 
 CMakeFiles/DwarfController.dir/notify.pb.cc.o: CMakeFiles/DwarfController.dir/flags.make
 CMakeFiles/DwarfController.dir/notify.pb.cc.o: notify.pb.cc
 CMakeFiles/DwarfController.dir/notify.pb.cc.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Building CXX object CMakeFiles/DwarfController.dir/notify.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/notify.pb.cc.o -MF CMakeFiles/DwarfController.dir/notify.pb.cc.o.d -o CMakeFiles/DwarfController.dir/notify.pb.cc.o -c /media/data/programming/pydwarf/build/notify.pb.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Building CXX object CMakeFiles/DwarfController.dir/notify.pb.cc.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/notify.pb.cc.o -MF CMakeFiles/DwarfController.dir/notify.pb.cc.o.d -o CMakeFiles/DwarfController.dir/notify.pb.cc.o -c /home/lux/programming/pydwarf/build/notify.pb.cc
 
 CMakeFiles/DwarfController.dir/notify.pb.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/notify.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/build/notify.pb.cc > CMakeFiles/DwarfController.dir/notify.pb.cc.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/build/notify.pb.cc > CMakeFiles/DwarfController.dir/notify.pb.cc.i
 
 CMakeFiles/DwarfController.dir/notify.pb.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/notify.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/build/notify.pb.cc -o CMakeFiles/DwarfController.dir/notify.pb.cc.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/build/notify.pb.cc -o CMakeFiles/DwarfController.dir/notify.pb.cc.s
 
 CMakeFiles/DwarfController.dir/panorama.pb.cc.o: CMakeFiles/DwarfController.dir/flags.make
 CMakeFiles/DwarfController.dir/panorama.pb.cc.o: panorama.pb.cc
 CMakeFiles/DwarfController.dir/panorama.pb.cc.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Building CXX object CMakeFiles/DwarfController.dir/panorama.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/panorama.pb.cc.o -MF CMakeFiles/DwarfController.dir/panorama.pb.cc.o.d -o CMakeFiles/DwarfController.dir/panorama.pb.cc.o -c /media/data/programming/pydwarf/build/panorama.pb.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Building CXX object CMakeFiles/DwarfController.dir/panorama.pb.cc.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/panorama.pb.cc.o -MF CMakeFiles/DwarfController.dir/panorama.pb.cc.o.d -o CMakeFiles/DwarfController.dir/panorama.pb.cc.o -c /home/lux/programming/pydwarf/build/panorama.pb.cc
 
 CMakeFiles/DwarfController.dir/panorama.pb.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/panorama.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/build/panorama.pb.cc > CMakeFiles/DwarfController.dir/panorama.pb.cc.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/build/panorama.pb.cc > CMakeFiles/DwarfController.dir/panorama.pb.cc.i
 
 CMakeFiles/DwarfController.dir/panorama.pb.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/panorama.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/build/panorama.pb.cc -o CMakeFiles/DwarfController.dir/panorama.pb.cc.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/build/panorama.pb.cc -o CMakeFiles/DwarfController.dir/panorama.pb.cc.s
 
 CMakeFiles/DwarfController.dir/system.pb.cc.o: CMakeFiles/DwarfController.dir/flags.make
 CMakeFiles/DwarfController.dir/system.pb.cc.o: system.pb.cc
 CMakeFiles/DwarfController.dir/system.pb.cc.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_39) "Building CXX object CMakeFiles/DwarfController.dir/system.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/system.pb.cc.o -MF CMakeFiles/DwarfController.dir/system.pb.cc.o.d -o CMakeFiles/DwarfController.dir/system.pb.cc.o -c /media/data/programming/pydwarf/build/system.pb.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_39) "Building CXX object CMakeFiles/DwarfController.dir/system.pb.cc.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/system.pb.cc.o -MF CMakeFiles/DwarfController.dir/system.pb.cc.o.d -o CMakeFiles/DwarfController.dir/system.pb.cc.o -c /home/lux/programming/pydwarf/build/system.pb.cc
 
 CMakeFiles/DwarfController.dir/system.pb.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/system.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/build/system.pb.cc > CMakeFiles/DwarfController.dir/system.pb.cc.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/build/system.pb.cc > CMakeFiles/DwarfController.dir/system.pb.cc.i
 
 CMakeFiles/DwarfController.dir/system.pb.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/system.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/build/system.pb.cc -o CMakeFiles/DwarfController.dir/system.pb.cc.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/build/system.pb.cc -o CMakeFiles/DwarfController.dir/system.pb.cc.s
 
 CMakeFiles/DwarfController.dir/tracking.pb.cc.o: CMakeFiles/DwarfController.dir/flags.make
 CMakeFiles/DwarfController.dir/tracking.pb.cc.o: tracking.pb.cc
 CMakeFiles/DwarfController.dir/tracking.pb.cc.o: CMakeFiles/DwarfController.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_40) "Building CXX object CMakeFiles/DwarfController.dir/tracking.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/tracking.pb.cc.o -MF CMakeFiles/DwarfController.dir/tracking.pb.cc.o.d -o CMakeFiles/DwarfController.dir/tracking.pb.cc.o -c /media/data/programming/pydwarf/build/tracking.pb.cc
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_40) "Building CXX object CMakeFiles/DwarfController.dir/tracking.pb.cc.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/DwarfController.dir/tracking.pb.cc.o -MF CMakeFiles/DwarfController.dir/tracking.pb.cc.o.d -o CMakeFiles/DwarfController.dir/tracking.pb.cc.o -c /home/lux/programming/pydwarf/build/tracking.pb.cc
 
 CMakeFiles/DwarfController.dir/tracking.pb.cc.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/DwarfController.dir/tracking.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /media/data/programming/pydwarf/build/tracking.pb.cc > CMakeFiles/DwarfController.dir/tracking.pb.cc.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lux/programming/pydwarf/build/tracking.pb.cc > CMakeFiles/DwarfController.dir/tracking.pb.cc.i
 
 CMakeFiles/DwarfController.dir/tracking.pb.cc.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/DwarfController.dir/tracking.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /media/data/programming/pydwarf/build/tracking.pb.cc -o CMakeFiles/DwarfController.dir/tracking.pb.cc.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lux/programming/pydwarf/build/tracking.pb.cc -o CMakeFiles/DwarfController.dir/tracking.pb.cc.s
 
 # Object files for target DwarfController
 DwarfController_OBJECTS = \
@@ -651,12 +651,12 @@ DwarfController: /usr/lib64/libOpenGL.so
 DwarfController: /usr/lib64/libQt6Network.so.6.10.1
 DwarfController: /usr/lib64/libQt6Core.so.6.10.1
 DwarfController: CMakeFiles/DwarfController.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_41) "Linking CXX executable DwarfController"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_41) "Linking CXX executable DwarfController"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/DwarfController.dir/link.txt --verbose=$(VERBOSE)
-	/usr/bin/cmake -E make_directory /media/data/programming/pydwarf/build/i18n
-	/usr/bin/cmake -E copy_if_different /media/data/programming/pydwarf/i18n/DwarfController_de.qm /media/data/programming/pydwarf/i18n/DwarfController_en.qm /media/data/programming/pydwarf/build/i18n
-	/usr/bin/cmake -E make_directory /media/data/programming/pydwarf/build/styles
-	/usr/bin/cmake -E copy_if_different /media/data/programming/pydwarf/styles/app.qss /media/data/programming/pydwarf/build/styles/app.qss
+	/usr/bin/cmake -E make_directory /home/lux/programming/pydwarf/build/i18n
+	/usr/bin/cmake -E copy_if_different /home/lux/programming/pydwarf/i18n/DwarfController_de.qm /home/lux/programming/pydwarf/i18n/DwarfController_en.qm /home/lux/programming/pydwarf/build/i18n
+	/usr/bin/cmake -E make_directory /home/lux/programming/pydwarf/build/styles
+	/usr/bin/cmake -E copy_if_different /home/lux/programming/pydwarf/styles/app.qss /home/lux/programming/pydwarf/build/styles/app.qss
 
 # Rule to build all files generated by this target.
 CMakeFiles/DwarfController.dir/build: DwarfController
@@ -685,6 +685,6 @@ CMakeFiles/DwarfController.dir/depend: system.pb.cc
 CMakeFiles/DwarfController.dir/depend: system.pb.h
 CMakeFiles/DwarfController.dir/depend: tracking.pb.cc
 CMakeFiles/DwarfController.dir/depend: tracking.pb.h
-	cd /media/data/programming/pydwarf/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /media/data/programming/pydwarf /media/data/programming/pydwarf /media/data/programming/pydwarf/build /media/data/programming/pydwarf/build /media/data/programming/pydwarf/build/CMakeFiles/DwarfController.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/lux/programming/pydwarf/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/lux/programming/pydwarf /home/lux/programming/pydwarf /home/lux/programming/pydwarf/build /home/lux/programming/pydwarf/build /home/lux/programming/pydwarf/build/CMakeFiles/DwarfController.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/DwarfController.dir/depend
 

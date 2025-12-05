@@ -91,14 +91,17 @@ CameraSettingsPanel QGroupBox::title {
     color: #3498db;
 }
 
-CameraSettingsPanel QSlider::groove:horizontal {
+/* Slider styles for all panels */
+CameraSettingsPanel QSlider::groove:horizontal,
+AstroNavigationPanel QSlider::groove:horizontal {
     border: 1px solid #444444;
     height: 6px;
     background: #333333;
     border-radius: 3px;
 }
 
-CameraSettingsPanel QSlider::handle:horizontal {
+CameraSettingsPanel QSlider::handle:horizontal,
+AstroNavigationPanel QSlider::handle:horizontal {
     background: #3498db;
     border: 1px solid #2980b9;
     width: 14px;
@@ -106,23 +109,28 @@ CameraSettingsPanel QSlider::handle:horizontal {
     border-radius: 7px;
 }
 
-CameraSettingsPanel QSlider::handle:horizontal:hover {
+CameraSettingsPanel QSlider::handle:horizontal:hover,
+AstroNavigationPanel QSlider::handle:horizontal:hover {
     background: #5dade2;
 }
 
-CameraSettingsPanel QSlider::handle:horizontal:disabled {
+CameraSettingsPanel QSlider::handle:horizontal:disabled,
+AstroNavigationPanel QSlider::handle:horizontal:disabled {
     background: #555555;
 }
 
-CameraSettingsPanel QSlider::sub-page:horizontal:disabled {
+CameraSettingsPanel QSlider::sub-page:horizontal:disabled,
+AstroNavigationPanel QSlider::sub-page:horizontal:disabled {
     background: #555555;
 }
 
-CameraSettingsPanel QSlider::sub-page:horizontal {
+CameraSettingsPanel QSlider::sub-page:horizontal,
+AstroNavigationPanel QSlider::sub-page:horizontal {
     background: #3498db;
     border-radius: 3px;
 }
 
-CameraSettingsPanel QLabel {
+CameraSettingsPanel QLabel,
+AstroNavigationPanel QLabel {
     color: #E0E0E0;
 }

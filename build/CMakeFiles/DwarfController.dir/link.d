@@ -28,6 +28,7 @@ DwarfController: \
   CMakeFiles/DwarfController.dir/camera.pb.cc.o \
   CMakeFiles/DwarfController.dir/focus.pb.cc.o \
   CMakeFiles/DwarfController.dir/motor.pb.cc.o \
+  CMakeFiles/DwarfController.dir/notify.pb.cc.o \
   CMakeFiles/DwarfController.dir/panorama.pb.cc.o \
   CMakeFiles/DwarfController.dir/system.pb.cc.o \
   CMakeFiles/DwarfController.dir/tracking.pb.cc.o \
@@ -205,6 +206,8 @@ CMakeFiles/DwarfController.dir/camera.pb.cc.o:
 CMakeFiles/DwarfController.dir/focus.pb.cc.o:
 
 CMakeFiles/DwarfController.dir/motor.pb.cc.o:
+
+CMakeFiles/DwarfController.dir/notify.pb.cc.o:
 
 CMakeFiles/DwarfController.dir/panorama.pb.cc.o:
 

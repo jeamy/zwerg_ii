@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package dwarf;
+
+// ============================================================================
+// Notification Messages (Module 9)
+// ============================================================================
+
+// 15201 - Battery Notification
+message ResNotifyBattery {
+  int32 value = 1;  // Battery percentage
+}
+
+// 15202 - Charge Status Notification
+message ResNotifyChargeStatus {
+  int32 value = 1;  // 0=not charging, 1=charging
+}
+
+// 15203 - SD Card Info
+message ResNotifySDcardInfo {
+  int64 total = 1;      // Total capacity in bytes
+  int64 available = 2;  // Available space in bytes
+}
+
+// 15206 - Dark Frame Operation State
+message ResNotifyDarkOperationState {
+  int32 state = 1;  // 0=idle, 1=capturing
+}
+
+// 15207 - Dark Frame Capture Progress
+message ResNotifyProgressCaptureRawDark {
+  int32 current_count = 1;  // Current frame number
+  int32 total_count = 2;    // Total frames to capture
+}
+
+// 15208 - Astro Stacking Operation State
+message ResNotifyOperationState {
+  int32 state = 1;  // 0=idle, 1=capturing, 2=stacking
+}
+
+// 15209 - Astro Stacking Progress
+message ResNotifyProgressCaptureRawLiveStacking {
+  int32 current_count = 1;    // Current frame number
+  int32 total_count = 2;      // Total frames (0 = unlimited)
+  int32 stacked_count = 3;    // Successfully stacked frames
+  int32 rejected_count = 4;   // Rejected frames
+  int32 exp_index = 5;        // Exposure index
+  int32 gain_index = 6;       // Gain index
+  int32 bin_index = 7;        // Binning index
+}
+
+// 15210 - Calibration State
+message ResNotifyStateAstroCalibration {
+  int32 state = 1;  // 0=idle, 1=calibrating, 2=success, 3=failed
+  int32 code = 2;   // Error code if failed
+}
+
+// 15211 - GOTO State
+message ResNotifyStateAstroGoto {
+  int32 state = 1;  // 0=idle, 1=slewing, 2=centering, 3=tracking
+  int32 code = 2;   // Error code if failed
+}
+
+// 15212 - Tracking State
+message ResNotifyStateAstroTracking {
+  int32 state = 1;  // 0=idle, 1=tracking
+}
+
+// 15233 - One-Click GOTO State
+message ResNotifyOneClickGotoState {
+  int32 step = 1;     // 10=calibrating, 20=slewing, 30=centering, 40=tracking
+  int32 state = 2;    // 0=in progress, 1=success, 2=failed
+  int32 code = 3;     // Error code if failed
+}
+
+// 15236 - Wide Stacking Operation State
+message ResNotifyWideOperationState {
+  int32 state = 1;  // 0=idle, 1=capturing
+}
+
+// 15237 - Wide Stacking Progress
+message ResNotifyProgressCaptureWideRawLiveStacking {
+  int32 current_count = 1;
+  int32 total_count = 2;
+  int32 stacked_count = 3;
+  int32 rejected_count = 4;
+}
+
+// 15239 - EQ Solving State
+message ResNotifyEqSolvingState {
+  int32 state = 1;
+  double azi_err = 2;
+  double alt_err = 3;
+}
+
+// 15243 - Temperature
+message ResNotifyTemperature {
+  int32 temperature = 1;  // Temperature in Celsius
+}
+
+// 15257 - Focus Position
+message ResNotifyFocus {
+  int32 position = 1;
+}

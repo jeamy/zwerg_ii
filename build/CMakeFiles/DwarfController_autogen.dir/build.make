@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /media/data/programming/pydwarf
+CMAKE_SOURCE_DIR = /home/lux/programming/pydwarf
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /media/data/programming/pydwarf/build
+CMAKE_BINARY_DIR = /home/lux/programming/pydwarf/build
 
 # Utility rule file for DwarfController_autogen.
 
@@ -71,9 +71,9 @@ CMakeFiles/DwarfController_autogen: DwarfController_autogen/timestamp
 DwarfController_autogen/timestamp: /usr/lib64/qt6/libexec/moc
 DwarfController_autogen/timestamp: /usr/lib64/qt6/libexec/uic
 DwarfController_autogen/timestamp: CMakeFiles/DwarfController_autogen.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic MOC and UIC for target DwarfController"
-	/usr/bin/cmake -E cmake_autogen /media/data/programming/pydwarf/build/CMakeFiles/DwarfController_autogen.dir/AutogenInfo.json Debug
-	/usr/bin/cmake -E touch /media/data/programming/pydwarf/build/DwarfController_autogen/timestamp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic MOC and UIC for target DwarfController"
+	/usr/bin/cmake -E cmake_autogen /home/lux/programming/pydwarf/build/CMakeFiles/DwarfController_autogen.dir/AutogenInfo.json Debug
+	/usr/bin/cmake -E touch /home/lux/programming/pydwarf/build/DwarfController_autogen/timestamp
 
 CMakeFiles/DwarfController_autogen.dir/codegen:
 .PHONY : CMakeFiles/DwarfController_autogen.dir/codegen
@@ -92,6 +92,6 @@ CMakeFiles/DwarfController_autogen.dir/clean:
 .PHONY : CMakeFiles/DwarfController_autogen.dir/clean
 
 CMakeFiles/DwarfController_autogen.dir/depend:
-	cd /media/data/programming/pydwarf/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /media/data/programming/pydwarf /media/data/programming/pydwarf /media/data/programming/pydwarf/build /media/data/programming/pydwarf/build /media/data/programming/pydwarf/build/CMakeFiles/DwarfController_autogen.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/lux/programming/pydwarf/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/lux/programming/pydwarf /home/lux/programming/pydwarf /home/lux/programming/pydwarf/build /home/lux/programming/pydwarf/build /home/lux/programming/pydwarf/build/CMakeFiles/DwarfController_autogen.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/DwarfController_autogen.dir/depend
 

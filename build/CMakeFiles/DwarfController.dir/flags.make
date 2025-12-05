@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = -DQT_CORE_LIB -DQT_GUI_LIB -DQT_MULTIMEDIAWIDGETS_LIB -DQT_MULTIMEDIA_LIB -DQT_NETWORK_LIB -DQT_SQL_LIB -DQT_WEBSOCKETS_LIB -DQT_WIDGETS_LIB
 
-CXX_INCLUDES = -I/media/data/programming/pydwarf/build/DwarfController_autogen/include -I/media/data/programming/pydwarf/build -I/media/data/programming/pydwarf/src -isystem /usr/include/qt6/QtWidgets -isystem /usr/include/qt6 -isystem /usr/include/qt6/QtCore -isystem /usr/lib64/qt6/mkspecs/linux-g++ -isystem /usr/include/qt6/QtGui -isystem /usr/include/qt6/QtNetwork -isystem /usr/include/qt6/QtMultimedia -isystem /usr/include/qt6/QtMultimediaWidgets -isystem /usr/include/qt6/QtWebSockets -isystem /usr/include/qt6/QtSql
+CXX_INCLUDES = -I/home/lux/programming/pydwarf/build/DwarfController_autogen/include -I/home/lux/programming/pydwarf/build -I/home/lux/programming/pydwarf/src -isystem /usr/include/qt6/QtWidgets -isystem /usr/include/qt6 -isystem /usr/include/qt6/QtCore -isystem /usr/lib64/qt6/mkspecs/linux-g++ -isystem /usr/include/qt6/QtGui -isystem /usr/include/qt6/QtNetwork -isystem /usr/include/qt6/QtMultimedia -isystem /usr/include/qt6/QtMultimediaWidgets -isystem /usr/include/qt6/QtWebSockets -isystem /usr/include/qt6/QtSql
 
 CXX_FLAGS = -g -std=gnu++17
 

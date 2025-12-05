@@ -197,7 +197,7 @@ void DwarfFinder::checkNextIp() {
 }
 
 void DwarfFinder::getDeviceInfo(const QString &ip) {
-  QUrl url(QString("http://%1:8082/getdeviceinfo").arg(ip));
+  QUrl url(QString("http://%1:8082/getdeviceInfo").arg(ip));
   QNetworkRequest request(url);
   request.setTransferTimeout(1000); // 1s timeout for HTTP
 

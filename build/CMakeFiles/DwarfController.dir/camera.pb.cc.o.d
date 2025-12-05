@@ -1,7 +1,7 @@
 CMakeFiles/DwarfController.dir/camera.pb.cc.o: \
- /media/data/programming/pydwarf/build/camera.pb.cc \
+ /home/lux/programming/pydwarf/build/camera.pb.cc \
  /usr/include/stdc-predef.h \
- /media/data/programming/pydwarf/build/camera.pb.h \
+ /home/lux/programming/pydwarf/build/camera.pb.h \
  /usr/include/c++/15/limits \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
  /usr/include/bits/wordsize.h \

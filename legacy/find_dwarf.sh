@@ -28,7 +28,7 @@ for ip in ${SUBNET}.{1..254}; do
                 echo "   Ports: 8082 (HTTP), 8092 (Stream), 9900 (WebSocket)"
                 
                 # Versuche Geräte-Info abzurufen
-                INFO=$(curl -s -m 2 "http://$ip:8082/getdeviceinfo" 2>/dev/null)
+                INFO=$(curl -s -m 2 "http://$ip:8082/getdeviceInfo" 2>/dev/null)
                 if [ ! -z "$INFO" ]; then
                     echo "   Info: $INFO"
                 fi

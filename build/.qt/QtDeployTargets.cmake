@@ -1,2 +1,2 @@
-set(__QT_DEPLOY_TARGET_DwarfController_FILE /media/data/programming/pydwarf/build/DwarfController)
+set(__QT_DEPLOY_TARGET_DwarfController_FILE /home/lux/programming/pydwarf/build/DwarfController)
 set(__QT_DEPLOY_TARGET_DwarfController_TYPE EXECUTABLE)

@@ -1,5 +1,15 @@
 # Build
 build/
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Qt Creator / Qt
+.qt/
+cmake-build-*/
 
 # Dokumentation (große Dateien)
 /doc/DWARF API2.0*
@@ -21,6 +31,9 @@ ENV/
 database/*.db
 database/*.db-journal
 database/*.db-wal
+
+# Projekt-Daten
+/data/*.db
 
 # IDE
 .vscode/
