@@ -14,7 +14,7 @@
 
 1. **Projekt initialisieren**
    ```bash
-   cd /media/data/programming/pydwarf
+   cd /media/data/programming/zwergii
    mkdir -p backend/app/{api,models,services,utils}
    mkdir -p backend/proto
    mkdir -p frontend/{css,js/components,js/utils}

@@ -1,9 +1,10 @@
 CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o: \
- /home/lux/programming/pydwarf/src/net/DwarfCameraController.cpp \
+ /media/data/programming/zwergII/src/net/DwarfCameraController.cpp \
  /usr/include/stdc-predef.h \
- /home/lux/programming/pydwarf/src/net/DwarfCameraController.h \
- /home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.h \
- /home/lux/programming/pydwarf/build/base.pb.h /usr/include/c++/15/limits \
+ /media/data/programming/zwergII/src/net/DwarfCameraController.h \
+ /media/data/programming/zwergII/src/net/DwarfWebSocketClient.h \
+ /media/data/programming/zwergII/build/base.pb.h \
+ /usr/include/c++/15/limits \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
  /usr/include/bits/wordsize.h \
  /usr/include/c++/15/x86_64-redhat-linux/bits/os_defines.h \
@@ -407,9 +408,9 @@ CMakeFiles/DwarfController.dir/src/net/DwarfCameraController.cpp.o: \
  /usr/include/qt6/QtWebSockets/qwebsockets_global.h \
  /usr/include/qt6/QtWebSockets/qtwebsocketsexports.h \
  /usr/include/qt6/QtWebSockets/qwebsocketprotocol.h \
- /home/lux/programming/pydwarf/build/camera.pb.h \
+ /media/data/programming/zwergII/build/camera.pb.h \
  /usr/include/google/protobuf/generated_message_bases.h \
  /usr/include/google/protobuf/io/zero_copy_stream_impl.h \
- /home/lux/programming/pydwarf/src/net/ProtobufHelper.h \
+ /media/data/programming/zwergII/src/net/ProtobufHelper.h \
  /usr/include/qt6/QtCore/QByteArray /usr/include/qt6/QtCore/qbytearray.h \
  /usr/include/qt6/QtCore/QDebug /usr/include/qt6/QtCore/qdebug.h

@@ -1,7 +1,7 @@
 CMakeFiles/DwarfController.dir/system.pb.cc.o: \
- /home/lux/programming/pydwarf/build/system.pb.cc \
+ /media/data/programming/zwergII/build/system.pb.cc \
  /usr/include/stdc-predef.h \
- /home/lux/programming/pydwarf/build/system.pb.h \
+ /media/data/programming/zwergII/build/system.pb.h \
  /usr/include/c++/15/limits \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
  /usr/include/bits/wordsize.h \

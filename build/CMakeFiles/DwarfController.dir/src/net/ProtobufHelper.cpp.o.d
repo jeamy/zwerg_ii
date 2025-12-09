@@ -1,7 +1,7 @@
 CMakeFiles/DwarfController.dir/src/net/ProtobufHelper.cpp.o: \
- /home/lux/programming/pydwarf/src/net/ProtobufHelper.cpp \
+ /media/data/programming/zwergII/src/net/ProtobufHelper.cpp \
  /usr/include/stdc-predef.h \
- /home/lux/programming/pydwarf/src/net/ProtobufHelper.h \
+ /media/data/programming/zwergII/src/net/ProtobufHelper.h \
  /usr/include/qt6/QtCore/QByteArray /usr/include/qt6/QtCore/qbytearray.h \
  /usr/include/qt6/QtCore/qrefcount.h /usr/include/qt6/QtCore/qatomic.h \
  /usr/include/qt6/QtCore/qbasicatomic.h \

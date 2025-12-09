@@ -1,16 +1,16 @@
 {
-	"BUILD_DIR" : "/home/lux/programming/pydwarf/build/DwarfController_autogen",
-	"CMAKE_BINARY_DIR" : "/home/lux/programming/pydwarf/build",
-	"CMAKE_CURRENT_BINARY_DIR" : "/home/lux/programming/pydwarf/build",
-	"CMAKE_CURRENT_SOURCE_DIR" : "/home/lux/programming/pydwarf",
+	"BUILD_DIR" : "/media/data/programming/zwergII/build/DwarfController_autogen",
+	"CMAKE_BINARY_DIR" : "/media/data/programming/zwergII/build",
+	"CMAKE_CURRENT_BINARY_DIR" : "/media/data/programming/zwergII/build",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/media/data/programming/zwergII",
 	"CMAKE_EXECUTABLE" : "/usr/bin/cmake",
 	"CMAKE_LIST_FILES" : 
 	[
-		"/home/lux/programming/pydwarf/CMakeLists.txt",
-		"/home/lux/programming/pydwarf/build/CMakeFiles/3.31.6/CMakeSystem.cmake",
+		"/media/data/programming/zwergII/CMakeLists.txt",
+		"/media/data/programming/zwergII/build/CMakeFiles/3.31.6/CMakeSystem.cmake",
 		"/usr/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake",
 		"/usr/share/cmake/Modules/Platform/Linux-Initialize.cmake",
-		"/home/lux/programming/pydwarf/build/CMakeFiles/3.31.6/CMakeCXXCompiler.cmake",
+		"/media/data/programming/zwergII/build/CMakeFiles/3.31.6/CMakeCXXCompiler.cmake",
 		"/usr/share/cmake/Modules/CMakeSystemSpecificInformation.cmake",
 		"/usr/share/cmake/Modules/CMakeGenericSystem.cmake",
 		"/usr/share/cmake/Modules/CMakeInitializeConfigs.cmake",
@@ -526,184 +526,184 @@
 		"/usr/share/cmake/Modules/FindPackageHandleStandardArgs.cmake",
 		"/usr/share/cmake/Modules/FindPackageMessage.cmake"
 	],
-	"CMAKE_SOURCE_DIR" : "/home/lux/programming/pydwarf",
+	"CMAKE_SOURCE_DIR" : "/media/data/programming/zwergII",
 	"CROSS_CONFIG" : false,
-	"DEP_FILE" : "/home/lux/programming/pydwarf/build/DwarfController_autogen/deps",
+	"DEP_FILE" : "/media/data/programming/zwergII/build/DwarfController_autogen/deps",
 	"DEP_FILE_RULE_NAME" : "DwarfController_autogen/timestamp",
 	"HEADERS" : 
 	[
 		[
-			"/home/lux/programming/pydwarf/build/astro.pb.h",
+			"/media/data/programming/zwergII/build/astro.pb.h",
 			"MU",
 			"JU62CA5L7X/moc_astro.pb.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/build/base.pb.h",
+			"/media/data/programming/zwergII/build/base.pb.h",
 			"MU",
 			"JU62CA5L7X/moc_base.pb.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/build/camera.pb.h",
+			"/media/data/programming/zwergII/build/camera.pb.h",
 			"MU",
 			"JU62CA5L7X/moc_camera.pb.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/build/focus.pb.h",
+			"/media/data/programming/zwergII/build/focus.pb.h",
 			"MU",
 			"JU62CA5L7X/moc_focus.pb.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/build/motor.pb.h",
+			"/media/data/programming/zwergII/build/motor.pb.h",
 			"MU",
 			"JU62CA5L7X/moc_motor.pb.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/build/notify.pb.h",
+			"/media/data/programming/zwergII/build/notify.pb.h",
 			"MU",
 			"JU62CA5L7X/moc_notify.pb.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/build/panorama.pb.h",
+			"/media/data/programming/zwergII/build/panorama.pb.h",
 			"MU",
 			"JU62CA5L7X/moc_panorama.pb.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/build/system.pb.h",
+			"/media/data/programming/zwergII/build/system.pb.h",
 			"MU",
 			"JU62CA5L7X/moc_system.pb.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/build/tracking.pb.h",
+			"/media/data/programming/zwergII/build/tracking.pb.h",
 			"MU",
 			"JU62CA5L7X/moc_tracking.pb.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/MainWindow.h",
+			"/media/data/programming/zwergII/src/MainWindow.h",
 			"MU",
 			"UVLADIE3JM/moc_MainWindow.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfAstroController.h",
+			"/media/data/programming/zwergII/src/net/DwarfAstroController.h",
 			"MU",
 			"7OIUYE7PDQ/moc_DwarfAstroController.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfCameraController.h",
+			"/media/data/programming/zwergII/src/net/DwarfCameraController.h",
 			"MU",
 			"7OIUYE7PDQ/moc_DwarfCameraController.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfFinder.h",
+			"/media/data/programming/zwergII/src/net/DwarfFinder.h",
 			"MU",
 			"7OIUYE7PDQ/moc_DwarfFinder.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfFocusController.h",
+			"/media/data/programming/zwergII/src/net/DwarfFocusController.h",
 			"MU",
 			"7OIUYE7PDQ/moc_DwarfFocusController.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfFtpClient.h",
+			"/media/data/programming/zwergII/src/net/DwarfFtpClient.h",
 			"MU",
 			"7OIUYE7PDQ/moc_DwarfFtpClient.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfFtpDownloader.h",
+			"/media/data/programming/zwergII/src/net/DwarfFtpDownloader.h",
 			"MU",
 			"7OIUYE7PDQ/moc_DwarfFtpDownloader.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfHttpClient.h",
+			"/media/data/programming/zwergII/src/net/DwarfHttpClient.h",
 			"MU",
 			"7OIUYE7PDQ/moc_DwarfHttpClient.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfMessageDispatcher.h",
+			"/media/data/programming/zwergII/src/net/DwarfMessageDispatcher.h",
 			"MU",
 			"7OIUYE7PDQ/moc_DwarfMessageDispatcher.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfMjpegStream.h",
+			"/media/data/programming/zwergII/src/net/DwarfMjpegStream.h",
 			"MU",
 			"7OIUYE7PDQ/moc_DwarfMjpegStream.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfMjpegView.h",
+			"/media/data/programming/zwergII/src/net/DwarfMjpegView.h",
 			"MU",
 			"7OIUYE7PDQ/moc_DwarfMjpegView.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfMotorController.h",
+			"/media/data/programming/zwergII/src/net/DwarfMotorController.h",
 			"MU",
 			"7OIUYE7PDQ/moc_DwarfMotorController.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.h",
+			"/media/data/programming/zwergII/src/net/DwarfWebSocketClient.h",
 			"MU",
 			"7OIUYE7PDQ/moc_DwarfWebSocketClient.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/ProtobufHelper.h",
+			"/media/data/programming/zwergII/src/net/ProtobufHelper.h",
 			"MU",
 			"7OIUYE7PDQ/moc_ProtobufHelper.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/ui/AstroNavigationPanel.h",
+			"/media/data/programming/zwergII/src/ui/AstroNavigationPanel.h",
 			"MU",
 			"YPKJ5OE7LN/moc_AstroNavigationPanel.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/ui/CameraSettingsPanel.h",
+			"/media/data/programming/zwergII/src/ui/CameraSettingsPanel.h",
 			"MU",
 			"YPKJ5OE7LN/moc_CameraSettingsPanel.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/ui/ImageSettingsWidget.h",
+			"/media/data/programming/zwergII/src/ui/ImageSettingsWidget.h",
 			"MU",
 			"YPKJ5OE7LN/moc_ImageSettingsWidget.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/ui/MediaLightbox.h",
+			"/media/data/programming/zwergII/src/ui/MediaLightbox.h",
 			"MU",
 			"YPKJ5OE7LN/moc_MediaLightbox.cpp",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/ui/StarMapWidget.h",
+			"/media/data/programming/zwergII/src/ui/StarMapWidget.h",
 			"MU",
 			"YPKJ5OE7LN/moc_StarMapWidget.cpp",
 			null
 		]
 	],
 	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
-	"INCLUDE_DIR" : "/home/lux/programming/pydwarf/build/DwarfController_autogen/include",
-	"MOC_COMPILATION_FILE" : "/home/lux/programming/pydwarf/build/DwarfController_autogen/mocs_compilation.cpp",
+	"INCLUDE_DIR" : "/media/data/programming/zwergII/build/DwarfController_autogen/include",
+	"MOC_COMPILATION_FILE" : "/media/data/programming/zwergII/build/DwarfController_autogen/mocs_compilation.cpp",
 	"MOC_DEFINITIONS" : 
 	[
 		"QT_CORE_LIB",
@@ -724,8 +724,8 @@
 	],
 	"MOC_INCLUDES" : 
 	[
-		"/home/lux/programming/pydwarf/build",
-		"/home/lux/programming/pydwarf/src",
+		"/media/data/programming/zwergII/build",
+		"/media/data/programming/zwergII/src",
 		"/usr/include/qt6/QtWidgets",
 		"/usr/include/qt6",
 		"/usr/include/qt6/QtCore",
@@ -763,108 +763,116 @@
 		"-c",
 		"/usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
 	],
-	"MOC_PREDEFS_FILE" : "/home/lux/programming/pydwarf/build/DwarfController_autogen/moc_predefs.h",
+	"MOC_PREDEFS_FILE" : "/media/data/programming/zwergII/build/DwarfController_autogen/moc_predefs.h",
 	"MOC_RELAXED_MODE" : false,
 	"MOC_SKIP" : [],
 	"MULTI_CONFIG" : false,
 	"PARALLEL" : 8,
-	"PARSE_CACHE_FILE" : "/home/lux/programming/pydwarf/build/CMakeFiles/DwarfController_autogen.dir/ParseCache.txt",
+	"PARSE_CACHE_FILE" : "/media/data/programming/zwergII/build/CMakeFiles/DwarfController_autogen.dir/ParseCache.txt",
 	"QT_MOC_EXECUTABLE" : "/usr/lib64/qt6/libexec/moc",
 	"QT_UIC_EXECUTABLE" : "/usr/lib64/qt6/libexec/uic",
 	"QT_VERSION_MAJOR" : 6,
 	"QT_VERSION_MINOR" : 10,
-	"SETTINGS_FILE" : "/home/lux/programming/pydwarf/build/CMakeFiles/DwarfController_autogen.dir/AutogenUsed.txt",
+	"SETTINGS_FILE" : "/media/data/programming/zwergII/build/CMakeFiles/DwarfController_autogen.dir/AutogenUsed.txt",
 	"SOURCES" : 
 	[
-		[ "/home/lux/programming/pydwarf/build/astro.pb.cc", "MU", null ],
-		[ "/home/lux/programming/pydwarf/build/base.pb.cc", "MU", null ],
-		[ "/home/lux/programming/pydwarf/build/camera.pb.cc", "MU", null ],
-		[ "/home/lux/programming/pydwarf/build/focus.pb.cc", "MU", null ],
-		[ "/home/lux/programming/pydwarf/build/motor.pb.cc", "MU", null ],
-		[ "/home/lux/programming/pydwarf/build/notify.pb.cc", "MU", null ],
-		[ "/home/lux/programming/pydwarf/build/panorama.pb.cc", "MU", null ],
-		[ "/home/lux/programming/pydwarf/build/system.pb.cc", "MU", null ],
-		[ "/home/lux/programming/pydwarf/build/tracking.pb.cc", "MU", null ],
-		[ "/home/lux/programming/pydwarf/src/MainWindow.cpp", "MU", null ],
-		[ "/home/lux/programming/pydwarf/src/main.cpp", "MU", null ],
+		[ "/media/data/programming/zwergII/build/astro.pb.cc", "MU", null ],
+		[ "/media/data/programming/zwergII/build/base.pb.cc", "MU", null ],
+		[ "/media/data/programming/zwergII/build/camera.pb.cc", "MU", null ],
+		[ "/media/data/programming/zwergII/build/focus.pb.cc", "MU", null ],
+		[ "/media/data/programming/zwergII/build/motor.pb.cc", "MU", null ],
+		[ "/media/data/programming/zwergII/build/notify.pb.cc", "MU", null ],
+		[ "/media/data/programming/zwergII/build/panorama.pb.cc", "MU", null ],
+		[ "/media/data/programming/zwergII/build/system.pb.cc", "MU", null ],
+		[ "/media/data/programming/zwergII/build/tracking.pb.cc", "MU", null ],
+		[ "/media/data/programming/zwergII/src/MainWindow.cpp", "MU", null ],
+		[ "/media/data/programming/zwergII/src/main.cpp", "MU", null ],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfAstroController.cpp",
+			"/media/data/programming/zwergII/src/net/DwarfAstroController.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfCameraController.cpp",
+			"/media/data/programming/zwergII/src/net/DwarfCameraController.cpp",
 			"MU",
 			null
 		],
-		[ "/home/lux/programming/pydwarf/src/net/DwarfFinder.cpp", "MU", null ],
+		[ "/media/data/programming/zwergII/src/net/DwarfFinder.cpp", "MU", null ],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfFocusController.cpp",
-			"MU",
-			null
-		],
-		[
-			"/home/lux/programming/pydwarf/src/net/DwarfFtpClient.cpp",
+			"/media/data/programming/zwergII/src/net/DwarfFocusController.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfFtpDownloader.cpp",
+			"/media/data/programming/zwergII/src/net/DwarfFtpClient.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfHttpClient.cpp",
+			"/media/data/programming/zwergII/src/net/DwarfFtpDownloader.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfMessageDispatcher.cpp",
+			"/media/data/programming/zwergII/src/net/DwarfHttpClient.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfMjpegStream.cpp",
+			"/media/data/programming/zwergII/src/net/DwarfMessageDispatcher.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfMjpegView.cpp",
+			"/media/data/programming/zwergII/src/net/DwarfMjpegStream.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfMotorController.cpp",
+			"/media/data/programming/zwergII/src/net/DwarfMjpegView.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.cpp",
+			"/media/data/programming/zwergII/src/net/DwarfMotorController.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/net/ProtobufHelper.cpp",
+			"/media/data/programming/zwergII/src/net/DwarfWebSocketClient.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/ui/AstroNavigationPanel.cpp",
+			"/media/data/programming/zwergII/src/net/ProtobufHelper.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/ui/CameraSettingsPanel.cpp",
+			"/media/data/programming/zwergII/src/ui/AstroNavigationPanel.cpp",
 			"MU",
 			null
 		],
 		[
-			"/home/lux/programming/pydwarf/src/ui/ImageSettingsWidget.cpp",
+			"/media/data/programming/zwergII/src/ui/CameraSettingsPanel.cpp",
 			"MU",
 			null
 		],
-		[ "/home/lux/programming/pydwarf/src/ui/MediaLightbox.cpp", "MU", null ],
-		[ "/home/lux/programming/pydwarf/src/ui/StarMapWidget.cpp", "MU", null ]
+		[
+			"/media/data/programming/zwergII/src/ui/ImageSettingsWidget.cpp",
+			"MU",
+			null
+		],
+		[
+			"/media/data/programming/zwergII/src/ui/MediaLightbox.cpp",
+			"MU",
+			null
+		],
+		[
+			"/media/data/programming/zwergII/src/ui/StarMapWidget.cpp",
+			"MU",
+			null
+		]
 	],
 	"UIC_OPTIONS" : [],
 	"UIC_SEARCH_PATHS" : [],

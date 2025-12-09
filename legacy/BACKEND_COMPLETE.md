@@ -234,7 +234,7 @@ curl -X POST "http://localhost:8000/api/camera/tele/photo?ip=192.168.88.1"
 ## Projekt-Struktur
 
 ```
-pydwarf/
+zwergii/
 ├── backend/
 │   ├── app/
 │   │   ├── api/              # 7 API-Module ✅

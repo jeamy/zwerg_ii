@@ -1,7 +1,7 @@
 CMakeFiles/DwarfController.dir/src/main.cpp.o: \
- /home/lux/programming/pydwarf/src/main.cpp /usr/include/stdc-predef.h \
- /home/lux/programming/pydwarf/src/MainWindow.h \
- /home/lux/programming/pydwarf/src/net/DwarfFinder.h \
+ /media/data/programming/zwergII/src/main.cpp /usr/include/stdc-predef.h \
+ /media/data/programming/zwergII/src/MainWindow.h \
+ /media/data/programming/zwergII/src/net/DwarfFinder.h \
  /usr/include/qt6/QtNetwork/QHostAddress \
  /usr/include/qt6/QtNetwork/qhostaddress.h \
  /usr/include/qt6/QtNetwork/qtnetworkglobal.h \
@@ -344,10 +344,10 @@ CMakeFiles/DwarfController.dir/src/main.cpp.o: \
  /usr/include/qt6/QtCore/QObject /usr/include/qt6/QtCore/QString \
  /usr/include/qt6/QtNetwork/QTcpSocket \
  /usr/include/qt6/QtNetwork/qtcpsocket.h \
- /home/lux/programming/pydwarf/src/net/DwarfMessageDispatcher.h \
+ /media/data/programming/zwergII/src/net/DwarfMessageDispatcher.h \
  /usr/include/qt6/QtCore/QByteArray /usr/include/qt6/QtCore/qbytearray.h \
- /home/lux/programming/pydwarf/src/net/DwarfWebSocketClient.h \
- /home/lux/programming/pydwarf/build/base.pb.h \
+ /media/data/programming/zwergII/src/net/DwarfWebSocketClient.h \
+ /media/data/programming/zwergII/build/base.pb.h \
  /usr/include/google/protobuf/port_def.inc \
  /usr/include/google/protobuf/port_undef.inc \
  /usr/include/google/protobuf/io/coded_stream.h \

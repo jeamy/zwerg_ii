@@ -1,7 +1,7 @@
 CMakeFiles/DwarfController.dir/focus.pb.cc.o: \
- /home/lux/programming/pydwarf/build/focus.pb.cc \
+ /media/data/programming/zwergII/build/focus.pb.cc \
  /usr/include/stdc-predef.h \
- /home/lux/programming/pydwarf/build/focus.pb.h \
+ /media/data/programming/zwergII/build/focus.pb.h \
  /usr/include/c++/15/limits \
  /usr/include/c++/15/x86_64-redhat-linux/bits/c++config.h \
  /usr/include/bits/wordsize.h \

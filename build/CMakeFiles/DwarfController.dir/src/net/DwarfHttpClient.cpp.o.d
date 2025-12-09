@@ -1,7 +1,7 @@
 CMakeFiles/DwarfController.dir/src/net/DwarfHttpClient.cpp.o: \
- /home/lux/programming/pydwarf/src/net/DwarfHttpClient.cpp \
+ /media/data/programming/zwergII/src/net/DwarfHttpClient.cpp \
  /usr/include/stdc-predef.h \
- /home/lux/programming/pydwarf/src/net/DwarfHttpClient.h \
+ /media/data/programming/zwergII/src/net/DwarfHttpClient.h \
  /usr/include/qt6/QtCore/QJsonDocument \
  /usr/include/qt6/QtCore/qjsondocument.h \
  /usr/include/qt6/QtCore/qcompare.h /usr/include/qt6/QtCore/qglobal.h \

@@ -2,11 +2,11 @@
 #include "DwarfWebSocketClient.h"
 #include "astro.pb.h"
 #include "notify.pb.h"
+#include "base.pb.h"
 
 #include <QDebug>
 
 // Astro module command IDs (module 8)
-// Based on https://stevejcl.github.io/dwarfii_api/
 namespace AstroCmd {
     constexpr quint32 START_CALIBRATION = 11000;
     constexpr quint32 STOP_CALIBRATION = 11001;
@@ -28,11 +28,9 @@ namespace AstroCmd {
     constexpr quint32 STOP_CAPTURE_WIDE_RAW_LIVE_STACKING = 11017;
     constexpr quint32 START_EQ_SOLVING = 11018;
     constexpr quint32 STOP_EQ_SOLVING = 11019;
-    constexpr quint32 GO_LIVE_WIDE = 11020;
     constexpr quint32 CAPTURE_DARK_FRAME_WITH_PARAM = 11021;
-    constexpr quint32 STOP_CAPTURE_DARK_FRAME_WITH_PARAM = 11022;
-    constexpr quint32 GET_DARK_FRAME_LIST = 11023;
-    constexpr quint32 DEL_DARK_FRAME_LIST = 11024;
+    constexpr quint32 GET_DARK_FRAME_LIST = 11022;
+    constexpr quint32 DEL_DARK_FRAME_LIST = 11023;
 }
 
 DwarfAstroController::DwarfAstroController(QObject *parent)
@@ -319,6 +317,32 @@ void DwarfAstroController::handleAstroMessage(quint32 cmd, const QByteArray &dat
                 }
                 emit darkFrameListReceived(frames);
             }
+            break;
+        }
+        
+        case AstroCmd::CAPTURE_RAW_LIVE_STACKING: {
+            // Response to stacking start command
+            qDebug() << "Stacking start response received, data size:" << data.size();
+            if (data.size() > 0) {
+                // Parse as ComResponse to check error code
+                dwarf::ComResponse res;
+                if (res.ParseFromArray(data.data(), data.size())) {
+                    qDebug() << "Stacking start response code:" << res.code();
+                    if (res.code() != 0) {
+                        qWarning() << "Stacking start failed with code:" << res.code();
+                    }
+                }
+            }
+            break;
+        }
+        
+        case AstroCmd::STOP_CAPTURE_RAW_LIVE_STACKING: {
+            qDebug() << "Stacking stop response received";
+            break;
+        }
+        
+        case AstroCmd::GO_LIVE: {
+            qDebug() << "Go Live response received, data size:" << data.size();
             break;
         }
         

@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/lux/programming/pydwarf
+CMAKE_SOURCE_DIR = /media/data/programming/zwergII
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/lux/programming/pydwarf/build
+CMAKE_BINARY_DIR = /media/data/programming/zwergII/build
 
 # Utility rule file for DwarfController_autogen_timestamp_deps.
 
@@ -85,74 +85,74 @@ CMakeFiles/DwarfController_autogen_timestamp_deps: system.pb.h
 CMakeFiles/DwarfController_autogen_timestamp_deps: tracking.pb.cc
 CMakeFiles/DwarfController_autogen_timestamp_deps: tracking.pb.h
 
-astro.pb.h: /home/lux/programming/pydwarf/src/proto/astro.proto
+astro.pb.h: /media/data/programming/zwergII/src/proto/astro.proto
 astro.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/astro.proto"
-	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/astro.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/zwergII/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Running cpp protocol buffer compiler on /media/data/programming/zwergII/src/proto/astro.proto"
+	/usr/bin/protoc --cpp_out :/media/data/programming/zwergII/build -I /media/data/programming/zwergII/src/proto /media/data/programming/zwergII/src/proto/astro.proto
 
 astro.pb.cc: astro.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate astro.pb.cc
 
-base.pb.h: /home/lux/programming/pydwarf/src/proto/base.proto
+base.pb.h: /media/data/programming/zwergII/src/proto/base.proto
 base.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/base.proto"
-	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/base.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/zwergII/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Running cpp protocol buffer compiler on /media/data/programming/zwergII/src/proto/base.proto"
+	/usr/bin/protoc --cpp_out :/media/data/programming/zwergII/build -I /media/data/programming/zwergII/src/proto /media/data/programming/zwergII/src/proto/base.proto
 
 base.pb.cc: base.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate base.pb.cc
 
-camera.pb.h: /home/lux/programming/pydwarf/src/proto/camera.proto
+camera.pb.h: /media/data/programming/zwergII/src/proto/camera.proto
 camera.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/camera.proto"
-	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/camera.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/zwergII/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Running cpp protocol buffer compiler on /media/data/programming/zwergII/src/proto/camera.proto"
+	/usr/bin/protoc --cpp_out :/media/data/programming/zwergII/build -I /media/data/programming/zwergII/src/proto /media/data/programming/zwergII/src/proto/camera.proto
 
 camera.pb.cc: camera.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate camera.pb.cc
 
-focus.pb.h: /home/lux/programming/pydwarf/src/proto/focus.proto
+focus.pb.h: /media/data/programming/zwergII/src/proto/focus.proto
 focus.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/focus.proto"
-	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/focus.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/zwergII/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Running cpp protocol buffer compiler on /media/data/programming/zwergII/src/proto/focus.proto"
+	/usr/bin/protoc --cpp_out :/media/data/programming/zwergII/build -I /media/data/programming/zwergII/src/proto /media/data/programming/zwergII/src/proto/focus.proto
 
 focus.pb.cc: focus.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate focus.pb.cc
 
-motor.pb.h: /home/lux/programming/pydwarf/src/proto/motor.proto
+motor.pb.h: /media/data/programming/zwergII/src/proto/motor.proto
 motor.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/motor.proto"
-	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/motor.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/zwergII/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Running cpp protocol buffer compiler on /media/data/programming/zwergII/src/proto/motor.proto"
+	/usr/bin/protoc --cpp_out :/media/data/programming/zwergII/build -I /media/data/programming/zwergII/src/proto /media/data/programming/zwergII/src/proto/motor.proto
 
 motor.pb.cc: motor.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate motor.pb.cc
 
-notify.pb.h: /home/lux/programming/pydwarf/src/proto/notify.proto
+notify.pb.h: /media/data/programming/zwergII/src/proto/notify.proto
 notify.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/notify.proto"
-	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/notify.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/zwergII/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Running cpp protocol buffer compiler on /media/data/programming/zwergII/src/proto/notify.proto"
+	/usr/bin/protoc --cpp_out :/media/data/programming/zwergII/build -I /media/data/programming/zwergII/src/proto /media/data/programming/zwergII/src/proto/notify.proto
 
 notify.pb.cc: notify.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate notify.pb.cc
 
-panorama.pb.h: /home/lux/programming/pydwarf/src/proto/panorama.proto
+panorama.pb.h: /media/data/programming/zwergII/src/proto/panorama.proto
 panorama.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/panorama.proto"
-	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/panorama.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/zwergII/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Running cpp protocol buffer compiler on /media/data/programming/zwergII/src/proto/panorama.proto"
+	/usr/bin/protoc --cpp_out :/media/data/programming/zwergII/build -I /media/data/programming/zwergII/src/proto /media/data/programming/zwergII/src/proto/panorama.proto
 
 panorama.pb.cc: panorama.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate panorama.pb.cc
 
-system.pb.h: /home/lux/programming/pydwarf/src/proto/system.proto
+system.pb.h: /media/data/programming/zwergII/src/proto/system.proto
 system.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/system.proto"
-	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/system.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/zwergII/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Running cpp protocol buffer compiler on /media/data/programming/zwergII/src/proto/system.proto"
+	/usr/bin/protoc --cpp_out :/media/data/programming/zwergII/build -I /media/data/programming/zwergII/src/proto /media/data/programming/zwergII/src/proto/system.proto
 
 system.pb.cc: system.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate system.pb.cc
 
-tracking.pb.h: /home/lux/programming/pydwarf/src/proto/tracking.proto
+tracking.pb.h: /media/data/programming/zwergII/src/proto/tracking.proto
 tracking.pb.h: /usr/bin/protoc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/lux/programming/pydwarf/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Running cpp protocol buffer compiler on /home/lux/programming/pydwarf/src/proto/tracking.proto"
-	/usr/bin/protoc --cpp_out :/home/lux/programming/pydwarf/build -I /home/lux/programming/pydwarf/src/proto /home/lux/programming/pydwarf/src/proto/tracking.proto
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/media/data/programming/zwergII/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Running cpp protocol buffer compiler on /media/data/programming/zwergII/src/proto/tracking.proto"
+	/usr/bin/protoc --cpp_out :/media/data/programming/zwergII/build -I /media/data/programming/zwergII/src/proto /media/data/programming/zwergII/src/proto/tracking.proto
 
 tracking.pb.cc: tracking.pb.h
 	@$(CMAKE_COMMAND) -E touch_nocreate tracking.pb.cc
@@ -191,6 +191,6 @@ CMakeFiles/DwarfController_autogen_timestamp_deps.dir/clean:
 .PHONY : CMakeFiles/DwarfController_autogen_timestamp_deps.dir/clean
 
 CMakeFiles/DwarfController_autogen_timestamp_deps.dir/depend:
-	cd /home/lux/programming/pydwarf/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/lux/programming/pydwarf /home/lux/programming/pydwarf /home/lux/programming/pydwarf/build /home/lux/programming/pydwarf/build /home/lux/programming/pydwarf/build/CMakeFiles/DwarfController_autogen_timestamp_deps.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /media/data/programming/zwergII/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /media/data/programming/zwergII /media/data/programming/zwergII /media/data/programming/zwergII/build /media/data/programming/zwergII/build /media/data/programming/zwergII/build/CMakeFiles/DwarfController_autogen_timestamp_deps.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/DwarfController_autogen_timestamp_deps.dir/depend
 

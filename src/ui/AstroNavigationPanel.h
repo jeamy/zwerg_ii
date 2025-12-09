@@ -56,6 +56,7 @@ private slots:
     void onObjectSelected(const CelestialObject &obj);
     void onObjectDoubleClicked(const CelestialObject &obj);
     void onGotoClicked();
+    void onStopGotoClicked();
     void onCalibrateClicked();
     
     // Search
@@ -100,6 +101,7 @@ private:
     QLabel *m_selectedObjectLabel;
     QLabel *m_objectInfoLabel;
     QPushButton *m_gotoButton;
+    QPushButton *m_stopGotoButton;
     QPushButton *m_calibrateButton;
     QLabel *m_calibrationStatusLabel;
     

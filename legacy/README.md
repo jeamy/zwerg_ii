@@ -21,7 +21,7 @@ Web-basierte Anwendung zur vollständigen Steuerung des DWARF II Teleskops.
 ## Projekt-Struktur
 
 ```
-pydwarf/
+zwergii/
 ├── backend/              # FastAPI Backend
 │   ├── app/
 │   │   ├── api/         # API-Endpoints
@@ -215,4 +215,4 @@ Bei Fragen oder Problemen öffnen Sie bitte ein Issue.
 - [ ] Phase 4: WebSocket-Integration
 - [ ] Phase 5: Testing & Debugging
 - [ ] Phase 6: Deployment
-# pydwarf
+# zwergii

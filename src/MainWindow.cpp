@@ -305,7 +305,7 @@ void MainWindow::setupUi() {
   // Row 1: Connect
   QLabel *ipLabel = new QLabel(tr("DWARF II IP:"), this);
   m_ipInput = new QLineEdit(this);
-  m_ipInput->setText("192.168.8.223");
+  m_ipInput->setText("192.168.8.30");
   m_ipInput->setPlaceholderText(tr("Enter IP address"));
 
   m_connectButton = new QPushButton(tr("Connect"), this);
@@ -508,7 +508,11 @@ void MainWindow::setupUi() {
   m_astroController = new DwarfAstroController(this);
   m_astroController->setClient(m_wsClient);
   
-  // Connect notification messages to astro controller
+  // Connect astro messages (Module 8) to astro controller
+  connect(m_dispatcher, &DwarfMessageDispatcher::astroMessage,
+          m_astroController, &DwarfAstroController::handleAstroMessage);
+  
+  // Connect notification messages (Module 9) to astro controller
   connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage,
           m_astroController, &DwarfAstroController::handleNotification);
   

@@ -77,9 +77,14 @@ void AstroNavigationPanel::setupStarMapTab() {
     m_gotoButton->setEnabled(false);
     m_gotoButton->setStyleSheet("QPushButton { background-color: #27ae60; color: white; font-weight: bold; padding: 10px; }");
     
+    m_stopGotoButton = new QPushButton(tr("Stop"), infoGroup);
+    m_stopGotoButton->setEnabled(false);
+    m_stopGotoButton->setStyleSheet("QPushButton { background-color: #c0392b; color: white; font-weight: bold; padding: 10px; }");
+    
     infoLayout->addWidget(m_selectedObjectLabel, 0, 0, 1, 2);
     infoLayout->addWidget(m_objectInfoLabel, 1, 0, 1, 2);
-    infoLayout->addWidget(m_gotoButton, 2, 0, 1, 2);
+    infoLayout->addWidget(m_gotoButton, 2, 0);
+    infoLayout->addWidget(m_stopGotoButton, 2, 1);
     
     // Calibration controls
     auto *calibrationGroup = new QGroupBox(tr("Calibration"), tab);
@@ -403,6 +408,7 @@ void AstroNavigationPanel::connectSignals() {
     connect(m_starMap, &StarMapWidget::objectSelected, this, &AstroNavigationPanel::onObjectSelected);
     connect(m_starMap, &StarMapWidget::objectDoubleClicked, this, &AstroNavigationPanel::onObjectDoubleClicked);
     connect(m_gotoButton, &QPushButton::clicked, this, &AstroNavigationPanel::onGotoClicked);
+    connect(m_stopGotoButton, &QPushButton::clicked, this, &AstroNavigationPanel::onStopGotoClicked);
     
     // Search signals
     connect(m_searchEdit, &QLineEdit::textChanged, this, &AstroNavigationPanel::onSearchTextChanged);
@@ -430,7 +436,7 @@ void AstroNavigationPanel::loadCatalog() {
         QCoreApplication::applicationDirPath() + "/data/stars.db",
         QDir::currentPath() + "/data/stars.db",
         QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/stars.db",
-        "/usr/share/pydwarf/stars.db"
+        "/usr/share/zwergii/stars.db"
     };
     
     for (const QString &path : searchPaths) {
@@ -471,6 +477,7 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
         connect(m_astroController, &DwarfAstroController::gotoStarted, this, [this](const QString &name) {
             m_gotoButton->setEnabled(false);
             m_gotoButton->setText(tr("Going to %1...").arg(name));
+            m_stopGotoButton->setEnabled(true);
         });
         connect(m_astroController, &DwarfAstroController::gotoProgress, this, [this](int step) {
             // Steps: 10=calibrating, 20=slewing, 30=centering, 40=tracking
@@ -487,10 +494,12 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
         connect(m_astroController, &DwarfAstroController::gotoCompleted, this, [this]() {
             m_gotoButton->setEnabled(true);
             m_gotoButton->setText(tr("GOTO"));
+            m_stopGotoButton->setEnabled(false);
         });
         connect(m_astroController, &DwarfAstroController::gotoFailed, this, [this](const QString &error) {
             m_gotoButton->setEnabled(true);
             m_gotoButton->setText(tr("GOTO"));
+            m_stopGotoButton->setEnabled(false);
             QMessageBox::warning(this, tr("GOTO Failed"), error);
         });
         
@@ -609,6 +618,16 @@ void AstroNavigationPanel::onObjectDoubleClicked(const CelestialObject &obj) {
 void AstroNavigationPanel::onGotoClicked() {
     if (m_selectedObject.isVisible) {
         gotoObject(m_selectedObject);
+    }
+}
+
+void AstroNavigationPanel::onStopGotoClicked() {
+    if (m_astroController) {
+        qDebug() << "Stopping GOTO...";
+        m_astroController->stopGoto();
+        m_gotoButton->setEnabled(true);
+        m_gotoButton->setText(tr("GOTO"));
+        m_stopGotoButton->setEnabled(false);
     }
 }
 
@@ -736,6 +755,10 @@ void AstroNavigationPanel::onStartStackingClicked() {
         qWarning() << "No AstroController set!";
         return;
     }
+    if (!m_cameraController) {
+        qWarning() << "No CameraController set!";
+        return;
+    }
     
     m_isStacking = true;
     m_currentFrame = 0;
@@ -756,7 +779,22 @@ void AstroNavigationPanel::onStartStackingClicked() {
     m_stackingTimer->start(100); // Update UI every 100ms
     
     int exposureIndex = m_astroExposureSlider->value();
+    int gainIndex = m_astroGainSlider->value();
+    
+    // Set camera parameters BEFORE starting stacking
+    // The DWARF II requires exposure/gain to be set via camera API first
+    qDebug() << "Setting camera params for stacking: exposure index=" << exposureIndex 
+             << "gain index=" << gainIndex;
+    m_cameraController->setExposureMode(DwarfCameraController::CameraKind::Tele, 1);  // Manual mode
+    m_cameraController->setExposureIndex(DwarfCameraController::CameraKind::Tele, exposureIndex);
+    m_cameraController->setGainMode(DwarfCameraController::CameraKind::Tele, 1);  // Manual mode
+    m_cameraController->setGainIndex(DwarfCameraController::CameraKind::Tele, gainIndex);
+    
     emit stackingStarted(m_totalFrames, exposureIndex);
+    
+    // First activate Astro mode with "Go Live", then start stacking
+    qDebug() << "Activating Astro mode (Go Live)...";
+    m_astroController->goLive();
     
     // Start stacking via AstroController
     m_astroController->startLiveStacking();
@@ -859,7 +897,7 @@ void AstroNavigationPanel::onAutoLocationClicked() {
     
     // ip-api.com returns: lat, lon, city, country, etc.
     QNetworkRequest request(QUrl("http://ip-api.com/json/?fields=status,message,lat,lon,city,country"));
-    request.setHeader(QNetworkRequest::UserAgentHeader, "PyDwarf/1.0");
+    request.setHeader(QNetworkRequest::UserAgentHeader, "zwergii/1.0");
     manager->get(request);
 }
 

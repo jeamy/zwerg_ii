@@ -50,17 +50,17 @@ docker-compose down
 docker-compose down -v
 
 # In Container einloggen
-docker exec -it pydwarf-app bash
+docker exec -it zwergii-app bash
 
 # Python-Shell im Container
-docker exec -it pydwarf-app python
+docker exec -it zwergii-app python
 ```
 
 ## Protobuf kompilieren
 
 ```bash
 # Im Container
-docker exec -it pydwarf-app bash
+docker exec -it zwergii-app bash
 cd backend/proto
 protoc --python_out=../app/services/proto/ *.proto
 ```

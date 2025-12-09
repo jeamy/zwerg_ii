@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    container_name: pydwarf-app
+    container_name: zwergii-app
     volumes:
       # Source-Code wird gemountet - Änderungen bleiben aktuell
       - ./backend:/app/backend
