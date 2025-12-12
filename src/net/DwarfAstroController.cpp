@@ -174,13 +174,15 @@ void DwarfAstroController::stopTrackSpecialTarget() {
 // ============================================================================
 
 void DwarfAstroController::startLiveStacking() {
-    qDebug() << "=== DwarfAstroController::startLiveStacking() called";
-    qDebug() << "    Module: 3, Cmd: 11005 (CAPTURE_RAW_LIVE_STACKING)";
+    qWarning() << "=== DwarfAstroController::startLiveStacking() called";
+    qWarning() << "    Module: 3, Cmd: 11005 (CAPTURE_RAW_LIVE_STACKING)";
     dwarf::ReqCaptureRawLiveStacking req;
     QByteArray data = QByteArray::fromStdString(req.SerializeAsString());
-    qDebug() << "    Payload size:" << data.size() << "bytes";
+    qWarning() << "    Payload size:" << data.size() << "bytes";
     sendCommand(AstroCmd::CAPTURE_RAW_LIVE_STACKING, data);
-    qDebug() << "    Command sent, emitting stackingStarted signal";
+    qWarning() << "    Command sent, emitting stackingStarted signal";
+    qWarning() << "    Waiting for response from Module 3 Cmd 11005...";
+    qWarning() << "    If no progress notifications (15209) come within 5s, stacking failed to start!";
     emit stackingStarted();
 }
 
@@ -282,6 +284,7 @@ void DwarfAstroController::goLive() {
 // ============================================================================
 
 void DwarfAstroController::handleAstroMessage(quint32 cmd, const QByteArray &data) {
+    qWarning() << "[AstroController::handleAstroMessage] Cmd:" << cmd << "Size:" << data.size();
     switch (cmd) {
         case AstroCmd::CHECK_DARK_FRAME: {
             dwarf::ResCheckDarkFrame res;
@@ -356,7 +359,20 @@ void DwarfAstroController::handleAstroMessage(quint32 cmd, const QByteArray &dat
         }
         
         case AstroCmd::GO_LIVE: {
-            qDebug() << "Go Live response received, data size:" << data.size();
+            qWarning() << "=== GO LIVE response received, data size:" << data.size();
+            if (data.size() > 0) {
+                dwarf::ComResponse res;
+                if (res.ParseFromArray(data.data(), data.size())) {
+                    qWarning() << "    Go Live response code:" << res.code();
+                    if (res.code() != 0) {
+                        qWarning() << "    ✗ Go Live FAILED with code:" << res.code();
+                    } else {
+                        qWarning() << "    ✓ Go Live activated successfully";
+                    }
+                }
+            } else {
+                qWarning() << "    ✓ Go Live command acknowledged (empty response)";
+            }
             break;
         }
         
