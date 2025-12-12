@@ -8,8 +8,8 @@ DwarfMessageDispatcher::DwarfMessageDispatcher(QObject *parent)
 void DwarfMessageDispatcher::dispatch(std::uint32_t moduleId,
                                       std::uint32_t cmd,
                                       const QByteArray &data) {
-  qDebug() << "Dispatching message module" << moduleId << "cmd" << cmd
-           << "size" << data.size();
+  qWarning() << "[DISPATCHER] Module:" << moduleId << "Cmd:" << cmd
+             << "Size:" << data.size();
 
   switch (moduleId) {
   case MODULE_CAMERA_TELE:

@@ -389,6 +389,7 @@ namespace NotifyCmd {
 }
 
 void DwarfAstroController::handleNotification(quint32 cmd, const QByteArray &data) {
+    qWarning() << "[AstroController::handleNotification] Cmd:" << cmd << "Size:" << data.size();
     switch (cmd) {
         case NotifyCmd::BATTERY: {
             dwarf::ResNotifyBattery res;
