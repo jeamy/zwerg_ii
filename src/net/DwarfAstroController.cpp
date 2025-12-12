@@ -415,14 +415,24 @@ void DwarfAstroController::handleNotification(quint32 cmd, const QByteArray &dat
         }
         
         case NotifyCmd::STACKING_PROGRESS: {
+            qDebug() << "=== STACKING_PROGRESS notification, data size:" << data.size();
+            
+            if (data.size() == 0) {
+                qWarning() << "Empty stacking progress notification";
+                break;
+            }
+            
             dwarf::ResNotifyProgressCaptureRawLiveStacking res;
             if (res.ParseFromArray(data.data(), data.size())) {
-                qDebug() << "Stacking progress: frame" << res.current_count() 
+                qDebug() << "✓ Stacking progress: frame" << res.current_count() 
                          << "/" << res.total_count()
                          << "stacked:" << res.stacked_count()
                          << "rejected:" << res.rejected_count();
                 emit stackingProgress(res.current_count(), res.total_count(), 
                                       res.stacked_count(), res.rejected_count());
+            } else {
+                qWarning() << "✗ Failed to parse stacking progress notification";
+                qWarning() << "   Raw data (hex):" << data.toHex();
             }
             break;
         }
