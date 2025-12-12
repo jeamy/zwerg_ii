@@ -48,8 +48,8 @@ void DwarfAstroController::sendCommand(quint32 cmd, const QByteArray &data) {
         return;
     }
     
-    // Module 8 = Astro module
-    m_client->sendCommand(8, cmd, data);
+    // Module 3 = Astro module (not 8, that's Focus!)
+    m_client->sendCommand(3, cmd, data);
 }
 
 // ============================================================================
