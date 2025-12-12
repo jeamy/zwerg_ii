@@ -76,11 +76,16 @@ void DwarfAstroController::stopCalibration() {
 // ============================================================================
 
 void DwarfAstroController::gotoDSO(double ra, double dec, const QString &targetName) {
-    qDebug() << "GOTO DSO:" << targetName << "RA:" << ra << "Dec:" << dec;
+    // Convert RA from degrees (0-360) to hours (0-24)
+    double raHours = ra / 15.0;
+    
+    qDebug() << "GOTO DSO:" << targetName 
+             << "RA:" << ra << "deg (" << raHours << "hours)"
+             << "Dec:" << dec << "deg";
     
     dwarf::ReqGotoDSO req;
-    req.set_ra(ra);
-    req.set_dec(dec);
+    req.set_ra(raHours);  // API expects hours
+    req.set_dec(dec);     // Dec is already in degrees
     req.set_target_name(targetName.toStdString());
     
     sendCommand(AstroCmd::GOTO_DSO,
@@ -89,11 +94,16 @@ void DwarfAstroController::gotoDSO(double ra, double dec, const QString &targetN
 }
 
 void DwarfAstroController::oneClickGotoDSO(double ra, double dec, const QString &targetName) {
-    qDebug() << "One-Click GOTO DSO:" << targetName << "RA:" << ra << "Dec:" << dec;
+    // Convert RA from degrees (0-360) to hours (0-24)
+    double raHours = ra / 15.0;
+    
+    qDebug() << "One-Click GOTO DSO:" << targetName 
+             << "RA:" << ra << "deg (" << raHours << "hours)"
+             << "Dec:" << dec << "deg";
     
     dwarf::ReqOneClickGotoDSO req;
-    req.set_ra(ra);
-    req.set_dec(dec);
+    req.set_ra(raHours);  // API expects hours
+    req.set_dec(dec);     // Dec is already in degrees
     req.set_target_name(targetName.toStdString());
     
     sendCommand(AstroCmd::ONE_CLICK_GOTO_DSO,

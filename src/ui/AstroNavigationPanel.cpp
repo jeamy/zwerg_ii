@@ -781,10 +781,11 @@ void AstroNavigationPanel::onStartStackingClicked() {
     int exposureIndex = m_astroExposureSlider->value();
     int gainIndex = m_astroGainSlider->value();
     
-    // Set camera parameters BEFORE starting stacking
+    // STEP 1: Set camera parameters BEFORE starting stacking
     // The DWARF II requires exposure/gain to be set via camera API first
     qDebug() << "Setting camera params for stacking: exposure index=" << exposureIndex 
              << "gain index=" << gainIndex;
+    m_stackingStatusLabel->setText(tr("Preparing camera..."));
     m_cameraController->setExposureMode(DwarfCameraController::CameraKind::Tele, 1);  // Manual mode
     m_cameraController->setExposureIndex(DwarfCameraController::CameraKind::Tele, exposureIndex);
     m_cameraController->setGainMode(DwarfCameraController::CameraKind::Tele, 1);  // Manual mode
@@ -792,13 +793,23 @@ void AstroNavigationPanel::onStartStackingClicked() {
     
     emit stackingStarted(m_totalFrames, exposureIndex);
     
-    // First activate Astro mode with "Go Live", then start stacking
-    qDebug() << "Activating Astro mode (Go Live)...";
-    m_astroController->goLive();
-    
-    // Start stacking via AstroController
-    m_astroController->startLiveStacking();
-    qDebug() << "Starting stacking:" << m_totalFrames << "frames @ exposure index" << exposureIndex;
+    // STEP 2: Wait 200ms for camera params to apply, then activate Astro mode
+    QTimer::singleShot(200, this, [this]() {
+        if (!m_isStacking) return; // User cancelled
+        
+        m_stackingStatusLabel->setText(tr("Activating Astro mode..."));
+        qDebug() << "Activating Astro mode (Go Live)...";
+        m_astroController->goLive();
+        
+        // STEP 3: Wait 800ms for Go Live to activate, then start stacking
+        QTimer::singleShot(800, this, [this]() {
+            if (!m_isStacking) return; // User cancelled
+            
+            m_stackingStatusLabel->setText(tr("Starting stacking..."));
+            qDebug() << "Starting live stacking:" << m_totalFrames << "frames";
+            m_astroController->startLiveStacking();
+        });
+    });
 }
 
 void AstroNavigationPanel::onStopStackingClicked() {
