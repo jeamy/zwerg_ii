@@ -793,20 +793,20 @@ void AstroNavigationPanel::onStartStackingClicked() {
     
     emit stackingStarted(m_totalFrames, exposureIndex);
     
-    // STEP 2: Wait 200ms for camera params to apply, then activate Astro mode
-    QTimer::singleShot(200, this, [this]() {
+    // STEP 2: Wait 300ms for camera params to apply, then activate Astro mode
+    QTimer::singleShot(300, this, [this]() {
         if (!m_isStacking) return; // User cancelled
         
         m_stackingStatusLabel->setText(tr("Activating Astro mode..."));
-        qDebug() << "Activating Astro mode (Go Live)...";
+        qDebug() << "=== STEP 2: Activating Astro mode (Go Live)...";
         m_astroController->goLive();
         
-        // STEP 3: Wait 800ms for Go Live to activate, then start stacking
-        QTimer::singleShot(800, this, [this]() {
+        // STEP 3: Wait 1500ms for Go Live to activate, then start stacking
+        QTimer::singleShot(1500, this, [this]() {
             if (!m_isStacking) return; // User cancelled
             
             m_stackingStatusLabel->setText(tr("Starting stacking..."));
-            qDebug() << "Starting live stacking:" << m_totalFrames << "frames";
+            qDebug() << "=== STEP 3: Starting live stacking:" << m_totalFrames << "frames";
             m_astroController->startLiveStacking();
         });
     });

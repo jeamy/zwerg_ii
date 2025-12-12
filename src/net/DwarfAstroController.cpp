@@ -48,6 +48,7 @@ void DwarfAstroController::sendCommand(quint32 cmd, const QByteArray &data) {
         return;
     }
     
+    qDebug() << "[AstroController] Sending command - Module: 3, Cmd:" << cmd << "Data size:" << data.size();
     // Module 3 = Astro module (not 8, that's Focus!)
     m_client->sendCommand(3, cmd, data);
 }
@@ -173,10 +174,13 @@ void DwarfAstroController::stopTrackSpecialTarget() {
 // ============================================================================
 
 void DwarfAstroController::startLiveStacking() {
-    qDebug() << "Starting live stacking...";
+    qDebug() << "=== DwarfAstroController::startLiveStacking() called";
+    qDebug() << "    Module: 3, Cmd: 11005 (CAPTURE_RAW_LIVE_STACKING)";
     dwarf::ReqCaptureRawLiveStacking req;
-    sendCommand(AstroCmd::CAPTURE_RAW_LIVE_STACKING,
-                QByteArray::fromStdString(req.SerializeAsString()));
+    QByteArray data = QByteArray::fromStdString(req.SerializeAsString());
+    qDebug() << "    Payload size:" << data.size() << "bytes";
+    sendCommand(AstroCmd::CAPTURE_RAW_LIVE_STACKING, data);
+    qDebug() << "    Command sent, emitting stackingStarted signal";
     emit stackingStarted();
 }
 
@@ -395,10 +399,17 @@ void DwarfAstroController::handleNotification(quint32 cmd, const QByteArray &dat
         }
         
         case NotifyCmd::STACKING_STATE: {
+            qDebug() << "=== STACKING_STATE notification, data size:" << data.size();
+            if (data.size() == 0) {
+                qWarning() << "Empty stacking state notification - device may not be ready";
+                break;
+            }
             dwarf::ResNotifyOperationState res;
             if (res.ParseFromArray(data.data(), data.size())) {
                 qDebug() << "Stacking state:" << res.state();
                 emit stackingStateChanged(res.state());
+            } else {
+                qWarning() << "Failed to parse stacking state notification";
             }
             break;
         }
