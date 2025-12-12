@@ -1,2 +1,0 @@
-set(__QT_DEPLOY_TARGET_DwarfController_FILE /media/data/programming/zwergII/build/DwarfController)
-set(__QT_DEPLOY_TARGET_DwarfController_TYPE EXECUTABLE)
