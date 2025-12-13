@@ -299,7 +299,7 @@ void DwarfAstroController::handleAstroMessage(quint32 cmd, const QByteArray &dat
         case AstroCmd::ONE_CLICK_GOTO_SOLAR: {
             dwarf::ResOneClickGoto res;
             if (res.ParseFromArray(data.data(), data.size())) {
-                qWarning() << "=== GOTO progress: step" << res.step() << "state" << res.state() << "code" << res.code();
+                qWarning() << "=== GOTO progress: step" << res.step() << "all_end" << res.all_end() << "code" << res.code();
                 emit gotoProgress(res.step());
                 if (res.all_end()) {
                     if (res.code() == 0) {
