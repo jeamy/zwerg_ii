@@ -339,14 +339,32 @@ void DwarfAstroController::handleAstroMessage(quint32 cmd, const QByteArray &dat
         
         case AstroCmd::CAPTURE_RAW_LIVE_STACKING: {
             // Response to stacking start command
-            qDebug() << "Stacking start response received, data size:" << data.size();
+            qWarning() << "=== STACKING START response received, data size:" << data.size();
             if (data.size() > 0) {
                 // Parse as ComResponse to check error code
                 dwarf::ComResponse res;
                 if (res.ParseFromArray(data.data(), data.size())) {
-                    qDebug() << "Stacking start response code:" << res.code();
+                    qWarning() << "    Response code:" << res.code();
                     if (res.code() != 0) {
-                        qWarning() << "Stacking start failed with code:" << res.code();
+                        QString errorMsg;
+                        switch (res.code()) {
+                            case -11513:
+                                errorMsg = "GOTO required! Please use GOTO to a target first, then start stacking.";
+                                break;
+                            case -11514:
+                                errorMsg = "Parameters not suitable! Check exposure/gain settings.";
+                                break;
+                            case -11503:
+                                errorMsg = "Dark frame not found! Capture dark frames first.";
+                                break;
+                            default:
+                                errorMsg = QString("Error code: %1").arg(res.code());
+                                break;
+                        }
+                        qCritical() << "✗ Stacking start FAILED:" << errorMsg;
+                        emit stackingFailed(errorMsg);
+                    } else {
+                        qWarning() << "    ✓ Stacking started successfully";
                     }
                 }
             }

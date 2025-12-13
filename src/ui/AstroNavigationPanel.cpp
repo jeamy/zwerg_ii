@@ -561,6 +561,20 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
                     break;
             }
         });
+        
+        connect(m_astroController, &DwarfAstroController::stackingFailed, this, [this](const QString &error) {
+            m_stackingStatusLabel->setText(tr("Failed: %1").arg(error));
+            m_isStacking = false;
+            m_stackingTimer->stop();
+            m_startStackingButton->setEnabled(true);
+            m_stopStackingButton->setEnabled(false);
+            m_numFramesSpin->setEnabled(true);
+            m_astroExposureSlider->setEnabled(true);
+            m_astroGainSlider->setEnabled(true);
+            
+            // Show error in message box
+            QMessageBox::warning(this, tr("Stacking Failed"), error);
+        });
     }
 }
 

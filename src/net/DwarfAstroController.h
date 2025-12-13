@@ -73,6 +73,7 @@ signals:
     void stackingProgress(int currentFrame, int totalFrames, int stackedFrames, int rejectedFrames);
     void stackingStateChanged(int state);  // 0=idle, 1=capturing, 2=stacking
     void stackingStopped();
+    void stackingFailed(const QString &error);
     
     void darkFrameProgress(int current, int total);
     void darkFrameListReceived(const QList<QVariantMap> &frames);
