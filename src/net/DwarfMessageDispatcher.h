@@ -29,14 +29,20 @@ signals:
                       const QByteArray &data);
 
 private:
+  // Module IDs based on DWARF II API
+  // Commands 10000-10999 = Camera Tele (Module 1)
+  // Commands 11000-11999 = Astro (Module 8)
+  // Commands 12000-12999 = Camera Wide (Module 2)
+  // Commands 13000-13999 = System (Module 4)
+  // Notifications 15000+ = Notify (Module 9)
   static constexpr std::uint32_t MODULE_CAMERA_TELE = 1;
   static constexpr std::uint32_t MODULE_CAMERA_WIDE = 2;
-  static constexpr std::uint32_t MODULE_ASTRO = 3;
+  static constexpr std::uint32_t MODULE_FOCUS = 3;        // Focus module
   static constexpr std::uint32_t MODULE_SYSTEM = 4;
   static constexpr std::uint32_t MODULE_RGB_POWER = 5;
   static constexpr std::uint32_t MODULE_MOTOR = 6;
   static constexpr std::uint32_t MODULE_TRACK = 7;
-  static constexpr std::uint32_t MODULE_FOCUS = 8;
+  static constexpr std::uint32_t MODULE_ASTRO = 8;        // Astro module (GOTO, Stacking, etc.)
   static constexpr std::uint32_t MODULE_NOTIFY = 9;
   static constexpr std::uint32_t MODULE_PANORAMA = 10;
 };

@@ -1,5 +1,6 @@
 # Build
 build/
+
 # CMake
 CMakeFiles/
 CMakeCache.txt
@@ -33,7 +34,6 @@ database/*.db-journal
 database/*.db-wal
 
 # Projekt-Daten
-/data/*.db
 
 # IDE
 .vscode/
