@@ -1,10 +1,18 @@
 # How to Use Stacking in DWARF II Controller
 
-## ⚠️ Important: GOTO Required!
+## ⚠️ CRITICAL: GOTO MUST BE DONE FIRST!
 
 **Stacking will NOT work without first performing a GOTO!**
 
 Error code `-11513` means: "You must GOTO a target before stacking."
+
+**⚠️ WARNING: Once you start stacking, GOTO will fail!**
+
+Error code `-10501` means: "Camera is closed" - This happens because:
+- Stacking switches the camera to RAW mode (preview stops)
+- GOTO needs the camera open for plate solving
+- **Solution: Do GOTO BEFORE starting any stacking!**
+- If you already started stacking: Stop it and restart the app
 
 ## Why?
 
@@ -79,8 +87,32 @@ Without tracking, each frame would show a different position → stacking fails.
 
 ## Troubleshooting
 
+### ⚠️ Error: "Camera is closed! GOTO requires an open camera"
+**This is error code `-10501`**
+
+**Cause:** You tried to GOTO after starting stacking.
+
+**Why it happens:**
+- Stacking switches camera to RAW mode (preview stops)
+- GOTO needs camera open to see stars (plate solving)
+- Once in RAW mode, camera can't be used for GOTO
+
+**Solution:**
+1. Stop stacking (click "Stop Stacking")
+2. Disconnect and reconnect (to reset camera)
+3. Do GOTO FIRST
+4. THEN start stacking
+
+**Prevention:** Always follow the correct order:
+```
+✓ CORRECT:   Connect → GOTO → Stacking
+✗ WRONG:     Connect → Stacking → GOTO (will fail!)
+```
+
 ### Error: "GOTO required! Please use GOTO to a target first"
-**Solution:** You skipped step 4. Do GOTO before stacking.
+**This is error code `-11513`**
+
+**Solution:** You skipped GOTO step. Do GOTO before stacking.
 
 ### Error: "Parameters not suitable"
 **Solution:** Your exposure/gain settings are invalid. Try:

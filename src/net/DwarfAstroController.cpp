@@ -299,17 +299,26 @@ void DwarfAstroController::handleAstroMessage(quint32 cmd, const QByteArray &dat
         case AstroCmd::ONE_CLICK_GOTO_SOLAR: {
             dwarf::ResOneClickGoto res;
             if (res.ParseFromArray(data.data(), data.size())) {
-                qWarning() << "[GOTO] Response: step=" << res.step() 
-                           << "code=" << res.code() 
-                           << "all_end=" << res.all_end();
+                qWarning() << "=== GOTO progress: step" << res.step() << "all_end" << res.all_end() << "code" << res.code();
                 emit gotoProgress(res.step());
                 if (res.all_end()) {
                     if (res.code() == 0) {
-                        qWarning() << "[GOTO] ✓ Completed successfully";
+                        qWarning() << "    ✓ GOTO completed successfully";
                         emit gotoCompleted();
                     } else {
-                        qWarning() << "[GOTO] ✗ Failed with code:" << res.code();
-                        emit gotoFailed(QString("Error code: %1").arg(res.code()));
+                        QString errorMsg;
+                        switch (res.code()) {
+                            case -10501:
+                                errorMsg = "Camera is closed! GOTO requires an open camera for plate solving.\n\n"
+                                          "Solution: Do NOT use 'Go Live' or stop stacking before GOTO.\n"
+                                          "Restart the app if needed.";
+                                break;
+                            default:
+                                errorMsg = QString("Error code: %1").arg(res.code());
+                                break;
+                        }
+                        qCritical() << "    ✗ GOTO failed:" << errorMsg;
+                        emit gotoFailed(errorMsg);
                     }
                 }
             } else {
