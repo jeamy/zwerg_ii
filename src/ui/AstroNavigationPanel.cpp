@@ -4,6 +4,7 @@
 #include "../net/DwarfWebSocketClient.h"
 #include "../net/DwarfCameraController.h"
 #include "../net/DwarfAstroController.h"
+#include "../net/Lx200Server.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -35,6 +36,7 @@ AstroNavigationPanel::AstroNavigationPanel(QWidget *parent)
     , m_totalFrames(0)
     , m_rejectedFrames(0)
     , m_stackingTimer(new QTimer(this))
+    , m_lx200Server(new Lx200Server(this))
 {
     setupUI();
     connectSignals();
@@ -396,8 +398,31 @@ void AstroNavigationPanel::setupSettingsTab() {
     // Connect auto-location button
     connect(m_autoLocationButton, &QPushButton::clicked, this, &AstroNavigationPanel::onAutoLocationClicked);
     
+    // LX200 Server settings
+    auto *lx200Group = new QGroupBox(tr("LX200 Server"), tab);
+    auto *lx200Layout = new QGridLayout(lx200Group);
+    
+    m_lx200EnableCheck = new QCheckBox(tr("Enable LX200 Server"), lx200Group);
+    m_lx200EnableCheck->setToolTip(tr("Start a local TCP server for external apps like SkySafari or Stellarium"));
+    lx200Layout->addWidget(m_lx200EnableCheck, 0, 0, 1, 2);
+    
+    lx200Layout->addWidget(new QLabel(tr("Port:")), 1, 0);
+    m_lx200PortSpin = new QSpinBox(lx200Group);
+    m_lx200PortSpin->setRange(1024, 65535);
+    m_lx200PortSpin->setValue(4030);
+    m_lx200PortSpin->setToolTip(tr("TCP port for LX200 connections (default: 4030)"));
+    lx200Layout->addWidget(m_lx200PortSpin, 1, 1);
+    
+    m_lx200StatusLabel = new QLabel(tr("Server stopped"), lx200Group);
+    m_lx200StatusLabel->setStyleSheet("color: gray;");
+    lx200Layout->addWidget(m_lx200StatusLabel, 2, 0, 1, 2);
+    
+    connect(m_lx200EnableCheck, &QCheckBox::toggled, this, &AstroNavigationPanel::onLx200EnableToggled);
+    connect(m_lx200PortSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &AstroNavigationPanel::onLx200PortChanged);
+    
     layout->addWidget(displayGroup);
     layout->addWidget(locationGroup);
+    layout->addWidget(lx200Group);
     layout->addStretch();
     
     m_tabWidget->addTab(tab, tr("Settings"));
@@ -427,6 +452,61 @@ void AstroNavigationPanel::connectSignals() {
     connect(m_showConstellationsCheck, &QCheckBox::toggled, this, &AstroNavigationPanel::onShowConstellationsToggled);
     connect(m_showGridCheck, &QCheckBox::toggled, this, &AstroNavigationPanel::onShowGridToggled);
     connect(m_showLabelsCheck, &QCheckBox::toggled, this, &AstroNavigationPanel::onShowLabelsToggled);
+    
+    // LX200 server signals
+    connect(m_lx200Server, &Lx200Server::runningChanged, this, [this](bool running) {
+        if (running) {
+            m_lx200StatusLabel->setText(tr("Listening on port %1").arg(m_lx200Server->listeningPort()));
+            m_lx200StatusLabel->setStyleSheet("color: green;");
+        } else {
+            m_lx200StatusLabel->setText(tr("Server stopped"));
+            m_lx200StatusLabel->setStyleSheet("color: gray;");
+        }
+        m_lx200PortSpin->setEnabled(!running);
+    });
+    
+    connect(m_lx200Server, &Lx200Server::clientConnected, this, [this](const QHostAddress &, quint16) {
+        if (m_lx200Server->isRunning()) {
+            int count = m_lx200Server->clientCount();
+            m_lx200StatusLabel->setText(tr("Port %1 - %2 client(s)").arg(m_lx200Server->listeningPort()).arg(count));
+        }
+    });
+    
+    connect(m_lx200Server, &Lx200Server::clientDisconnected, this, [this](const QHostAddress &, quint16) {
+        if (m_lx200Server->isRunning()) {
+            int count = m_lx200Server->clientCount();
+            if (count > 0) {
+                m_lx200StatusLabel->setText(tr("Port %1 - %2 client(s)").arg(m_lx200Server->listeningPort()).arg(count));
+            } else {
+                m_lx200StatusLabel->setText(tr("Listening on port %1").arg(m_lx200Server->listeningPort()));
+            }
+        }
+    });
+    
+    connect(m_lx200Server, &Lx200Server::errorOccurred, this, [this](const QString &error) {
+        m_lx200StatusLabel->setText(tr("Error: %1").arg(error));
+        m_lx200StatusLabel->setStyleSheet("color: red;");
+        m_lx200EnableCheck->setChecked(false);
+    });
+    
+    connect(m_lx200Server, &Lx200Server::gotoRequested, this, [this](double raDeg, double decDeg) {
+        qDebug() << "[LX200] GOTO requested: RA" << raDeg << "Dec" << decDeg;
+        emit gotoRequested(raDeg, decDeg);
+        
+        if (m_astroController) {
+            QString targetName = QString("LX200 Target RA:%1 Dec:%2")
+                .arg(raDeg / 15.0, 0, 'f', 2)
+                .arg(decDeg, 0, 'f', 2);
+            m_astroController->oneClickGotoDSO(raDeg, decDeg, targetName);
+        }
+    });
+    
+    connect(m_lx200Server, &Lx200Server::stopRequested, this, [this]() {
+        qDebug() << "[LX200] Stop requested";
+        if (m_astroController) {
+            m_astroController->stopGoto();
+        }
+    });
 }
 
 void AstroNavigationPanel::loadCatalog() {
@@ -598,6 +678,7 @@ void AstroNavigationPanel::setLocation(double latitude, double longitude) {
 
 void AstroNavigationPanel::setTelescopePointing(double ra, double dec) {
     m_starMap->setTelescopePointing(ra, dec);
+    m_lx200Server->setCurrentPosition(ra, dec);
 }
 
 void AstroNavigationPanel::onObjectSelected(const CelestialObject &obj) {
@@ -954,4 +1035,26 @@ void AstroNavigationPanel::onLocationReceived(const QJsonObject &location) {
     m_locationStatusLabel->setStyleSheet("color: green;");
     
     qDebug() << "Auto-detected location:" << lat << lon << "-" << locationStr;
+}
+
+void AstroNavigationPanel::onLx200EnableToggled(bool enabled) {
+    if (enabled) {
+        quint16 port = static_cast<quint16>(m_lx200PortSpin->value());
+        m_lx200Server->setLocation(m_latitudeSpin->value(), m_longitudeSpin->value());
+        if (!m_lx200Server->start(port)) {
+            m_lx200EnableCheck->setChecked(false);
+        }
+    } else {
+        m_lx200Server->stop();
+    }
+}
+
+void AstroNavigationPanel::onLx200PortChanged(int port) {
+    Q_UNUSED(port);
+    // Port change only takes effect on next server start
+    // If server is running, user needs to restart it
+    if (m_lx200Server->isRunning()) {
+        m_lx200StatusLabel->setText(tr("Restart server to apply new port"));
+        m_lx200StatusLabel->setStyleSheet("color: orange;");
+    }
 }

@@ -299,14 +299,21 @@ void DwarfAstroController::handleAstroMessage(quint32 cmd, const QByteArray &dat
         case AstroCmd::ONE_CLICK_GOTO_SOLAR: {
             dwarf::ResOneClickGoto res;
             if (res.ParseFromArray(data.data(), data.size())) {
+                qWarning() << "[GOTO] Response: step=" << res.step() 
+                           << "code=" << res.code() 
+                           << "all_end=" << res.all_end();
                 emit gotoProgress(res.step());
                 if (res.all_end()) {
                     if (res.code() == 0) {
+                        qWarning() << "[GOTO] ✓ Completed successfully";
                         emit gotoCompleted();
                     } else {
+                        qWarning() << "[GOTO] ✗ Failed with code:" << res.code();
                         emit gotoFailed(QString("Error code: %1").arg(res.code()));
                     }
                 }
+            } else {
+                qWarning() << "[GOTO] Failed to parse response, raw hex:" << data.toHex();
             }
             break;
         }

@@ -47,6 +47,8 @@ set(SOURCES
     src/net/DwarfFocusController.h
     src/net/DwarfAstroController.cpp
     src/net/DwarfAstroController.h
+    src/net/Lx200Server.cpp
+    src/net/Lx200Server.h
     src/net/DwarfMjpegStream.cpp
     src/net/DwarfMjpegStream.h
     src/net/DwarfMjpegView.cpp

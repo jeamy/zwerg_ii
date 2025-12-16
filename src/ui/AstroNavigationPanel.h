@@ -20,6 +20,7 @@
 class DwarfWebSocketClient;
 class DwarfCameraController;
 class DwarfAstroController;
+class Lx200Server;
 class ImageSettingsWidget;
 class WhiteBalanceWidget;
 
@@ -76,6 +77,9 @@ private slots:
     void onShowLabelsToggled(bool checked);
     void onAutoLocationClicked();
     void onLocationReceived(const QJsonObject &location);
+
+    void onLx200EnableToggled(bool enabled);
+    void onLx200PortChanged(int port);
 
 private:
     void setupUI();
@@ -156,11 +160,17 @@ private:
     QDoubleSpinBox *m_altitudeSpin;
     QPushButton *m_autoLocationButton;
     QLabel *m_locationStatusLabel;
+
+    QCheckBox *m_lx200EnableCheck;
+    QSpinBox *m_lx200PortSpin;
+    QLabel *m_lx200StatusLabel;
     
     // Controllers
     DwarfWebSocketClient *m_wsClient;
     DwarfCameraController *m_cameraController;
     DwarfAstroController *m_astroController;
+
+    Lx200Server *m_lx200Server;
     
     // Current selection
     CelestialObject m_selectedObject;

@@ -12,10 +12,11 @@ import csv
 import os
 import urllib.request
 import sys
+import gzip
 
 # URLs for catalog data
-# HYG moved to Codeberg
-HYG_URL = "https://codeberg.org/astronexus/hyg/raw/branch/main/hyg/v4/hyg_v41.csv"
+# HYG is now hosted on Codeberg; use current HYG v4.2 (gzipped CSV)
+HYG_URL = "https://codeberg.org/astronexus/hyg/media/branch/main/data/hyg/CURRENT/hyg_v42.csv.gz"
 OPENGC_URL = "https://raw.githubusercontent.com/mattiaverga/OpenNGC/master/database_files/NGC.csv"
 
 DB_PATH = "stars.db"
@@ -31,7 +32,31 @@ def download_file(url, filename):
     print(f"  Downloading {filename}...")
     urllib.request.urlretrieve(url, filepath)
     print(f"  Downloaded {filename}")
+
+    # Validate downloads: Codeberg raw endpoint may return Git-LFS pointer text.
+    # Also validate gzip magic for .gz files.
+    try:
+        with open(filepath, 'rb') as chk:
+            head = chk.read(64)
+        if head.startswith(b'version https://git-lfs.github.com/spec/'):
+            raise RuntimeError(
+                f"Downloaded a Git-LFS pointer instead of the real file: {filename}. "
+                f"Please use a /media/ URL for Codeberg-hosted LFS files. URL was: {url}"
+            )
+        if filename.lower().endswith('.gz') and not head.startswith(b'\x1f\x8b'):
+            raise RuntimeError(
+                f"Downloaded file is not a gzip stream: {filename} (header={head[:2]!r}). URL was: {url}"
+            )
+    except Exception:
+        # Re-raise with a clean error so the user immediately sees what's wrong.
+        raise
+
     return filepath
+
+def _open_text_maybe_gzip(path):
+    if path.lower().endswith('.gz'):
+        return gzip.open(path, 'rt', encoding='utf-8', newline='')
+    return open(path, 'r', encoding='utf-8', newline='')
 
 def create_database():
     """Create the SQLite database with star and DSO tables."""
@@ -99,7 +124,7 @@ def import_hyg_catalog(conn, filepath):
     cursor = conn.cursor()
     
     count = 0
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with _open_text_maybe_gzip(filepath) as f:
         reader = csv.DictReader(f)
         for row in reader:
             try:
@@ -236,7 +261,7 @@ def main():
     
     # Download catalogs
     print("Step 1: Downloading catalogs...")
-    hyg_file = download_file(HYG_URL, "hyg_v41.csv")
+    hyg_file = download_file(HYG_URL, "hyg_v42.csv.gz")
     ngc_file = download_file(OPENGC_URL, "NGC.csv")
     print()
     
