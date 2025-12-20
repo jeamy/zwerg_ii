@@ -9,6 +9,7 @@
 #include <QPen>
 #include <QtMath>
 #include <QDebug>
+#include <QRegularExpression>
 
 namespace {
 // Astronomical constants
@@ -157,7 +158,7 @@ void StarMapWidget::loadStarsFromDatabase() {
     
     // Load bright stars from HYG catalog
     query.prepare(R"(
-        SELECT id, proper, ra, dec, mag, spect, con
+        SELECT id, proper, ra, dec, mag, spect, con, hip, bayer, flam
         FROM stars
         WHERE mag <= :magLimit
         ORDER BY mag ASC
@@ -174,7 +175,21 @@ void StarMapWidget::loadStarsFromDatabase() {
     while (query.next()) {
         CelestialObject star;
         star.id = query.value(0).toInt();
-        star.name = query.value(1).toString();
+        const QString proper = query.value(1).toString();
+        const int hip = query.value(7).toInt();
+        const QString bayer = query.value(8).toString();
+        const QString flam = query.value(9).toString();
+
+        if (!proper.isEmpty()) {
+            star.name = proper;
+        } else if (!bayer.isEmpty()) {
+            star.name = flam.isEmpty() ? bayer : (bayer + " " + flam);
+        } else if (hip > 0) {
+            star.name = QString("HIP %1").arg(hip);
+        } else {
+            star.name = QString("Star %1").arg(star.id);
+        }
+
         star.commonName = star.name;
         star.type = "star";
         star.ra = query.value(2).toDouble() * HOURS_TO_DEG; // Convert hours to degrees
@@ -193,10 +208,10 @@ void StarMapWidget::loadDeepSkyFromDatabase() {
     
     // Load deep sky objects from OpenNGC
     query.prepare(R"(
-        SELECT name, ra, dec, mag, type, const, common_names
+        SELECT name, ra, dec, mag, type, const, common_names, messier
         FROM dso
         WHERE mag <= :magLimit OR mag IS NULL
-        ORDER BY mag ASC NULLS LAST
+        ORDER BY CASE WHEN mag IS NULL THEN 1 ELSE 0 END, mag ASC
         LIMIT 2000
     )");
     query.bindValue(":magLimit", m_magnitudeLimit + 4.0);
@@ -215,8 +230,18 @@ void StarMapWidget::loadDeepSkyFromDatabase() {
         dso.magnitude = query.value(3).isNull() ? 99.0 : query.value(3).toDouble();
         dso.type = query.value(4).toString();
         dso.constellation = query.value(5).toString();
-        dso.commonName = query.value(6).toString();
-        if (dso.commonName.isEmpty()) dso.commonName = dso.name;
+        const QString commonNames = query.value(6).toString();
+        const QString messier = query.value(7).toString();
+
+        QStringList parts;
+        if (!messier.isEmpty())
+            parts << messier;
+        if (!commonNames.isEmpty())
+            parts << commonNames;
+
+        dso.commonName = parts.join(" ");
+        if (dso.commonName.isEmpty())
+            dso.commonName = dso.name;
         m_deepSkyObjects.append(dso);
     }
     
@@ -225,20 +250,36 @@ void StarMapWidget::loadDeepSkyFromDatabase() {
 
 QVector<CelestialObject> StarMapWidget::searchObjects(const QString &query, int limit) {
     QVector<CelestialObject> results;
-    QString lowerQuery = query.toLower();
+
+    auto normalizeMessier = [](QString s) {
+        s = s.toLower();
+        // Normalize Messier: m031 / m 031 -> m31
+        static const QRegularExpression re(QStringLiteral("\\bm\\s*0*([0-9]{1,3})\\b"));
+        s.replace(re, QStringLiteral("m\\1"));
+        return s;
+    };
+
+    const QString lowerQuery = query.toLower();
+    const QString normalizedQuery = normalizeMessier(query);
     
     // Search in loaded objects first
     for (const auto &star : m_stars) {
-        if (star.name.toLower().contains(lowerQuery) ||
-            star.commonName.toLower().contains(lowerQuery)) {
+        const QString name = star.name.toLower();
+        const QString common = star.commonName.toLower();
+        if (name.contains(lowerQuery) || common.contains(lowerQuery) ||
+            normalizeMessier(name).contains(normalizedQuery) ||
+            normalizeMessier(common).contains(normalizedQuery)) {
             results.append(star);
             if (results.size() >= limit) return results;
         }
     }
     
     for (const auto &dso : m_deepSkyObjects) {
-        if (dso.name.toLower().contains(lowerQuery) ||
-            dso.commonName.toLower().contains(lowerQuery)) {
+        const QString name = dso.name.toLower();
+        const QString common = dso.commonName.toLower();
+        if (name.contains(lowerQuery) || common.contains(lowerQuery) ||
+            normalizeMessier(name).contains(normalizedQuery) ||
+            normalizeMessier(common).contains(normalizedQuery)) {
             results.append(dso);
             if (results.size() >= limit) return results;
         }

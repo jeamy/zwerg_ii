@@ -167,28 +167,12 @@ void AstroNavigationPanel::setupStarMapTab() {
     calibrationLayout->addWidget(m_calibrationStatusLabel, 1);
     
     connect(m_calibrateButton, &QPushButton::clicked, this, &AstroNavigationPanel::onCalibrateClicked);
-    
+
+    // Place Selected Object + Calibration under Visible Tonight in the right column
+    rightPanelLayout->addWidget(infoGroup);
+    rightPanelLayout->addWidget(calibrationGroup);
+
     contentLayout->addLayout(topRowLayout, 1);
-
-    auto *infoRow = new QWidget(m_starMapContent);
-    auto *infoRowLayout = new QHBoxLayout(infoRow);
-    infoRowLayout->setContentsMargins(0, 0, 0, 0);
-    infoRowLayout->setSpacing(0);
-    infoRowLayout->addStretch(1);
-    infoGroup->setMaximumWidth(900);
-    infoRowLayout->addWidget(infoGroup);
-    infoRowLayout->addStretch(1);
-    contentLayout->addWidget(infoRow);
-
-    auto *calRow = new QWidget(m_starMapContent);
-    auto *calRowLayout = new QHBoxLayout(calRow);
-    calRowLayout->setContentsMargins(0, 0, 0, 0);
-    calRowLayout->setSpacing(0);
-    calRowLayout->addStretch(1);
-    calibrationGroup->setMaximumWidth(900);
-    calRowLayout->addWidget(calibrationGroup);
-    calRowLayout->addStretch(1);
-    contentLayout->addWidget(calRow);
 
     m_starMapTabLayout->addWidget(m_starMapContent, 1);
     
@@ -555,6 +539,7 @@ void AstroNavigationPanel::connectSignals() {
     connect(m_searchEdit, &QLineEdit::textChanged, this, &AstroNavigationPanel::onSearchTextChanged);
     connect(m_searchResults, &QListWidget::itemClicked, this, &AstroNavigationPanel::onSearchResultClicked);
     connect(m_searchResults, &QListWidget::itemDoubleClicked, this, &AstroNavigationPanel::onSearchResultDoubleClicked);
+    connect(m_visibleObjectsList, &QListWidget::itemClicked, this, &AstroNavigationPanel::onSearchResultClicked);
     connect(m_visibleObjectsList, &QListWidget::itemDoubleClicked, this, &AstroNavigationPanel::onSearchResultDoubleClicked);
     
     // Stacking signals
