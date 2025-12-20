@@ -98,9 +98,11 @@ void DwarfAstroController::oneClickGotoDSO(double ra, double dec, const QString 
     // Convert RA from degrees (0-360) to hours (0-24)
     double raHours = ra / 15.0;
     
-    qDebug() << "One-Click GOTO DSO:" << targetName 
-             << "RA:" << ra << "deg (" << raHours << "hours)"
-             << "Dec:" << dec << "deg";
+    qWarning() << "=== [GOTO DEBUG] Starting One-Click GOTO DSO ===";
+    qWarning() << "    Target:" << targetName;
+    qWarning() << "    Input RA (deg):" << ra;
+    qWarning() << "    Input Dec (deg):" << dec;
+    qWarning() << "    Sending RA (hours):" << raHours;
     
     dwarf::ReqOneClickGotoDSO req;
     req.set_ra(raHours);  // API expects hours

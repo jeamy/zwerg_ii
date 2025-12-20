@@ -1,52 +1,53 @@
 #include "CameraSettingsPanel.h"
 #include "../net/DwarfCameraController.h"
+#include "../net/DwarfFocusController.h"
 
 #include <QGridLayout>
 #include <QHBoxLayout>
-#include <QVBoxLayout>
 #include <QTimer>
+#include <QVBoxLayout>
 
 // Exposure index values for Tele camera (DWARF II API)
 // Format: {api_index, display_name} - API uses indices 0,3,6,9,...,156
 const QVector<QPair<int, QString>> CameraSettingsPanel::s_teleExposureValues = {
-    {0, "1/10000"}, {3, "1/8000"}, {6, "1/6400"}, {9, "1/5000"},
+    {0, "1/10000"}, {3, "1/8000"},  {6, "1/6400"},  {9, "1/5000"},
     {12, "1/4000"}, {15, "1/3200"}, {18, "1/2500"}, {21, "1/2000"},
     {24, "1/1600"}, {27, "1/1250"}, {30, "1/1000"}, {33, "1/800"},
-    {36, "1/640"}, {39, "1/500"}, {42, "1/400"}, {45, "1/320"},
-    {48, "1/250"}, {51, "1/200"}, {54, "1/160"}, {57, "1/125"},
-    {60, "1/100"}, {63, "1/80"}, {66, "1/60"}, {69, "1/50"},
-    {72, "1/40"}, {75, "1/30"}, {78, "1/25"}, {81, "1/20"},
-    {84, "1/15"}, {87, "1/13"}, {90, "1/10"}, {93, "1/8"},
-    {96, "1/6"}, {99, "1/5"}, {102, "1/4"}, {105, "1/3"},
-    {108, "0.4s"}, {111, "0.5s"}, {114, "0.6s"}, {117, "0.8s"},
-    {120, "1s"}, {123, "1.3s"}, {126, "1.6s"}, {129, "2s"},
-    {132, "2.5s"}, {135, "3.2s"}, {138, "4s"}, {141, "5s"},
-    {144, "6s"}, {147, "8s"}, {150, "10s"}, {153, "13s"}, {156, "15s"}};
+    {36, "1/640"},  {39, "1/500"},  {42, "1/400"},  {45, "1/320"},
+    {48, "1/250"},  {51, "1/200"},  {54, "1/160"},  {57, "1/125"},
+    {60, "1/100"},  {63, "1/80"},   {66, "1/60"},   {69, "1/50"},
+    {72, "1/40"},   {75, "1/30"},   {78, "1/25"},   {81, "1/20"},
+    {84, "1/15"},   {87, "1/13"},   {90, "1/10"},   {93, "1/8"},
+    {96, "1/6"},    {99, "1/5"},    {102, "1/4"},   {105, "1/3"},
+    {108, "0.4s"},  {111, "0.5s"},  {114, "0.6s"},  {117, "0.8s"},
+    {120, "1s"},    {123, "1.3s"},  {126, "1.6s"},  {129, "2s"},
+    {132, "2.5s"},  {135, "3.2s"},  {138, "4s"},    {141, "5s"},
+    {144, "6s"},    {147, "8s"},    {150, "10s"},   {153, "13s"},
+    {156, "15s"}};
 
 // Exposure index values for Wide camera (DWARF II API)
 // Wide camera has shorter max exposure (1s)
 const QVector<QPair<int, QString>> CameraSettingsPanel::s_wideExposureValues = {
-    {0, "3/10000"}, {3, "1/2500"}, {6, "1/2000"}, {9, "1/1600"},
-    {12, "1/1250"}, {15, "1/1000"}, {18, "1/800"}, {21, "1/640"},
-    {24, "1/500"}, {27, "1/400"}, {30, "1/320"}, {33, "1/250"},
-    {36, "1/160"}, {39, "1/200"}, {42, "1/125"}, {45, "1/100"},
-    {48, "1/80"}, {51, "1/60"}, {54, "1/50"}, {57, "1/40"},
-    {60, "1/30"}, {63, "1/25"}, {66, "1/20"}, {69, "1/15"},
-    {72, "1/13"}, {75, "1/10"}, {78, "1/8"}, {81, "1/6"},
-    {84, "1/5"}, {87, "1/4"}, {90, "1/4"}, {93, "0.4s"},
-    {96, "0.5s"}, {99, "0.6s"}, {102, "0.8s"}, {105, "1s"}};
+    {0, "3/10000"}, {3, "1/2500"}, {6, "1/2000"}, {9, "1/1600"}, {12, "1/1250"},
+    {15, "1/1000"}, {18, "1/800"}, {21, "1/640"}, {24, "1/500"}, {27, "1/400"},
+    {30, "1/320"},  {33, "1/250"}, {36, "1/160"}, {39, "1/200"}, {42, "1/125"},
+    {45, "1/100"},  {48, "1/80"},  {51, "1/60"},  {54, "1/50"},  {57, "1/40"},
+    {60, "1/30"},   {63, "1/25"},  {66, "1/20"},  {69, "1/15"},  {72, "1/13"},
+    {75, "1/10"},   {78, "1/8"},   {81, "1/6"},   {84, "1/5"},   {87, "1/4"},
+    {90, "1/4"},    {93, "0.4s"},  {96, "0.5s"},  {99, "0.6s"},  {102, "0.8s"},
+    {105, "1s"}};
 
 // Gain index values for Tele camera (DWARF II API)
 // Format: {api_index, gain_value} - Gain 0-240 in steps of 10
 const QVector<QPair<int, int>> CameraSettingsPanel::s_teleGainValues = {
-    {0, 0}, {3, 10}, {6, 20}, {9, 30}, {12, 40}, {15, 50}, {18, 60},
+    {0, 0},   {3, 10},  {6, 20},  {9, 30},   {12, 40},  {15, 50}, {18, 60},
     {21, 70}, {24, 80}, {27, 90}, {30, 100}, {33, 110}, {36, 120}};
 
 // Gain index values for Wide camera (DWARF II API)
 // Wide camera gain starts at 60 and goes to 160
 const QVector<QPair<int, int>> CameraSettingsPanel::s_wideGainValues = {
-    {0, 60}, {18, 60}, {21, 70}, {24, 80}, {27, 90}, {30, 100},
-    {33, 110}, {36, 120}};
+    {0, 60},  {18, 60},  {21, 70},  {24, 80},
+    {27, 90}, {30, 100}, {33, 110}, {36, 120}};
 
 // White balance color temperatures in Kelvin
 const QVector<int> CameraSettingsPanel::s_wbTemperatureValues = {
@@ -141,8 +142,9 @@ void CameraSettingsPanel::setupUi() {
 
   mainLayout->addWidget(m_exposureGroup);
 
-  connect(m_exposureModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-          this, &CameraSettingsPanel::onExposureModeChanged);
+  connect(m_exposureModeCombo,
+          QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+          &CameraSettingsPanel::onExposureModeChanged);
   connect(m_exposureSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onExposureSliderChanged);
   connect(m_gainModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -263,11 +265,38 @@ void CameraSettingsPanel::setupUi() {
   connect(m_wbTemperatureSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onWbTemperatureChanged);
 
+  // === Focus Group ===
+  m_focusGroup = new QGroupBox(tr("Focus"), this);
+  QHBoxLayout *focusLayout = new QHBoxLayout(m_focusGroup);
+  m_focusFarButton = new QPushButton(tr("Far -"), m_focusGroup);
+  m_focusNearButton = new QPushButton(tr("Near +"), m_focusGroup);
+  m_autoFocusButton = new QPushButton(tr("AUTO"), m_focusGroup);
+  m_autoFocusButton->setStyleSheet(
+      "background: #27ae60; color: white; font-weight: bold;");
+
+  focusLayout->addWidget(m_focusFarButton);
+  focusLayout->addWidget(m_autoFocusButton);
+  focusLayout->addWidget(m_focusNearButton);
+
+  mainLayout->addWidget(m_focusGroup);
+
+  connect(m_focusFarButton, &QPushButton::clicked, this,
+          &CameraSettingsPanel::onFocusFarClicked);
+  connect(m_focusNearButton, &QPushButton::clicked, this,
+          &CameraSettingsPanel::onFocusNearClicked);
+  connect(m_autoFocusButton, &QPushButton::clicked, this,
+          &CameraSettingsPanel::onAutoFocusClicked);
+
   // Add stretch at bottom
   mainLayout->addStretch();
 }
 
-void CameraSettingsPanel::setCameraController(DwarfCameraController *controller) {
+void CameraSettingsPanel::setFocusController(DwarfFocusController *controller) {
+  m_focusController = controller;
+}
+
+void CameraSettingsPanel::setCameraController(
+    DwarfCameraController *controller) {
   m_controller = controller;
   // Initialize UI from controller state so Auto modes still show a value
   syncFromController();
@@ -303,7 +332,8 @@ void CameraSettingsPanel::updateRangesForMode() {
     m_gainSlider->setRange(0, s_wideGainValues.size() - 1);
     // Video recording and IR-Cut not available on Wide
     m_recButton->setEnabled(false);
-    m_recButton->setToolTip(tr("Video recording only available on TELE camera"));
+    m_recButton->setToolTip(
+        tr("Video recording only available on TELE camera"));
     m_irCutCheckBox->setEnabled(false);
     m_irCutCheckBox->setVisible(false);
   }
@@ -319,11 +349,14 @@ void CameraSettingsPanel::updateButtonStates() {
   m_wideButton->setChecked(m_cameraMode == CameraMode::Wide);
 
   // Visual feedback for active camera
-  QString activeStyle = "font-weight: bold; background-color: #3498db; color: white;";
+  QString activeStyle =
+      "font-weight: bold; background-color: #3498db; color: white;";
   QString inactiveStyle = "";
 
-  m_teleButton->setStyleSheet(m_cameraMode == CameraMode::Tele ? activeStyle : inactiveStyle);
-  m_wideButton->setStyleSheet(m_cameraMode == CameraMode::Wide ? activeStyle : inactiveStyle);
+  m_teleButton->setStyleSheet(m_cameraMode == CameraMode::Tele ? activeStyle
+                                                               : inactiveStyle);
+  m_wideButton->setStyleSheet(m_cameraMode == CameraMode::Wide ? activeStyle
+                                                               : inactiveStyle);
 }
 
 void CameraSettingsPanel::syncFromController() {
@@ -384,9 +417,8 @@ QString CameraSettingsPanel::formatExposureValue(int sliderIndex) const {
 }
 
 QString CameraSettingsPanel::formatGainValue(int sliderIndex) const {
-  const auto &values = (m_cameraMode == CameraMode::Tele)
-                           ? s_teleGainValues
-                           : s_wideGainValues;
+  const auto &values =
+      (m_cameraMode == CameraMode::Tele) ? s_teleGainValues : s_wideGainValues;
 
   if (sliderIndex < 0 || sliderIndex >= values.size())
     return "---";
@@ -396,13 +428,9 @@ QString CameraSettingsPanel::formatGainValue(int sliderIndex) const {
 
 // === Slots ===
 
-void CameraSettingsPanel::onTeleClicked() {
-  setCameraMode(CameraMode::Tele);
-}
+void CameraSettingsPanel::onTeleClicked() { setCameraMode(CameraMode::Tele); }
 
-void CameraSettingsPanel::onWideClicked() {
-  setCameraMode(CameraMode::Wide);
-}
+void CameraSettingsPanel::onWideClicked() { setCameraMode(CameraMode::Wide); }
 
 void CameraSettingsPanel::onPhotoClicked() {
   if (m_controller) {
@@ -411,9 +439,9 @@ void CameraSettingsPanel::onPhotoClicked() {
                     : DwarfCameraController::CameraKind::Wide;
     m_controller->takePhoto(kind);
   }
-  m_photoButton->setStyleSheet("background-color: #27ae60; color: white; font-weight: bold; border-radius: 4px;");
-  QTimer::singleShot(500, this,
-                     [this]() { m_photoButton->setStyleSheet(""); });
+  m_photoButton->setStyleSheet("background-color: #27ae60; color: white; "
+                               "font-weight: bold; border-radius: 4px;");
+  QTimer::singleShot(500, this, [this]() { m_photoButton->setStyleSheet(""); });
   emit photoRequested();
 }
 
@@ -473,8 +501,8 @@ void CameraSettingsPanel::onExposureSliderChanged(int sliderIndex) {
     return;
 
   int apiIndex = values[sliderIndex].first;
-  qWarning() << "[CameraSettingsPanel] onExposureSliderChanged slider=" << sliderIndex
-             << "apiIndex=" << apiIndex;
+  qWarning() << "[CameraSettingsPanel] onExposureSliderChanged slider="
+             << sliderIndex << "apiIndex=" << apiIndex;
 
   auto kind = (m_cameraMode == CameraMode::Tele)
                   ? DwarfCameraController::CameraKind::Tele
@@ -506,15 +534,15 @@ void CameraSettingsPanel::onGainSliderChanged(int sliderIndex) {
     return;
 
   // Convert slider index to API index
-  const auto &values = (m_cameraMode == CameraMode::Tele)
-                           ? s_teleGainValues
-                           : s_wideGainValues;
+  const auto &values =
+      (m_cameraMode == CameraMode::Tele) ? s_teleGainValues : s_wideGainValues;
   if (sliderIndex < 0 || sliderIndex >= values.size())
     return;
 
   int apiIndex = values[sliderIndex].first;
-  qWarning() << "[CameraSettingsPanel] onGainSliderChanged slider=" << sliderIndex
-             << "apiIndex=" << apiIndex << "gainValue=" << values[sliderIndex].second;
+  qWarning() << "[CameraSettingsPanel] onGainSliderChanged slider="
+             << sliderIndex << "apiIndex=" << apiIndex
+             << "gainValue=" << values[sliderIndex].second;
 
   auto kind = (m_cameraMode == CameraMode::Tele)
                   ? DwarfCameraController::CameraKind::Tele
@@ -527,7 +555,8 @@ void CameraSettingsPanel::onIrCutToggled(bool checked) {
     return;
 
   // IR-Cut only available on Tele camera
-  m_controller->setIrCut(DwarfCameraController::CameraKind::Tele, checked ? 1 : 0);
+  m_controller->setIrCut(DwarfCameraController::CameraKind::Tele,
+                         checked ? 1 : 0);
 }
 
 void CameraSettingsPanel::onBrightnessChanged(int value) {
@@ -665,9 +694,8 @@ void CameraSettingsPanel::setGainMode(int mode) {
 
 void CameraSettingsPanel::setGainIndex(int apiIndex) {
   // Convert API index to slider index
-  const auto &values = (m_cameraMode == CameraMode::Tele)
-                           ? s_teleGainValues
-                           : s_wideGainValues;
+  const auto &values =
+      (m_cameraMode == CameraMode::Tele) ? s_teleGainValues : s_wideGainValues;
   int sliderIndex = 0;
   for (int i = 0; i < values.size(); ++i) {
     if (values[i].first == apiIndex) {
@@ -742,4 +770,19 @@ void CameraSettingsPanel::setWhiteBalanceTemperature(int index) {
     m_wbTemperatureValueLabel->setText(
         QString("%1K").arg(s_wbTemperatureValues[index]));
   }
+}
+
+void CameraSettingsPanel::onFocusFarClicked() {
+  if (m_focusController)
+    m_focusController->manualStepFar();
+}
+
+void CameraSettingsPanel::onFocusNearClicked() {
+  if (m_focusController)
+    m_focusController->manualStepNear();
+}
+
+void CameraSettingsPanel::onAutoFocusClicked() {
+  if (m_focusController)
+    m_focusController->autoFocusNormal();
 }

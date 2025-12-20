@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include <QApplication>
+#include <QCoreApplication>
 #include <QFile>
 #include <QLocale>
 #include <QLoggingCategory>
@@ -14,6 +15,13 @@ int main(int argc, char *argv[]) {
 
   fprintf(stderr, "=== DWARF II Controller starting ===\n");
   fflush(stderr);
+
+  // Some systems/drivers fail EGL/DRI2 init and can crash early in Qt's GL setup.
+  // Force software OpenGL as a stable fallback.
+  qputenv("QT_XCB_GL_INTEGRATION", "none");
+  qputenv("QT_OPENGL", "software");
+  qputenv("LIBGL_ALWAYS_SOFTWARE", "1");
+  QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
 
   QApplication app(argc, argv);
 

@@ -385,6 +385,11 @@ void DwarfFtpClient::finishDownload(bool success, const QString &error) {
       }
     }
   } else if (!success) {
+    // If memory download failed, still call callback with empty data
+    // so the caller (e.g. thumbnail loader) doesn't hang forever.
+    if (m_currentJob.type == JobType::DownloadToMemory && m_currentJob.memoryCallback) {
+      m_currentJob.memoryCallback(QByteArray());
+    }
     emit errorOccurred(m_currentJob.remotePath, error);
   }
 

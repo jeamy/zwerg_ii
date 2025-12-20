@@ -5,6 +5,7 @@
 #include "net/DwarfWebSocketClient.h"
 #include <QCheckBox>
 #include <QComboBox>
+#include <QElapsedTimer>
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
@@ -15,9 +16,10 @@
 #include <QPointer>
 #include <QPushButton>
 #include <QSlider>
+#include <QStackedWidget>
 #include <QTabWidget>
 #include <QTimer>
-#include <QElapsedTimer>
+#include <QToolButton>
 #include <QVideoWidget>
 #include <QWidget>
 
@@ -33,25 +35,50 @@ class DwarfHttpClient;
 class DwarfFtpDownloader;
 class CameraSettingsPanel;
 class AstroNavigationPanel;
+class VirtualJoystick;
+class MotorControlPanel;
 
-class ClickableLabel : public QWidget {
+class DraggablePiP : public QWidget {
   Q_OBJECT
-
 public:
-  explicit ClickableLabel(QWidget *parent = nullptr) : QWidget(parent) {}
+  explicit DraggablePiP(QWidget *parent = nullptr) : QWidget(parent) {
+    setCursor(Qt::OpenHandCursor);
+  }
 
 signals:
-  void clicked();
+  void doubleClicked();
 
 protected:
   void mousePressEvent(QMouseEvent *event) override {
-    QWidget::mousePressEvent(event);
+    if (event->button() == Qt::LeftButton) {
+      m_dragOffset = event->pos();
+      setCursor(Qt::ClosedHandCursor);
+    }
+  }
+
+  void mouseMoveEvent(QMouseEvent *event) override {
+    if (event->buttons() & Qt::LeftButton) {
+      QPoint newPos = mapToParent(event->pos() - m_dragOffset);
+      if (parentWidget()) {
+        newPos.setX(qBound(0, newPos.x(), parentWidget()->width() - width()));
+        newPos.setY(qBound(0, newPos.y(), parentWidget()->height() - height()));
+      }
+      move(newPos);
+    }
+  }
+
+  void mouseReleaseEvent(QMouseEvent *event) override {
+    setCursor(Qt::OpenHandCursor);
   }
 
   void mouseDoubleClickEvent(QMouseEvent *event) override {
-    QWidget::mouseDoubleClickEvent(event);
-    emit clicked();
+    if (event->button() == Qt::LeftButton) {
+      emit doubleClicked();
+    }
   }
+
+private:
+  QPoint m_dragOffset;
 };
 
 class MainWindow : public QMainWindow {
@@ -74,6 +101,7 @@ private slots:
   void onScanFinished();
   void onScanProgress(int percent);
   void onDeviceSelected(QListWidgetItem *item);
+  void onDisconnectClicked();
   void onCameraTeleMessage(uint32_t cmd, const QByteArray &data);
   void onCameraWideMessage(uint32_t cmd, const QByteArray &data);
   void onPipStreamClicked();
@@ -116,9 +144,23 @@ private:
   QPushButton *m_cancelScanButton;
   QListWidget *m_deviceList;
   QLabel *m_statusLabel;
-  QTabWidget *m_tabWidget;
+  QStackedWidget *m_contentStack;
+  QWidget *m_sidebar;
+  QButtonGroup *m_sidebarGroup;
   DwarfWebSocketClient *m_wsClient;
   DwarfMessageDispatcher *m_dispatcher;
+  
+  // Overlays
+  MotorControlPanel *m_motorOverlay = nullptr;
+
+private:
+  void updateOverlayPositions();
+  
+protected:
+  bool eventFilter(QObject *obj, QEvent *event) override;
+  void resizeEvent(QResizeEvent *event) override;
+
+private:
   DwarfFinder *m_finder;
   bool m_scanCancelled;
   void updateStatusStyle(const char *statusKey);
@@ -131,7 +173,7 @@ private:
 
   QWidget *m_mainStreamView;
   QLabel *m_streamNameOverlay;
-  ClickableLabel *m_pipStreamView;
+  DraggablePiP *m_pipContainer;
   DwarfMjpegView *m_mainVideoWidget;
   DwarfMjpegView *m_pipVideoWidget;
   CameraStream m_mainStream;

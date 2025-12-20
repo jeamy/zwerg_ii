@@ -1,136 +1,290 @@
-/* Global application styles (Qt Style Sheet)
- * Control Deck / dock panels
- */
+/* Global application styles (Qt Style Sheet) */
 
-QDockWidget {
-    background-color: #2D2D30;
+QMainWindow {
+    background-color: #050505;
 }
 
-QDockWidget::title {
-    background-color: #2D2D30;
-    color: #E0E0E0;
-    padding: 4px;
+/* Sidebar Styling */
+QWidget#sidebar {
+    background-color: rgba(15, 15, 15, 204);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Status label styling */
-QLabel#statusLabel {
+/* Content Stack */
+QStackedWidget {
+    background: rgba(10, 10, 10, 204);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Panel Headers */
+QLabel[heading="true"] {
+    font-size: 18px;
     font-weight: bold;
+    color: #27ae60;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    padding: 10px;
 }
 
-/* Error/cancelled/disconnected states (red) */
-QLabel#statusLabel[status="disconnected"],
-QLabel#statusLabel[status="cancelled"],
-QLabel#statusLabel[status="noDevices"] {
-    color: #FF5555;
+/* Draggable PiP */
+DraggablePiP {
+    border: 1px solid rgba(39, 174, 96, 0.5);
+    background: black;
+    border-radius: 8px;
 }
 
-/* Warning states (orange) */
-QLabel#statusLabel[status="scanning"],
-QLabel#statusLabel[status="connecting"] {
-    color: #FFA500;
+/* Overlays with Glassmorphism */
+QLabel#streamNameOverlay {
+    color: #2ecc71;
+    background: rgba(0, 0, 0, 180);
+    padding: 8px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    font-weight: bold;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-/* OK state (green) */
-QLabel#statusLabel[status="ok"] {
-    color: #55FF55;
+/* Sidebar Buttons */
+QToolButton {
+    color: rgba(255, 255, 255, 0.4);
+    background: transparent;
+    border: none;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 12px;
+    border-radius: 0px;
 }
 
-/* Critical error state (bright red) */
-QLabel#statusLabel[status="error"] {
-    color: #FF0000;
+QToolButton:hover {
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.03);
 }
 
-/* Stream views */
-QLabel#mainStreamView {
-    background-color: #202020;
-    border: 1px solid #444444;
-    color: #CCCCCC;
+QToolButton:checked {
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.05);
+    border-left: 4px solid #27ae60;
 }
 
-QLabel#pipStreamView {
-    background-color: #202020;
-    border: 1px solid #666666;
-    color: #CCCCCC;
+/* General Controls */
+QPushButton {
+    background-color: #1a1a1a;
+    color: #ddd;
+    border: 1px solid #333;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 11px;
+    text-transform: uppercase;
 }
 
-QLabel#pipStreamView:hover {
-    border-color: #AAAAAA;
-}
-
-/* Camera Settings Panel */
-CameraSettingsPanel QPushButton#photoButton,
-CameraSettingsPanel QPushButton#recButton {
-    background-color: #7f8c8d;
+QPushButton:hover {
+    background-color: #252525;
+    border-color: #27ae60;
     color: white;
+}
+
+QPushButton:pressed {
+    background-color: #111;
+}
+
+QPushButton:disabled {
+    color: #444;
+    background-color: #111;
+    border-color: #222;
+}
+
+QLineEdit {
+    background-color: rgba(0, 0, 0, 100);
+    border: 1px solid #333;
+    padding: 10px;
+    border-radius: 8px;
+    color: #eee;
+    font-size: 12px;
+}
+
+QLineEdit:focus {
+    border-color: #27ae60;
+    background-color: rgba(0, 0, 0, 150);
+}
+
+QListWidget {
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    outline: none;
+}
+
+QListWidget::item {
+    padding: 15px;
+    color: #bbb;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+QListWidget::item:selected {
+    background-color: rgba(39, 174, 96, 0.1);
+    color: #2ecc71;
+    border-left: 2px solid #27ae60;
+}
+
+/* Tabs */
+QTabWidget::pane {
+    border: none;
+}
+
+QTabBar::tab {
+    background: transparent;
+    color: #666;
+    padding: 10px 20px;
+    border-bottom: 2px solid transparent;
     font-weight: bold;
-    border-radius: 4px;
+    text-transform: uppercase;
+    font-size: 10px;
 }
 
-CameraSettingsPanel QPushButton#photoButton:hover,
-CameraSettingsPanel QPushButton#recButton:hover {
-    background-color: #95a5a6;
+QTabBar::tab:selected {
+    color: #27ae60;
+    border-bottom: 2px solid #27ae60;
 }
 
-CameraSettingsPanel QPushButton#recButton:disabled {
-    background-color: #555555;
-    color: #888888;
+/* GroupBoxes */
+QGroupBox {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    background: rgba(15, 15, 15, 204);
 }
 
-CameraSettingsPanel QGroupBox {
-    font-weight: bold;
-    border: 1px solid #555555;
-    border-radius: 4px;
-    margin-top: 8px;
-    padding-top: 8px;
-}
-
-CameraSettingsPanel QGroupBox::title {
+QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
-    padding: 0 4px;
-    color: #3498db;
+    left: 15px;
+    padding: 2px 10px;
+    color: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
 }
 
-/* Slider styles for all panels */
-CameraSettingsPanel QSlider::groove:horizontal,
-AstroNavigationPanel QSlider::groove:horizontal {
-    border: 1px solid #444444;
-    height: 6px;
-    background: #333333;
-    border-radius: 3px;
+/* Sliders */
+QSlider::groove:horizontal {
+    border: none;
+    height: 4px;
+    background: #222;
+    border-radius: 2px;
 }
 
-CameraSettingsPanel QSlider::handle:horizontal,
-AstroNavigationPanel QSlider::handle:horizontal {
-    background: #3498db;
-    border: 1px solid #2980b9;
-    width: 14px;
-    margin: -4px 0;
-    border-radius: 7px;
+QSlider::handle:horizontal {
+    background: #27ae60;
+    width: 16px;
+    height: 16px;
+    margin: -6px 0;
+    border-radius: 8px;
 }
 
-CameraSettingsPanel QSlider::handle:horizontal:hover,
-AstroNavigationPanel QSlider::handle:horizontal:hover {
-    background: #5dade2;
+QSlider::sub-page:horizontal {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1a4a2e, stop:1 #27ae60);
+    border-radius: 2px;
 }
 
-CameraSettingsPanel QSlider::handle:horizontal:disabled,
-AstroNavigationPanel QSlider::handle:horizontal:disabled {
-    background: #555555;
+/* Virtual Joystick */
+VirtualJoystick {
+    background: transparent;
 }
 
-CameraSettingsPanel QSlider::sub-page:horizontal:disabled,
-AstroNavigationPanel QSlider::sub-page:horizontal:disabled {
-    background: #555555;
+#motorControlGroup {
+    background: rgba(15, 15, 15, 204);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0px;
+    margin-top: 0px;
 }
 
-CameraSettingsPanel QSlider::sub-page:horizontal,
-AstroNavigationPanel QSlider::sub-page:horizontal {
-    background: #3498db;
-    border-radius: 3px;
+#motorControlGroup::title {
+    color: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 8px;
+    padding: 2px 10px;
+    font-weight: bold;
+    font-size: 10px;
+    text-transform: uppercase;
 }
 
-CameraSettingsPanel QLabel,
-AstroNavigationPanel QLabel {
-    color: #E0E0E0;
+#motorSpeedTextLabel {
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: bold;
+    font-size: 11px;
+}
+
+#motorSpeedValueLabel {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: bold;
+    font-size: 11px;
+}
+
+#motorSlewArea {
+    background: transparent;
+}
+
+#motorSlewButton {
+    background: rgba(30, 30, 30, 140);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 48px;
+    min-width: 86px;
+    min-height: 86px;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: bold;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+#motorSlewButton:hover {
+    border-color: rgba(39, 174, 96, 0.55);
+    background: rgba(35, 35, 35, 170);
+}
+
+#motorSlewButton:pressed {
+    background: rgba(39, 174, 96, 140);
+    border-color: rgba(39, 174, 96, 140);
+}
+
+#motorArrowUp, #motorArrowDown, #motorArrowLeft, #motorArrowRight {
+    background: transparent;
+}
+
+#motorArrowUpButton, #motorArrowDownButton, #motorArrowLeftButton, #motorArrowRightButton {
+    background: transparent;
+    border: none;
+    color: rgba(39, 174, 96, 0.9);
+    font-size: 28px;
+    font-weight: 900;
+    padding: 0px;
+    margin: 0px;
+}
+
+#motorArrowUpButton:hover, #motorArrowDownButton:hover, #motorArrowLeftButton:hover, #motorArrowRightButton:hover {
+    color: #2ecc71;
+}
+
+#motorArrowUpButton:pressed, #motorArrowDownButton:pressed, #motorArrowLeftButton:pressed, #motorArrowRightButton:pressed {
+    background: rgba(39, 174, 96, 0.2);
+    color: #2ecc71;
+    border-radius: 17px; /* Half of 34px fixed size */
+}
+
+#motorSlewText {
+    color: rgba(39, 174, 96, 0.9);
+    font-weight: bold;
+    font-size: 12px;
+    letter-spacing: 1px;
+    background: transparent;
+    border: none;
 }

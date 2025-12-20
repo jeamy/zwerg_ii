@@ -23,6 +23,8 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 # Include directories
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(src)
+include_directories(src/proto)
+include_directories(${Protobuf_INCLUDE_DIRS})
 
 # Source files
 set(SOURCES
@@ -67,8 +69,13 @@ set(SOURCES
     src/ui/AstroNavigationPanel.h
     src/ui/ImageSettingsWidget.cpp
     src/ui/ImageSettingsWidget.h
+    src/ui/VirtualJoystick.cpp
+    src/ui/VirtualJoystick.h
+    src/ui/MotorControlPanel.cpp
+    src/ui/MotorControlPanel.h
     ${PROTO_SRCS}
     ${PROTO_HDRS}
+    resources.qrc
 )
 
 # Executable

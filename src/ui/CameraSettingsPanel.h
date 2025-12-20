@@ -10,6 +10,7 @@
 #include <QWidget>
 
 class DwarfCameraController;
+class DwarfFocusController;
 
 /**
  * @brief Panel for camera settings with separate ranges for Tele/Wide cameras.
@@ -26,6 +27,7 @@ public:
   explicit CameraSettingsPanel(QWidget *parent = nullptr);
 
   void setCameraController(DwarfCameraController *controller);
+  void setFocusController(DwarfFocusController *controller);
   void setCameraMode(CameraMode mode);
   CameraMode cameraMode() const { return m_cameraMode; }
 
@@ -68,6 +70,9 @@ private slots:
   void onHueChanged(int value);
   void onWbModeChanged(int index);
   void onWbTemperatureChanged(int value);
+  void onFocusFarClicked();
+  void onFocusNearClicked();
+  void onAutoFocusClicked();
 
 private:
   void setupUi();
@@ -78,6 +83,7 @@ private:
   QString formatGainValue(int index) const;
 
   DwarfCameraController *m_controller = nullptr;
+  DwarfFocusController *m_focusController = nullptr;
   CameraMode m_cameraMode = CameraMode::Tele;
   bool m_isRecording = false;
 
@@ -117,6 +123,12 @@ private:
   QComboBox *m_wbModeCombo;
   QSlider *m_wbTemperatureSlider;
   QLabel *m_wbTemperatureValueLabel;
+
+  // Focus group
+  QGroupBox *m_focusGroup;
+  QPushButton *m_focusFarButton;
+  QPushButton *m_focusNearButton;
+  QPushButton *m_autoFocusButton;
 
   // Exposure values: {api_index, display_name} for Tele camera
   static const QVector<QPair<int, QString>> s_teleExposureValues;

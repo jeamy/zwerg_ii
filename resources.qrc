@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="icons/scan.svg">resources/icons/scan.svg</file>
+        <file alias="icons/camera.svg">resources/icons/camera.svg</file>
+        <file alias="icons/astro.svg">resources/icons/astro.svg</file>
+        <file alias="icons/panorama.svg">resources/icons/panorama.svg</file>
+        <file alias="icons/gallery.svg">resources/icons/gallery.svg</file>
+        <file alias="icons/settings.svg">resources/icons/settings.svg</file>
+    </qresource>
+</RCC>
