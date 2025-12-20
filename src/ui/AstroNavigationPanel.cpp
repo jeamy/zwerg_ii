@@ -27,6 +27,9 @@
 AstroNavigationPanel::AstroNavigationPanel(QWidget *parent)
     : QWidget(parent)
     , m_tabWidget(new QTabWidget(this))
+    , m_starMapTab(nullptr)
+    , m_starMapTabLayout(nullptr)
+    , m_starMapContent(nullptr)
     , m_starMap(nullptr)
     , m_wsClient(nullptr)
     , m_cameraController(nullptr)
@@ -37,6 +40,7 @@ AstroNavigationPanel::AstroNavigationPanel(QWidget *parent)
     , m_rejectedFrames(0)
     , m_stackingTimer(new QTimer(this))
     , m_lx200Server(new Lx200Server(this))
+    , m_catalogLoaded(false)
 {
     setupUI();
     connectSignals();
@@ -50,7 +54,6 @@ void AstroNavigationPanel::setupUI() {
     mainLayout->setContentsMargins(5, 5, 5, 5);
     
     setupStarMapTab();
-    setupSearchTab();
     setupStackingTab();
     setupSettingsTab();
     
@@ -58,15 +61,64 @@ void AstroNavigationPanel::setupUI() {
 }
 
 void AstroNavigationPanel::setupStarMapTab() {
-    auto *tab = new QWidget();
-    auto *layout = new QVBoxLayout(tab);
+    m_starMapTab = new QWidget();
+    m_starMapTabLayout = new QVBoxLayout(m_starMapTab);
+
+    m_starMapContent = new QWidget(m_starMapTab);
+    auto *contentLayout = new QVBoxLayout(m_starMapContent);
+    contentLayout->setContentsMargins(0, 0, 0, 0);
+    contentLayout->setSpacing(8);
     
     // Star map widget
-    m_starMap = new StarMapWidget(tab);
+    m_starMap = new StarMapWidget(m_starMapContent);
     m_starMap->setMinimumSize(400, 400);
+
+    auto *topRowLayout = new QHBoxLayout();
+
+    // Search input (integrated)
+    auto *searchGroup = new QGroupBox(tr("Object Search"), m_starMapContent);
+    auto *searchLayout = new QVBoxLayout(searchGroup);
+
+    m_searchEdit = new QLineEdit(searchGroup);
+    m_searchEdit->setPlaceholderText(tr("Search for stars, galaxies, nebulae..."));
+    m_searchEdit->setClearButtonEnabled(true);
+
+    m_searchStatusLabel = new QLabel(searchGroup);
+
+    m_searchResults = new QListWidget(searchGroup);
+    m_searchResults->setMaximumHeight(200);
+
+    searchLayout->addWidget(m_searchEdit);
+    searchLayout->addWidget(m_searchStatusLabel);
+    searchLayout->addWidget(m_searchResults);
+
+    // Visible objects tonight (integrated)
+    auto *visibleGroup = new QGroupBox(tr("Visible Tonight"), m_starMapContent);
+    auto *visibleLayout = new QVBoxLayout(visibleGroup);
+
+    m_visibleObjectsList = new QListWidget(visibleGroup);
+
+    auto *refreshButton = new QPushButton(tr("Refresh List"), visibleGroup);
+    connect(refreshButton, &QPushButton::clicked, this,
+            &AstroNavigationPanel::updateVisibleObjectsList);
+
+    visibleLayout->addWidget(m_visibleObjectsList);
+    visibleLayout->addWidget(refreshButton);
+
+    auto *rightPanel = new QWidget(m_starMapContent);
+    rightPanel->setObjectName("astroStarMapSidePanel");
+    rightPanel->setFixedWidth(320);
+    auto *rightPanelLayout = new QVBoxLayout(rightPanel);
+    rightPanelLayout->setContentsMargins(0, 0, 0, 0);
+    rightPanelLayout->setSpacing(8);
+    rightPanelLayout->addWidget(searchGroup);
+    rightPanelLayout->addWidget(visibleGroup, 1);
+
+    topRowLayout->addWidget(m_starMap, 1);
+    topRowLayout->addWidget(rightPanel);
     
     // Info panel below map
-    auto *infoGroup = new QGroupBox(tr("Selected Object"), tab);
+    auto *infoGroup = new QGroupBox(tr("Selected Object"), m_starMapContent);
     auto *infoLayout = new QGridLayout(infoGroup);
     
     m_selectedObjectLabel = new QLabel(tr("No object selected"), infoGroup);
@@ -85,11 +137,22 @@ void AstroNavigationPanel::setupStarMapTab() {
     
     infoLayout->addWidget(m_selectedObjectLabel, 0, 0, 1, 2);
     infoLayout->addWidget(m_objectInfoLabel, 1, 0, 1, 2);
-    infoLayout->addWidget(m_gotoButton, 2, 0);
-    infoLayout->addWidget(m_stopGotoButton, 2, 1);
+
+    auto *gotoRow = new QWidget(infoGroup);
+    auto *gotoRowLayout = new QHBoxLayout(gotoRow);
+    gotoRowLayout->setContentsMargins(0, 0, 0, 0);
+    gotoRowLayout->setSpacing(12);
+    gotoRowLayout->addStretch(1);
+    m_gotoButton->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
+    m_stopGotoButton->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
+    gotoRowLayout->addWidget(m_gotoButton);
+    gotoRowLayout->addWidget(m_stopGotoButton);
+    gotoRowLayout->addStretch(1);
+
+    infoLayout->addWidget(gotoRow, 2, 0, 1, 2);
     
     // Calibration controls
-    auto *calibrationGroup = new QGroupBox(tr("Calibration"), tab);
+    auto *calibrationGroup = new QGroupBox(tr("Calibration"), m_starMapContent);
     auto *calibrationLayout = new QHBoxLayout(calibrationGroup);
     
     m_calibrateButton = new QPushButton(tr("Calibrate"), calibrationGroup);
@@ -105,11 +168,60 @@ void AstroNavigationPanel::setupStarMapTab() {
     
     connect(m_calibrateButton, &QPushButton::clicked, this, &AstroNavigationPanel::onCalibrateClicked);
     
-    layout->addWidget(m_starMap, 1);
-    layout->addWidget(infoGroup);
-    layout->addWidget(calibrationGroup);
+    contentLayout->addLayout(topRowLayout, 1);
+
+    auto *infoRow = new QWidget(m_starMapContent);
+    auto *infoRowLayout = new QHBoxLayout(infoRow);
+    infoRowLayout->setContentsMargins(0, 0, 0, 0);
+    infoRowLayout->setSpacing(0);
+    infoRowLayout->addStretch(1);
+    infoGroup->setMaximumWidth(900);
+    infoRowLayout->addWidget(infoGroup);
+    infoRowLayout->addStretch(1);
+    contentLayout->addWidget(infoRow);
+
+    auto *calRow = new QWidget(m_starMapContent);
+    auto *calRowLayout = new QHBoxLayout(calRow);
+    calRowLayout->setContentsMargins(0, 0, 0, 0);
+    calRowLayout->setSpacing(0);
+    calRowLayout->addStretch(1);
+    calibrationGroup->setMaximumWidth(900);
+    calRowLayout->addWidget(calibrationGroup);
+    calRowLayout->addStretch(1);
+    contentLayout->addWidget(calRow);
+
+    m_starMapTabLayout->addWidget(m_starMapContent, 1);
     
-    m_tabWidget->addTab(tab, tr("Star Map"));
+    m_tabWidget->addTab(m_starMapTab, tr("Star Map"));
+}
+
+StarMapWidget *AstroNavigationPanel::starMapWidget() const {
+    return m_starMap;
+}
+
+QWidget *AstroNavigationPanel::starMapTabWidget() const {
+    return m_starMapTab;
+}
+
+QVBoxLayout *AstroNavigationPanel::starMapTabLayout() const {
+    return m_starMapTabLayout;
+}
+
+QWidget *AstroNavigationPanel::starMapContentWidget() const {
+    return m_starMapContent;
+}
+
+QTabWidget *AstroNavigationPanel::tabWidget() const {
+    return m_tabWidget;
+}
+
+void AstroNavigationPanel::setCurrentTabIndex(int index) {
+    if (m_tabWidget)
+        m_tabWidget->setCurrentIndex(index);
+}
+
+int AstroNavigationPanel::currentTabIndex() const {
+    return m_tabWidget ? m_tabWidget->currentIndex() : -1;
 }
 
 void AstroNavigationPanel::setupSearchTab() {
@@ -432,6 +544,10 @@ void AstroNavigationPanel::connectSignals() {
     // Star map signals
     connect(m_starMap, &StarMapWidget::objectSelected, this, &AstroNavigationPanel::onObjectSelected);
     connect(m_starMap, &StarMapWidget::objectDoubleClicked, this, &AstroNavigationPanel::onObjectDoubleClicked);
+
+    connect(m_tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
+        emit starMapOverlayRequested(index == 0);
+    });
     connect(m_gotoButton, &QPushButton::clicked, this, &AstroNavigationPanel::onGotoClicked);
     connect(m_stopGotoButton, &QPushButton::clicked, this, &AstroNavigationPanel::onStopGotoClicked);
     
@@ -524,6 +640,16 @@ void AstroNavigationPanel::loadCatalog() {
         if (QFile::exists(path)) {
             if (m_starMap->loadCatalog(path)) {
                 qDebug() << "Loaded star catalog from:" << path;
+                m_catalogLoaded = true;
+
+                if (m_searchEdit)
+                    m_searchEdit->setEnabled(true);
+                if (m_searchResults)
+                    m_searchResults->setEnabled(true);
+                if (m_visibleObjectsList)
+                    m_visibleObjectsList->setEnabled(true);
+                if (m_searchStatusLabel)
+                    m_searchStatusLabel->setText("");
                 return;
             }
         }
@@ -531,6 +657,16 @@ void AstroNavigationPanel::loadCatalog() {
     
     qWarning() << "Star catalog not found. Star map will be empty.";
     qWarning() << "Searched paths:" << searchPaths;
+
+    m_catalogLoaded = false;
+    if (m_searchStatusLabel)
+        m_searchStatusLabel->setText(tr("Star catalog not found. Search disabled."));
+    if (m_searchEdit)
+        m_searchEdit->setEnabled(false);
+    if (m_searchResults)
+        m_searchResults->setEnabled(false);
+    if (m_visibleObjectsList)
+        m_visibleObjectsList->setEnabled(false);
 }
 
 void AstroNavigationPanel::setWebSocketClient(DwarfWebSocketClient *client) {
@@ -771,6 +907,11 @@ void AstroNavigationPanel::gotoObject(const CelestialObject &obj) {
 
 void AstroNavigationPanel::onSearchTextChanged(const QString &text) {
     m_searchResults->clear();
+
+    if (!m_catalogLoaded) {
+        m_searchStatusLabel->setText(tr("Star catalog not found. Search disabled."));
+        return;
+    }
     
     if (text.length() < 2) {
         m_searchStatusLabel->setText("");

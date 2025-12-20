@@ -20,6 +20,7 @@
 #include <QTabWidget>
 #include <QTimer>
 #include <QToolButton>
+#include <QTabBar>
 #include <QVideoWidget>
 #include <QWidget>
 
@@ -37,6 +38,7 @@ class CameraSettingsPanel;
 class AstroNavigationPanel;
 class VirtualJoystick;
 class MotorControlPanel;
+class StarMapWidget;
 
 class DraggablePiP : public QWidget {
   Q_OBJECT
@@ -130,6 +132,8 @@ private slots:
   void onDownloadFinished(const QString &fileName, const QString &localPath);
   void onDownloadError(const QString &fileName, const QString &error);
 
+  void onStarMapOverlayRequested(bool enabled);
+
 private:
   void setupUi();
   void loadThumbnails();
@@ -152,6 +156,12 @@ private:
   
   // Overlays
   MotorControlPanel *m_motorOverlay = nullptr;
+  QWidget *m_starMapOverlayContainer = nullptr;
+  StarMapWidget *m_starMapOverlayWidget = nullptr;
+  bool m_starMapOverlayEnabled = false;
+
+  QWidget *m_astroTabsOverlayContainer = nullptr;
+  QTabBar *m_astroTabsOverlayBar = nullptr;
 
 private:
   void updateOverlayPositions();

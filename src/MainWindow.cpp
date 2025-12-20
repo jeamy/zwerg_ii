@@ -11,6 +11,7 @@
 #include "ui/CameraSettingsPanel.h"
 #include "ui/MotorControlPanel.h"
 #include "ui/MediaLightbox.h"
+#include "ui/StarMapWidget.h"
 #include <QButtonGroup>
 #include <QDateTime>
 #include <QDebug>
@@ -219,6 +220,19 @@ void MainWindow::setupUi() {
       m_contentStack->setCurrentIndex(index);
       if (index == 4)
         onOpenGalleryClicked();
+
+      const bool astroSelected = (index == 2);
+      if (m_astroTabsOverlayContainer)
+        m_astroTabsOverlayContainer->setVisible(astroSelected);
+
+      if (astroSelected) {
+        if (m_astroPanel) {
+          m_astroPanel->setCurrentTabIndex(0);
+        }
+        onStarMapOverlayRequested(true);
+      } else {
+        onStarMapOverlayRequested(false);
+      }
     });
   };
 
@@ -238,6 +252,20 @@ void MainWindow::setupUi() {
   QVBoxLayout *viewportLayout = new QVBoxLayout(m_mainStreamView);
   viewportLayout->setContentsMargins(0, 0, 0, 0);
   viewportLayout->addWidget(m_mainVideoWidget);
+
+  // StarMap overlay (over stream)
+  m_starMapOverlayContainer = new QWidget(centralWidget);
+  m_starMapOverlayContainer->setVisible(false);
+  QVBoxLayout *starMapOverlayLayout = new QVBoxLayout(m_starMapOverlayContainer);
+  starMapOverlayLayout->setContentsMargins(0, 0, 0, 0);
+  starMapOverlayLayout->setSpacing(0);
+
+  // Astro tabs overlay (over stream)
+  m_astroTabsOverlayContainer = new QWidget(centralWidget);
+  m_astroTabsOverlayContainer->setVisible(false);
+  auto *astroTabsOverlayLayout = new QVBoxLayout(m_astroTabsOverlayContainer);
+  astroTabsOverlayLayout->setContentsMargins(0, 0, 0, 0);
+  astroTabsOverlayLayout->setSpacing(0);
 
   // OVERLAYS ON MAIN VIDEO
   m_streamNameOverlay = new QLabel(m_mainVideoWidget);
@@ -341,6 +369,36 @@ void MainWindow::setupUi() {
   m_astroPanel->setCameraController(m_cameraController);
   m_astroPanel->setAstroController(m_astroController);
   m_contentStack->addWidget(m_astroPanel);
+  connect(m_astroPanel, &AstroNavigationPanel::starMapOverlayRequested, this,
+          &MainWindow::onStarMapOverlayRequested);
+
+  // Build overlay tab bar that controls Astro tabs while StarMap is full overlay
+  if (m_astroPanel->tabWidget()) {
+    m_astroTabsOverlayBar = new QTabBar(m_astroTabsOverlayContainer);
+    m_astroTabsOverlayBar->setExpanding(false);
+    m_astroTabsOverlayBar->setDrawBase(false);
+
+    for (int i = 0; i < m_astroPanel->tabWidget()->count(); ++i) {
+      m_astroTabsOverlayBar->addTab(m_astroPanel->tabWidget()->tabText(i));
+    }
+
+    astroTabsOverlayLayout->addWidget(m_astroTabsOverlayBar);
+
+    connect(m_astroTabsOverlayBar, &QTabBar::currentChanged, this,
+            [this](int index) {
+              if (!m_astroPanel)
+                return;
+              m_astroPanel->setCurrentTabIndex(index);
+            });
+
+    connect(m_astroPanel->tabWidget(), &QTabWidget::currentChanged, this,
+            [this](int index) {
+              if (!m_astroTabsOverlayBar)
+                return;
+              const QSignalBlocker blocker(m_astroTabsOverlayBar);
+              m_astroTabsOverlayBar->setCurrentIndex(index);
+            });
+  }
 
   // 3: Pano Panel
   QWidget *panoTab = new QWidget();
@@ -1403,6 +1461,89 @@ void MainWindow::updateOverlayPositions() {
     m_motorOverlay->move(overlayX, overlayY);
     m_motorOverlay->raise();
   }
+
+  if (m_starMapOverlayContainer && m_mainStreamView) {
+    QPoint streamPos = m_mainStreamView->mapTo(centralWidget(), QPoint(0, 0));
+    m_starMapOverlayContainer->move(streamPos);
+    m_starMapOverlayContainer->resize(m_mainStreamView->size());
+    if (m_starMapOverlayEnabled) {
+      m_starMapOverlayContainer->raise();
+    }
+  }
+
+  if (m_astroTabsOverlayContainer && m_mainStreamView) {
+    const QPoint streamPos = m_mainStreamView->mapTo(centralWidget(), QPoint(0, 0));
+    const int tabW = m_astroTabsOverlayBar ? m_astroTabsOverlayBar->sizeHint().width() : 320;
+    const int tabH = m_astroTabsOverlayBar ? m_astroTabsOverlayBar->sizeHint().height() : 32;
+    m_astroTabsOverlayContainer->move(streamPos + QPoint(10, 10));
+    m_astroTabsOverlayContainer->resize(tabW, tabH);
+    if (m_astroTabsOverlayContainer->isVisible()) {
+      m_astroTabsOverlayContainer->raise();
+    }
+  }
+}
+
+void MainWindow::onStarMapOverlayRequested(bool enabled) {
+  m_starMapOverlayEnabled = enabled;
+
+  if (!m_starMapOverlayContainer || !m_astroPanel)
+    return;
+
+  QWidget *starMapContent = m_astroPanel->starMapContentWidget();
+  if (!starMapContent)
+    return;
+
+  auto *overlayLayout = qobject_cast<QVBoxLayout *>(m_starMapOverlayContainer->layout());
+  if (!overlayLayout) {
+    overlayLayout = new QVBoxLayout(m_starMapOverlayContainer);
+    overlayLayout->setContentsMargins(0, 0, 0, 0);
+    overlayLayout->setSpacing(0);
+  }
+
+  const bool astroSelected = m_contentStack && (m_contentStack->currentWidget() == m_astroPanel);
+  if (m_astroTabsOverlayContainer) {
+    m_astroTabsOverlayContainer->setVisible(astroSelected && enabled);
+    if (astroSelected && enabled)
+      m_astroTabsOverlayContainer->raise();
+  }
+
+  if (enabled) {
+    if (m_contentStack)
+      m_contentStack->setVisible(false);
+
+    if (m_motorOverlay)
+      m_motorOverlay->setVisible(false);
+
+    if (auto *starMapTabLayout = m_astroPanel->starMapTabLayout()) {
+      starMapTabLayout->removeWidget(starMapContent);
+    }
+
+    starMapContent->setParent(m_starMapOverlayContainer);
+    overlayLayout->addWidget(starMapContent);
+    starMapContent->show();
+
+    m_starMapOverlayContainer->setVisible(true);
+    updateOverlayPositions();
+    m_starMapOverlayContainer->raise();
+    if (m_astroTabsOverlayContainer && m_astroTabsOverlayContainer->isVisible())
+      m_astroTabsOverlayContainer->raise();
+    return;
+  }
+
+  // Restore
+  overlayLayout->removeWidget(starMapContent);
+  starMapContent->setParent(m_astroPanel->starMapTabWidget());
+  if (auto *starMapTabLayout = m_astroPanel->starMapTabLayout()) {
+    starMapTabLayout->insertWidget(0, starMapContent, 1);
+  }
+  starMapContent->show();
+
+  m_starMapOverlayContainer->setVisible(false);
+  if (m_contentStack)
+    m_contentStack->setVisible(true);
+
+  if (m_motorOverlay)
+    m_motorOverlay->setVisible(true);
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {

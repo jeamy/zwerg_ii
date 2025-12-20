@@ -15,6 +15,9 @@
 #include <QCheckBox>
 #include <QSlider>
 
+class QVBoxLayout;
+class QTabWidget;
+
 #include "StarMapWidget.h"  // For CelestialObject
 
 class DwarfWebSocketClient;
@@ -47,10 +50,20 @@ public:
     // Update telescope pointing from external source
     void setTelescopePointing(double ra, double dec);
 
+    StarMapWidget *starMapWidget() const;
+    QWidget *starMapTabWidget() const;
+    QVBoxLayout *starMapTabLayout() const;
+    QWidget *starMapContentWidget() const;
+
+    QTabWidget *tabWidget() const;
+    void setCurrentTabIndex(int index);
+    int currentTabIndex() const;
+
 signals:
     void gotoRequested(double ra, double dec);
     void stackingStarted(int numFrames, double exposureSeconds);
     void stackingStopped();
+    void starMapOverlayRequested(bool enabled);
 
 private slots:
     // Star map
@@ -99,6 +112,10 @@ private:
 
     // Main tabs
     QTabWidget *m_tabWidget;
+
+    QWidget *m_starMapTab;
+    QVBoxLayout *m_starMapTabLayout;
+    QWidget *m_starMapContent;
     
     // Star Map Tab
     StarMapWidget *m_starMap;
@@ -171,6 +188,8 @@ private:
     DwarfAstroController *m_astroController;
 
     Lx200Server *m_lx200Server;
+
+    bool m_catalogLoaded;
     
     // Current selection
     CelestialObject m_selectedObject;
