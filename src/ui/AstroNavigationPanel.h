@@ -72,6 +72,7 @@ private slots:
     void onGotoClicked();
     void onStopGotoClicked();
     void onCalibrateClicked();
+    void onCancelCalibrationClicked();
     
     // Search
     void onSearchTextChanged(const QString &text);
@@ -123,8 +124,9 @@ private:
     QLabel *m_objectInfoLabel;
     QPushButton *m_gotoButton;
     QPushButton *m_stopGotoButton;
-    QPushButton *m_calibrateButton;
-    QLabel *m_calibrationStatusLabel;
+    QPushButton *m_calibrateButton = nullptr;
+    QPushButton *m_cancelCalibrationButton = nullptr;
+    QLabel *m_calibrationStatusLabel = nullptr;
     
     // Search Tab
     QLineEdit *m_searchEdit;

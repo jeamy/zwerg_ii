@@ -7,6 +7,7 @@
 #include <QPointF>
 #include <QTimer>
 #include <QVector>
+#include <QHash>
 
 class QSqlDatabase;
 
@@ -15,12 +16,14 @@ class QSqlDatabase;
  */
 struct CelestialObject {
     int id;
+    int hip = 0;
     QString name;
     QString commonName;
     QString type;           // "star", "galaxy", "nebula", "cluster", "planet"
     double ra;              // Right Ascension in degrees (0-360)
     double dec;             // Declination in degrees (-90 to +90)
     double magnitude;       // Visual magnitude (lower = brighter)
+    double bv = 0.5;        // Star B-V color index (approx). Used for star coloring.
     QString constellation;
     QString description;
     
@@ -92,12 +95,14 @@ private:
     void initializeScene();
     void loadStarsFromDatabase();
     void loadDeepSkyFromDatabase();
+    void loadConstellationLinesFromFile();
     void drawStars();
     void drawDeepSkyObjects();
     void drawConstellationLines();
     void drawCoordinateGrid();
     void drawHorizon();
     void drawTelescopeFOV();
+    void drawSelectionMarker();
     
     // Coordinate conversions
     QPointF raDecToAltAz(double ra, double dec) const;
@@ -141,6 +146,10 @@ private:
     QVector<CelestialObject> m_stars;
     QVector<CelestialObject> m_deepSkyObjects;
     CelestialObject m_selectedObject;
+
+    // Constellations
+    QVector<QPair<int, int>> m_constellationSegments; // hip1, hip2
+    QHash<int, int> m_hipToStarIndex; // hip -> index into m_stars
     
     // Graphics items for efficient updates
     QVector<QGraphicsEllipseItem*> m_starItems;

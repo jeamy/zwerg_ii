@@ -160,13 +160,18 @@ void AstroNavigationPanel::setupStarMapTab() {
                                       "This is automatically done during GOTO,\n"
                                       "but can be triggered separately if needed."));
     
+    m_cancelCalibrationButton = new QPushButton(tr("Stop"), calibrationGroup);
+    m_cancelCalibrationButton->setEnabled(false);
+
     m_calibrationStatusLabel = new QLabel(tr("Not calibrated"), calibrationGroup);
     m_calibrationStatusLabel->setStyleSheet("color: gray;");
     
     calibrationLayout->addWidget(m_calibrateButton);
+    calibrationLayout->addWidget(m_cancelCalibrationButton);
     calibrationLayout->addWidget(m_calibrationStatusLabel, 1);
     
     connect(m_calibrateButton, &QPushButton::clicked, this, &AstroNavigationPanel::onCalibrateClicked);
+    connect(m_cancelCalibrationButton, &QPushButton::clicked, this, &AstroNavigationPanel::onCancelCalibrationClicked);
 
     // Place Selected Object + Calibration under Visible Tonight in the right column
     rightPanelLayout->addWidget(infoGroup);
@@ -708,12 +713,16 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
         connect(m_astroController, &DwarfAstroController::calibrationStarted, this, [this]() {
             m_calibrateButton->setEnabled(false);
             m_calibrateButton->setText(tr("Calibrating..."));
+            if (m_cancelCalibrationButton)
+                m_cancelCalibrationButton->setEnabled(true);
             m_calibrationStatusLabel->setText(tr("Plate solving..."));
             m_calibrationStatusLabel->setStyleSheet("color: blue;");
         });
         connect(m_astroController, &DwarfAstroController::calibrationCompleted, this, [this](bool success) {
             m_calibrateButton->setEnabled(true);
             m_calibrateButton->setText(tr("Calibrate"));
+            if (m_cancelCalibrationButton)
+                m_cancelCalibrationButton->setEnabled(false);
             if (success) {
                 m_calibrationStatusLabel->setText(tr("Calibrated successfully"));
                 m_calibrationStatusLabel->setStyleSheet("color: green;");
@@ -725,6 +734,8 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
         connect(m_astroController, &DwarfAstroController::calibrationFailed, this, [this](const QString &error) {
             m_calibrateButton->setEnabled(true);
             m_calibrateButton->setText(tr("Calibrate"));
+            if (m_cancelCalibrationButton)
+                m_cancelCalibrationButton->setEnabled(false);
             m_calibrationStatusLabel->setText(tr("Failed: %1").arg(error));
             m_calibrationStatusLabel->setStyleSheet("color: red;");
         });
@@ -855,10 +866,23 @@ void AstroNavigationPanel::onCalibrateClicked() {
     
     m_calibrateButton->setEnabled(false);
     m_calibrateButton->setText(tr("Calibrating..."));
+    if (m_cancelCalibrationButton)
+        m_cancelCalibrationButton->setEnabled(true);
     m_calibrationStatusLabel->setText(tr("Plate solving in progress..."));
     m_calibrationStatusLabel->setStyleSheet("color: blue;");
     
     m_astroController->startCalibration();
+}
+
+void AstroNavigationPanel::onCancelCalibrationClicked() {
+    if (!m_astroController)
+        return;
+
+    qDebug() << "Stopping calibration...";
+    m_astroController->stopCalibration();
+    if (m_cancelCalibrationButton)
+        m_cancelCalibrationButton->setEnabled(false);
+    // Status will be updated by calibrationCompleted/calibrationFailed
 }
 
 void AstroNavigationPanel::gotoObject(const CelestialObject &obj) {
