@@ -5,6 +5,7 @@
 #include <QSlider>
 #include <QLabel>
 #include <QElapsedTimer>
+ #include <QGroupBox>
 
 class DwarfMotorController;
 class DwarfFocusController;
@@ -36,6 +37,9 @@ private:
     QPushButton *m_rightButton = nullptr;
     QSlider *m_speedSlider = nullptr;
     QLabel *m_speedLabel = nullptr;
+
+    QGroupBox *m_motorGroup = nullptr;
+    QGroupBox *m_focusGroup = nullptr;
 
     QPushButton *m_focusFarButton = nullptr;
     QPushButton *m_focusNearButton = nullptr;

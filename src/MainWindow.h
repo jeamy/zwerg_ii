@@ -258,6 +258,7 @@ private:
         DwarfCameraController::CameraKind::Tele;
     QString prefix;
     QString thumbnailPath;
+    int attempts = 0;
   };
 
   PendingCaptureLookup m_pendingCaptureLookup;

@@ -581,11 +581,9 @@ void CameraSettingsPanel::onPhotoCaptureFinished(
   m_photoButton->setEnabled(true);
 
   if (success) {
-    m_captureStatusLabel->setText(tr("Photo saved"));
-    m_photoButton->setStyleSheet(
-        "background-color: #27ae60; color: white; font-weight: bold; border-radius: 4px;");
-    QTimer::singleShot(800, this,
-                       [this]() { m_photoButton->setStyleSheet(""); });
+    // cmd 10002 ack is often only "accepted"; actual save can take as long as
+    // the exposure time. Final filename/preview is shown after MediaList refresh.
+    m_captureStatusLabel->setText(tr("Processing..."));
   } else {
     m_captureStatusLabel->setText(tr("Photo failed (code %1)").arg(code));
     m_photoButton->setStyleSheet(
@@ -715,6 +713,19 @@ void CameraSettingsPanel::onExposureSliderChanged(int sliderIndex) {
   if (!m_controller) {
     qWarning() << "[CameraSettingsPanel] ERROR: m_controller is null!";
     return;
+  }
+
+  // If user adjusts exposure value, ensure we are in manual mode;
+  // otherwise firmware may ignore exp_index while exp_mode is Auto.
+  if (m_exposureModeCombo && m_exposureModeCombo->currentIndex() != 1) {
+    auto kind = (m_cameraMode == CameraMode::Tele)
+                    ? DwarfCameraController::CameraKind::Tele
+                    : DwarfCameraController::CameraKind::Wide;
+    m_controller->setExposureMode(kind, 1);
+    m_exposureModeCombo->blockSignals(true);
+    m_exposureModeCombo->setCurrentIndex(1);
+    m_exposureModeCombo->blockSignals(false);
+    m_exposureSlider->setEnabled(true);
   }
 
   // Convert slider index to API index

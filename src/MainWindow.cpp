@@ -168,6 +168,7 @@ void MainWindow::onPhotoCaptureFinished(DwarfCameraController::CameraKind kind,
   m_pendingCaptureLookup.expectedKind = kind;
   m_pendingCaptureLookup.prefix = tr("Photo saved:");
   m_pendingCaptureLookup.thumbnailPath.clear();
+  m_pendingCaptureLookup.attempts = 0;
 
   ensureHttpClientForCurrentIp();
   if (m_httpClient)
@@ -1508,6 +1509,19 @@ void MainWindow::onMediaListReceived(const QJsonDocument &document) {
       }
 
       m_pendingCaptureLookup.active = false;
+      m_pendingCaptureLookup.attempts = 0;
+    } else {
+      // Long exposures can take time before the file appears in the album.
+      // Poll a few times before giving up.
+      if (m_pendingCaptureLookup.attempts < 20) {
+        m_pendingCaptureLookup.attempts++;
+        if (m_httpClient) {
+          QTimer::singleShot(1000, this, [this]() {
+            if (m_httpClient && m_pendingCaptureLookup.active)
+              m_httpClient->fetchMediaList();
+          });
+        }
+      }
     }
   }
 

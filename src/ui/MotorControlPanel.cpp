@@ -15,6 +15,7 @@
 #include <QStackedLayout>
 #include <QStyle>
 #include <QTimer>
+#include <QStyleOptionGroupBox>
 #include <algorithm>
 
 const double MotorControlPanel::s_speedTable[5] = {0.1, 1.0, 5.0, 10.0, 30.0};
@@ -60,19 +61,19 @@ void MotorControlPanel::setupUi() {
     mainLayout->setSpacing(8);
 
     // Motor Control Group
-    QGroupBox *motorGroup = new QGroupBox(tr("Motor Control"), this);
-    motorGroup->setObjectName("motorControlGroup");
-    QVBoxLayout *motorLayout = new QVBoxLayout(motorGroup);
+    m_motorGroup = new QGroupBox(tr("Motor Control"), this);
+    m_motorGroup->setObjectName("motorControlGroup");
+    QVBoxLayout *motorLayout = new QVBoxLayout(m_motorGroup);
     motorLayout->setContentsMargins(10, 0, 10, 10);
     motorLayout->setSpacing(8);
 
-    auto *groupGlow = new QGraphicsDropShadowEffect(motorGroup);
+    auto *groupGlow = new QGraphicsDropShadowEffect(m_motorGroup);
     groupGlow->setBlurRadius(32);
     groupGlow->setOffset(0, 0);
     groupGlow->setColor(QColor(39, 174, 96, 140));
-    motorGroup->setGraphicsEffect(groupGlow);
+    m_motorGroup->setGraphicsEffect(groupGlow);
 
-    QWidget *slewArea = new QWidget(motorGroup);
+    QWidget *slewArea = new QWidget(m_motorGroup);
     slewArea->setObjectName("motorSlewArea");
     slewArea->setFixedSize(190, 190);
     QGridLayout *slewLayout = new QGridLayout(slewArea);
@@ -165,33 +166,33 @@ void MotorControlPanel::setupUi() {
 
     motorLayout->addLayout(speedLayout);
 
-    mainLayout->addWidget(motorGroup);
+    mainLayout->addWidget(m_motorGroup);
 
     // Focus controls (docked below Motor Control)
-    auto *focusGroup = new QGroupBox(tr("Focus"), this);
-    focusGroup->setObjectName("motorFocusGroup");
+    m_focusGroup = new QGroupBox(tr("Focus"), this);
+    m_focusGroup->setObjectName("motorFocusGroup");
 
-    auto *focusGlow = new QGraphicsDropShadowEffect(focusGroup);
+    auto *focusGlow = new QGraphicsDropShadowEffect(m_focusGroup);
     focusGlow->setBlurRadius(32);
     focusGlow->setOffset(0, 0);
     focusGlow->setColor(QColor(39, 174, 96, 140));
-    focusGroup->setGraphicsEffect(focusGlow);
+    m_focusGroup->setGraphicsEffect(focusGlow);
 
-    auto *focusLayout = new QHBoxLayout(focusGroup);
+    auto *focusLayout = new QHBoxLayout(m_focusGroup);
     focusLayout->setContentsMargins(10, 8, 10, 10);
     focusLayout->setSpacing(8);
 
-    m_focusFarButton = new QPushButton(tr("Far -"), focusGroup);
+    m_focusFarButton = new QPushButton(tr("Far -"), m_focusGroup);
     m_focusFarButton->setObjectName("motorFocusFarButton");
     m_focusFarButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     m_focusFarButton->setFixedHeight(32);
 
-    m_autoFocusButton = new QPushButton(tr("AUTO"), focusGroup);
+    m_autoFocusButton = new QPushButton(tr("AUTO"), m_focusGroup);
     m_autoFocusButton->setObjectName("motorAutoFocusButton");
     m_autoFocusButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     m_autoFocusButton->setFixedHeight(32);
 
-    m_focusNearButton = new QPushButton(tr("Near +"), focusGroup);
+    m_focusNearButton = new QPushButton(tr("Near +"), m_focusGroup);
     m_focusNearButton->setObjectName("motorFocusNearButton");
     m_focusNearButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     m_focusNearButton->setFixedHeight(32);
@@ -200,7 +201,7 @@ void MotorControlPanel::setupUi() {
     focusLayout->addWidget(m_autoFocusButton);
     focusLayout->addWidget(m_focusNearButton);
 
-    mainLayout->addWidget(focusGroup);
+    mainLayout->addWidget(m_focusGroup);
     mainLayout->addStretch(1);
 
     m_joystickSendTimer = new QTimer(this);
@@ -360,7 +361,32 @@ void MotorControlPanel::mousePressEvent(QMouseEvent *event) {
         }
     }
 
-    m_dragOffset = QCursor::pos() - pos();
+    const QPoint localPos = event->pos();
+    const QWidget *child = childAt(localPos);
+    const QGroupBox *gb = nullptr;
+    for (const QWidget *w = child; w; w = w->parentWidget()) {
+        gb = qobject_cast<const QGroupBox *>(w);
+        if (gb)
+            break;
+        if (w == this)
+            break;
+    }
+
+    bool allowDrag = false;
+    if (gb) {
+        QStyleOptionGroupBox opt;
+        opt.initFrom(gb);
+        opt.text = gb->title();
+        opt.subControls = QStyle::SC_GroupBoxLabel;
+        const QRect labelRect =
+            style()->subControlRect(QStyle::CC_GroupBox, &opt, QStyle::SC_GroupBoxLabel, gb);
+        const QPoint gbPos = gb->mapFrom(this, localPos);
+        allowDrag = labelRect.adjusted(-6, -6, 6, 6).contains(gbPos);
+    }
+
+    if (allowDrag) {
+        m_dragOffset = QCursor::pos() - pos();
+    }
     QWidget::mousePressEvent(event);
 }
 
@@ -373,12 +399,13 @@ void MotorControlPanel::mouseMoveEvent(QMouseEvent *event) {
         }
     }
 
-    if (event->buttons() & Qt::LeftButton) {
+    if ((event->buttons() & Qt::LeftButton) && !m_dragOffset.isNull()) {
         move(QCursor::pos() - m_dragOffset);
     }
     QWidget::mouseMoveEvent(event);
 }
 
 void MotorControlPanel::mouseReleaseEvent(QMouseEvent *event) {
+    m_dragOffset = QPoint();
     QWidget::mouseReleaseEvent(event);
 }

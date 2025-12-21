@@ -350,6 +350,9 @@ void DwarfCameraController::setExposureIndex(CameraKind kind, int index) {
   sendSingleInt32(kind, cmdSetExpFor(kind), index);
 
   saveConfig(kind);
+
+  // Refresh from device to see actual/clamped exposure index
+  QTimer::singleShot(250, this, [this, kind]() { fetchAllParams(kind); });
 }
 
 void DwarfCameraController::setGainMode(CameraKind kind, int mode) {
