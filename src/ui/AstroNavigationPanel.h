@@ -78,6 +78,8 @@ private slots:
     void onSearchTextChanged(const QString &text);
     void onSearchResultClicked(QListWidgetItem *item);
     void onSearchResultDoubleClicked(QListWidgetItem *item);
+
+    void onStarMapCoordinatesClicked(double ra, double dec);
     
     // Stacking
     void onStartStackingClicked();
@@ -94,6 +96,8 @@ private slots:
 
     void onLx200EnableToggled(bool enabled);
     void onLx200PortChanged(int port);
+
+    void onRaDecGotoClicked();
 
 private:
     void setupUI();
@@ -133,6 +137,10 @@ private:
     QListWidget *m_searchResults;
     QListWidget *m_visibleObjectsList;
     QLabel *m_searchStatusLabel;
+
+    QLineEdit *m_raInput = nullptr;
+    QLineEdit *m_decInput = nullptr;
+    QPushButton *m_radecGotoButton = nullptr;
     
     // Stacking Tab - Capture Settings
     QSpinBox *m_numFramesSpin;

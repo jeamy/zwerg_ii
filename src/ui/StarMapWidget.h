@@ -81,6 +81,7 @@ signals:
     void objectSelected(const CelestialObject &obj);
     void objectDoubleClicked(const CelestialObject &obj);
     void gotoRequested(double ra, double dec);
+    void coordinatesClicked(double ra, double dec);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;

@@ -23,6 +23,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QStyle>
+#include <QRegularExpression>
+
+#include <cmath>
 
 AstroNavigationPanel::AstroNavigationPanel(QWidget *parent)
     : QWidget(parent)
@@ -98,12 +101,35 @@ void AstroNavigationPanel::setupStarMapTab() {
 
     m_visibleObjectsList = new QListWidget(visibleGroup);
 
+    auto *radecRow = new QWidget(visibleGroup);
+    auto *radecRowLayout = new QGridLayout(radecRow);
+    radecRowLayout->setContentsMargins(0, 0, 0, 0);
+    radecRowLayout->setHorizontalSpacing(8);
+    radecRowLayout->setVerticalSpacing(6);
+
+    m_raInput = new QLineEdit(radecRow);
+    m_raInput->setPlaceholderText(tr("RA (hh:mm:ss or deg)"));
+    m_raInput->setClearButtonEnabled(true);
+
+    m_decInput = new QLineEdit(radecRow);
+    m_decInput->setPlaceholderText(tr("Dec (dd:mm:ss or deg)"));
+    m_decInput->setClearButtonEnabled(true);
+
+    m_radecGotoButton = new QPushButton(tr("GOTO"), radecRow);
+
+    radecRowLayout->addWidget(m_raInput, 0, 0);
+    radecRowLayout->addWidget(m_decInput, 0, 1);
+    radecRowLayout->addWidget(m_radecGotoButton, 0, 2);
+    radecRowLayout->setColumnStretch(0, 1);
+    radecRowLayout->setColumnStretch(1, 1);
+
     auto *refreshButton = new QPushButton(tr("Refresh List"), visibleGroup);
     connect(refreshButton, &QPushButton::clicked, this,
             &AstroNavigationPanel::updateVisibleObjectsList);
 
     visibleLayout->addWidget(m_visibleObjectsList);
     visibleLayout->addWidget(refreshButton);
+    visibleLayout->addWidget(radecRow);
 
     auto *rightPanel = new QWidget(m_starMapContent);
     rightPanel->setObjectName("astroStarMapSidePanel");
@@ -533,12 +559,16 @@ void AstroNavigationPanel::connectSignals() {
     // Star map signals
     connect(m_starMap, &StarMapWidget::objectSelected, this, &AstroNavigationPanel::onObjectSelected);
     connect(m_starMap, &StarMapWidget::objectDoubleClicked, this, &AstroNavigationPanel::onObjectDoubleClicked);
+    connect(m_starMap, &StarMapWidget::coordinatesClicked, this, &AstroNavigationPanel::onStarMapCoordinatesClicked);
 
     connect(m_tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
         emit starMapOverlayRequested(index == 0);
     });
     connect(m_gotoButton, &QPushButton::clicked, this, &AstroNavigationPanel::onGotoClicked);
     connect(m_stopGotoButton, &QPushButton::clicked, this, &AstroNavigationPanel::onStopGotoClicked);
+
+    if (m_radecGotoButton)
+        connect(m_radecGotoButton, &QPushButton::clicked, this, &AstroNavigationPanel::onRaDecGotoClicked);
     
     // Search signals
     connect(m_searchEdit, &QLineEdit::textChanged, this, &AstroNavigationPanel::onSearchTextChanged);
@@ -613,6 +643,134 @@ void AstroNavigationPanel::connectSignals() {
             m_astroController->stopGoto();
         }
     });
+}
+
+void AstroNavigationPanel::onStarMapCoordinatesClicked(double ra, double dec) {
+    if (!m_raInput || !m_decInput)
+        return;
+
+    const QSignalBlocker raBlocker(m_raInput);
+    const QSignalBlocker decBlocker(m_decInput);
+
+    m_raInput->setText(QString::number(ra, 'f', 4));
+    m_decInput->setText(QString::number(dec, 'f', 4));
+}
+
+static bool parseSexagesimalAngle(const QString &text, double *outDegrees, bool hoursToDegrees) {
+    if (!outDegrees)
+        return false;
+
+    QString s = text.trimmed();
+    if (s.isEmpty())
+        return false;
+
+    s.replace(',', '.');
+    s.replace('h', ':');
+    s.replace('m', ':');
+    s.replace('s', ' ');
+    s.replace(QChar(0x00B0), ':');
+    s.replace(QChar(u'′'), QChar(':'));
+    s.replace(QChar(u'’'), QChar(':'));
+    s.replace(QChar(u'″'), QChar(' '));
+    s.replace('"', ' ');
+    s = s.simplified();
+
+    const QRegularExpression re(R"(^\s*([+-])?\s*(\d+(?:\.\d+)?)\s*(?:(?:\:|\s)\s*(\d+(?:\.\d+)?))?\s*(?:(?:\:|\s)\s*(\d+(?:\.\d+)?))?\s*$)");
+    const QRegularExpressionMatch m = re.match(s);
+    if (!m.hasMatch())
+        return false;
+
+    const bool negative = (m.captured(1) == "-");
+    const double a = m.captured(2).toDouble();
+    const double b = m.captured(3).isEmpty() ? 0.0 : m.captured(3).toDouble();
+    const double c = m.captured(4).isEmpty() ? 0.0 : m.captured(4).toDouble();
+    double value = a + (b / 60.0) + (c / 3600.0);
+    if (negative)
+        value = -value;
+
+    if (hoursToDegrees)
+        value *= 15.0;
+
+    *outDegrees = value;
+    return true;
+}
+
+static bool parseRaDegrees(const QString &text, double *outRaDeg) {
+    if (!outRaDeg)
+        return false;
+
+    QString s = text.trimmed();
+    if (s.isEmpty())
+        return false;
+
+    double deg = 0.0;
+    if (s.contains(':') || s.contains('h') || s.contains('m') || s.contains('s')) {
+        if (!parseSexagesimalAngle(s, &deg, true))
+            return false;
+    } else {
+        QString n = s;
+        n.replace(',', '.');
+        bool ok = false;
+        const double v = n.toDouble(&ok);
+        if (!ok)
+            return false;
+        deg = (v <= 24.0) ? (v * 15.0) : v;
+    }
+
+    deg = std::fmod(deg, 360.0);
+    if (deg < 0)
+        deg += 360.0;
+    *outRaDeg = deg;
+    return true;
+}
+
+static bool parseDecDegrees(const QString &text, double *outDecDeg) {
+    if (!outDecDeg)
+        return false;
+
+    QString s = text.trimmed();
+    if (s.isEmpty())
+        return false;
+
+    double deg = 0.0;
+    if (s.contains(':') || s.contains(QChar(0x00B0)) || s.contains(QChar(u'′')) || s.contains('"')) {
+        if (!parseSexagesimalAngle(s, &deg, false))
+            return false;
+    } else {
+        QString n = s;
+        n.replace(',', '.');
+        bool ok = false;
+        deg = n.toDouble(&ok);
+        if (!ok)
+            return false;
+    }
+
+    if (deg < -90.0 || deg > 90.0)
+        return false;
+
+    *outDecDeg = deg;
+    return true;
+}
+
+void AstroNavigationPanel::onRaDecGotoClicked() {
+    if (!m_raInput || !m_decInput)
+        return;
+
+    double raDeg = 0.0;
+    double decDeg = 0.0;
+    if (!parseRaDegrees(m_raInput->text(), &raDeg) || !parseDecDegrees(m_decInput->text(), &decDeg)) {
+        QMessageBox::warning(this, tr("Invalid coordinates"),
+                             tr("Please enter valid coordinates.\nRA: hh:mm:ss or degrees\nDec: dd:mm:ss or degrees"));
+        return;
+    }
+
+    CelestialObject obj;
+    obj.ra = raDeg;
+    obj.dec = decDeg;
+    obj.name = QString("Custom RA:%1 Dec:%2").arg(raDeg, 0, 'f', 4).arg(decDeg, 0, 'f', 4);
+    obj.commonName = obj.name;
+    obj.isVisible = true;
+    gotoObject(obj);
 }
 
 void AstroNavigationPanel::loadCatalog() {

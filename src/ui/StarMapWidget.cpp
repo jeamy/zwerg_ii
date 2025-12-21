@@ -584,6 +584,53 @@ QPointF StarMapWidget::raDecToScreen(double ra, double dec) const {
     return altAzToScreen(altAz.x(), altAz.y());
 }
 
+void StarMapWidget::screenToRaDec(const QPointF &screen, double &ra, double &dec) const {
+    // Inverse of altAzToScreen + raDecToAltAz.
+    // 1) Screen -> Alt/Az
+    const double scale = 5.0 * m_zoomLevel;
+    const double r = std::hypot(screen.x(), screen.y());
+    const double alt = 90.0 - (r / scale);
+
+    double az = std::atan2(screen.x(), -screen.y()) * RAD_TO_DEG;
+    if (az < 0.0)
+        az += 360.0;
+
+    // 2) Alt/Az -> RA/Dec
+    const double latRad = m_latitude * DEG_TO_RAD;
+    const double altRad = alt * DEG_TO_RAD;
+    const double azRad = az * DEG_TO_RAD;
+
+    const double sinAlt = std::sin(altRad);
+    const double cosAlt = std::cos(altRad);
+    const double sinLat = std::sin(latRad);
+    const double cosLat = std::cos(latRad);
+
+    const double sinDec = sinAlt * sinLat + cosAlt * cosLat * std::cos(azRad);
+    const double decRad = std::asin(qBound(-1.0, sinDec, 1.0));
+    const double cosDec = std::cos(decRad);
+
+    double haDeg = 0.0;
+    if (std::abs(cosDec) < 1e-12) {
+        haDeg = 0.0;
+    } else {
+        const double sinH = (-std::sin(azRad) * cosAlt) / cosDec;
+        const double cosH = (sinAlt - sinLat * std::sin(decRad)) / (cosLat * cosDec);
+        const double haRad = std::atan2(sinH, cosH);
+        haDeg = haRad * RAD_TO_DEG;
+        if (haDeg < 0.0)
+            haDeg += 360.0;
+    }
+
+    const double lst = localSiderealTime();
+    double raDeg = lst - haDeg;
+    raDeg = std::fmod(raDeg, 360.0);
+    if (raDeg < 0.0)
+        raDeg += 360.0;
+
+    ra = raDeg;
+    dec = decRad * RAD_TO_DEG;
+}
+
 void StarMapWidget::updateSky() {
     if (m_realTimeMode) {
         m_dateTime = QDateTime::currentDateTimeUtc();
@@ -704,6 +751,22 @@ void StarMapWidget::drawCoordinateGrid() {
             }
         }
         m_scene->addPath(path, gridPen);
+    }
+
+    // Alt/Az grid (horizon coordinates) - subtle silver-grey
+    QPen altAzPen(QColor(190, 190, 200, 70), 1, Qt::DotLine);
+
+    // Altitude circles
+    for (int alt = 15; alt <= 75; alt += 15) {
+        const double r = (90.0 - static_cast<double>(alt)) * 5.0 * m_zoomLevel;
+        m_scene->addEllipse(-r, -r, 2 * r, 2 * r, altAzPen, Qt::NoBrush);
+    }
+
+    // Azimuth lines
+    for (int az = 0; az < 360; az += 30) {
+        const QPointF p1 = altAzToScreen(0.0, static_cast<double>(az));
+        const QPointF p2 = altAzToScreen(90.0, static_cast<double>(az));
+        m_scene->addLine(QLineF(p1, p2), altAzPen);
     }
 }
 
@@ -871,6 +934,11 @@ void StarMapWidget::drawTelescopeFOV() {
 void StarMapWidget::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
         QPointF scenePos = mapToScene(event->pos());
+
+        double ra = 0.0;
+        double dec = 0.0;
+        screenToRaDec(scenePos, ra, dec);
+        emit coordinatesClicked(ra, dec);
         
         // Find nearest object
         double minDist = 20.0; // Click tolerance
