@@ -855,8 +855,12 @@ void CameraSettingsPanel::onExposureSliderChanged(int sliderIndex) {
 
   // Convert slider index to API index
   const auto &values = (m_cameraMode == CameraMode::Tele)
-                           ? s_teleExposureValues
-                           : s_wideExposureValues;
+                           ? (m_teleExposureValuesDyn.isEmpty()
+                                  ? s_teleExposureValues
+                                  : m_teleExposureValuesDyn)
+                           : (m_wideExposureValuesDyn.isEmpty()
+                                  ? s_wideExposureValues
+                                  : m_wideExposureValuesDyn);
   if (sliderIndex < 0 || sliderIndex >= values.size())
     return;
 
@@ -894,8 +898,11 @@ void CameraSettingsPanel::onGainSliderChanged(int sliderIndex) {
     return;
 
   // Convert slider index to API index
-  const auto &values =
-      (m_cameraMode == CameraMode::Tele) ? s_teleGainValues : s_wideGainValues;
+  const auto &values = (m_cameraMode == CameraMode::Tele)
+                           ? (m_teleGainValuesDyn.isEmpty() ? s_teleGainValues
+                                                           : m_teleGainValuesDyn)
+                           : (m_wideGainValuesDyn.isEmpty() ? s_wideGainValues
+                                                           : m_wideGainValuesDyn);
   if (sliderIndex < 0 || sliderIndex >= values.size())
     return;
 
@@ -1058,8 +1065,11 @@ void CameraSettingsPanel::setGainMode(int mode) {
 
 void CameraSettingsPanel::setGainIndex(int apiIndex) {
   // Convert API index to slider index
-  const auto &values =
-      (m_cameraMode == CameraMode::Tele) ? s_teleGainValues : s_wideGainValues;
+  const auto &values = (m_cameraMode == CameraMode::Tele)
+                           ? (m_teleGainValuesDyn.isEmpty() ? s_teleGainValues
+                                                           : m_teleGainValuesDyn)
+                           : (m_wideGainValuesDyn.isEmpty() ? s_wideGainValues
+                                                           : m_wideGainValuesDyn);
   int sliderIndex = 0;
   for (int i = 0; i < values.size(); ++i) {
     if (values[i].first == apiIndex) {
