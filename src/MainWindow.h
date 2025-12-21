@@ -149,6 +149,7 @@ private slots:
 private:
   void setupUi();
   void updateOverlayVisibility();
+  void updateSidebarForConnectionState(bool connected);
   void loadThumbnails();
   void setItemThumbnail(QListWidgetItem *item, const QByteArray &data);
   void syncTimeWithDevice();

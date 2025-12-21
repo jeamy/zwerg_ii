@@ -321,6 +321,42 @@ void MainWindow::onGalleryOverlayRequested(bool enabled) {
   updateOverlayVisibility();
 }
 
+void MainWindow::updateSidebarForConnectionState(bool connected) {
+  if (!m_sidebarGroup)
+    return;
+
+  // SCAN is always visible.
+  if (auto *scanBtn = m_sidebarGroup->button(0))
+    scanBtn->setVisible(true);
+
+  for (int idx = 1; idx <= 5; ++idx) {
+    if (auto *btn = m_sidebarGroup->button(idx))
+      btn->setVisible(connected);
+  }
+
+  if (m_motorOverlayToggleButton)
+    m_motorOverlayToggleButton->setVisible(connected);
+  if (m_paramsOverlayToggleButton)
+    m_paramsOverlayToggleButton->setVisible(connected);
+
+  if (!connected) {
+    // Ensure we don't stay on a hidden tab.
+    if (auto *scanBtn = m_sidebarGroup->button(0))
+      scanBtn->setChecked(true);
+    if (m_contentStack)
+      m_contentStack->setCurrentIndex(0);
+
+    m_motorOverlayUserVisible = true;
+    m_paramsOverlayUserVisible = true;
+    if (m_motorOverlayToggleButton)
+      m_motorOverlayToggleButton->setChecked(true);
+    if (m_paramsOverlayToggleButton)
+      m_paramsOverlayToggleButton->setChecked(true);
+  }
+
+  updateOverlayVisibility();
+}
+
 void MainWindow::onMotorSpeedSliderChanged(int value) {
   int idx = value;
   if (idx < 0)
@@ -826,6 +862,8 @@ void MainWindow::setupUi() {
   m_sidebarGroup->button(0)->setChecked(true);
   m_contentStack->setCurrentIndex(0);
 
+  updateSidebarForConnectionState(false);
+
   updateOverlayVisibility();
 
   auto applyGlow = [](QWidget *w) {
@@ -1151,6 +1189,8 @@ void MainWindow::onWebSocketConnected() {
   QString ip = m_ipInput->text().trimmed();
   startStreaming(ip);
 
+  updateSidebarForConnectionState(true);
+
   // Load default parameter configuration (params_config.json)
   ensureHttpClientForCurrentIp();
   applyCachedParamsConfig();
@@ -1223,6 +1263,8 @@ void MainWindow::onWebSocketDisconnected() {
   m_statusLabel->setText(tr("Disconnected"));
   updateStatusStyle("disconnected");
   statusBar()->showMessage(tr("Disconnected from DWARF II"));
+
+  updateSidebarForConnectionState(false);
 }
 
 void MainWindow::onWebSocketError(const QString &error) {
