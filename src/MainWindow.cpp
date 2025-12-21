@@ -340,8 +340,12 @@ void MainWindow::updateSidebarForConnectionState(bool connected) {
     m_paramsOverlayToggleButton->setVisible(connected);
 
   // Stream viewport should not be shown while disconnected.
+  // Keep the container visible so the sidebar stays anchored left in the layout.
+  // Hide only the actual stream widgets.
   if (m_mainStreamView)
-    m_mainStreamView->setVisible(connected);
+    m_mainStreamView->setVisible(true);
+  if (m_mainVideoWidget)
+    m_mainVideoWidget->setVisible(connected);
   if (m_pipContainer)
     m_pipContainer->setVisible(connected);
   if (m_streamNameOverlay)
