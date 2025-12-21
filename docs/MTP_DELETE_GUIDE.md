@@ -57,7 +57,7 @@ sudo apt-get update
 sudo apt-get install mtp-tools
 
 # Fedora/RHEL
-sudo dnf install libmtp
+sudo dnf install libmtp-examples
 
 # Arch Linux
 sudo pacman -S libmtp

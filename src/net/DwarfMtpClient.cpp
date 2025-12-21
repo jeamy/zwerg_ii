@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QDir>
+#include <QTimer>
 #include <QStandardPaths>
 #include <QRegularExpression>
 
@@ -37,8 +38,10 @@ bool DwarfMtpClient::checkTools() {
     
     if (mtpDelfile.isEmpty()) {
         m_toolsAvailable = false;
-        QString msg = tr("MTP tools not found. Install with:\n"
-                        "sudo apt-get install mtp-tools");
+        QString msg = tr("MTP tools not found (missing mtp-delfile). Install MTP command line tools:\n"
+                        "Debian/Ubuntu: sudo apt-get install mtp-tools\n"
+                        "Fedora/RHEL: sudo dnf install libmtp-examples\n"
+                        "Arch Linux: sudo pacman -S libmtp");
         emit toolCheckCompleted(false, msg);
         qWarning() << "[MTP]" << msg;
         return false;
