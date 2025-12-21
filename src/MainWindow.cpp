@@ -339,6 +339,20 @@ void MainWindow::updateSidebarForConnectionState(bool connected) {
   if (m_paramsOverlayToggleButton)
     m_paramsOverlayToggleButton->setVisible(connected);
 
+  // Stream viewport should not be shown while disconnected.
+  if (m_mainStreamView)
+    m_mainStreamView->setVisible(connected);
+  if (m_pipContainer)
+    m_pipContainer->setVisible(connected);
+  if (m_streamNameOverlay)
+    m_streamNameOverlay->setVisible(connected);
+  if (m_starMapOverlayContainer)
+    m_starMapOverlayContainer->setVisible(connected ? m_starMapOverlayEnabled : false);
+  if (m_galleryOverlayContainer)
+    m_galleryOverlayContainer->setVisible(connected ? m_galleryOverlayEnabled : false);
+  if (m_astroTabsOverlayContainer)
+    m_astroTabsOverlayContainer->setVisible(false);
+
   if (!connected) {
     // Ensure we don't stay on a hidden tab.
     if (auto *scanBtn = m_sidebarGroup->button(0))
