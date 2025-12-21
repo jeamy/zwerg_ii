@@ -1,6 +1,5 @@
 #include "CameraSettingsPanel.h"
 #include "../net/DwarfCameraController.h"
-#include "../net/DwarfFocusController.h"
 
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -265,34 +264,8 @@ void CameraSettingsPanel::setupUi() {
   connect(m_wbTemperatureSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onWbTemperatureChanged);
 
-  // === Focus Group ===
-  m_focusGroup = new QGroupBox(tr("Focus"), this);
-  QHBoxLayout *focusLayout = new QHBoxLayout(m_focusGroup);
-  m_focusFarButton = new QPushButton(tr("Far -"), m_focusGroup);
-  m_focusNearButton = new QPushButton(tr("Near +"), m_focusGroup);
-  m_autoFocusButton = new QPushButton(tr("AUTO"), m_focusGroup);
-  m_autoFocusButton->setStyleSheet(
-      "background: #27ae60; color: white; font-weight: bold;");
-
-  focusLayout->addWidget(m_focusFarButton);
-  focusLayout->addWidget(m_autoFocusButton);
-  focusLayout->addWidget(m_focusNearButton);
-
-  mainLayout->addWidget(m_focusGroup);
-
-  connect(m_focusFarButton, &QPushButton::clicked, this,
-          &CameraSettingsPanel::onFocusFarClicked);
-  connect(m_focusNearButton, &QPushButton::clicked, this,
-          &CameraSettingsPanel::onFocusNearClicked);
-  connect(m_autoFocusButton, &QPushButton::clicked, this,
-          &CameraSettingsPanel::onAutoFocusClicked);
-
   // Add stretch at bottom
   mainLayout->addStretch();
-}
-
-void CameraSettingsPanel::setFocusController(DwarfFocusController *controller) {
-  m_focusController = controller;
 }
 
 void CameraSettingsPanel::setCameraController(
@@ -772,17 +745,3 @@ void CameraSettingsPanel::setWhiteBalanceTemperature(int index) {
   }
 }
 
-void CameraSettingsPanel::onFocusFarClicked() {
-  if (m_focusController)
-    m_focusController->manualStepFar();
-}
-
-void CameraSettingsPanel::onFocusNearClicked() {
-  if (m_focusController)
-    m_focusController->manualStepNear();
-}
-
-void CameraSettingsPanel::onAutoFocusClicked() {
-  if (m_focusController)
-    m_focusController->autoFocusNormal();
-}

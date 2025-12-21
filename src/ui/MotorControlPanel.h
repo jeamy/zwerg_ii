@@ -7,6 +7,7 @@
 #include <QElapsedTimer>
 
 class DwarfMotorController;
+class DwarfFocusController;
 class VirtualJoystick;
 class QTimer;
 
@@ -17,6 +18,7 @@ public:
     explicit MotorControlPanel(QWidget *parent = nullptr);
 
     void setMotorController(DwarfMotorController *controller);
+    void setFocusController(DwarfFocusController *controller);
 
 signals:
     void speedChanged(int speedIndex);
@@ -25,6 +27,7 @@ private:
     void setupUi();
 
     DwarfMotorController *m_controller = nullptr;
+    DwarfFocusController *m_focusController = nullptr;
 
     // UI Elements
     QPushButton *m_upButton = nullptr;
@@ -33,6 +36,10 @@ private:
     QPushButton *m_rightButton = nullptr;
     QSlider *m_speedSlider = nullptr;
     QLabel *m_speedLabel = nullptr;
+
+    QPushButton *m_focusFarButton = nullptr;
+    QPushButton *m_focusNearButton = nullptr;
+    QPushButton *m_autoFocusButton = nullptr;
 
     VirtualJoystick *m_joystick = nullptr;
     QTimer *m_joystickSendTimer = nullptr;
@@ -54,6 +61,10 @@ private slots:
     void onRightPressed();
     void onRightReleased();
     void onSpeedChanged(int value);
+
+    void onFocusFarClicked();
+    void onFocusNearClicked();
+    void onAutoFocusClicked();
 
     void onJoystickMoved(double angle, double strength);
     void onJoystickReleased();

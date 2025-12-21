@@ -366,7 +366,8 @@ void MainWindow::setupUi() {
   // Parent is centralWidget so it can be dragged over other panels
   m_motorOverlay = new MotorControlPanel(centralWidget);
   m_motorOverlay->setMotorController(m_motorController);
-  m_motorOverlay->setFixedSize(240, 260);
+  m_motorOverlay->setFocusController(m_focusController);
+  m_motorOverlay->setFixedSize(290, 380);
   m_motorOverlay->setCursor(Qt::OpenHandCursor);  // Show it's draggable
   m_motorOverlay->setMouseTracking(true);
   // Initial position will be set by updateOverlayPositions
@@ -438,7 +439,6 @@ void MainWindow::setupUi() {
   // 1: Camera Panel
   m_cameraSettingsPanel = new CameraSettingsPanel(this);
   m_cameraSettingsPanel->setCameraController(m_cameraController);
-  m_cameraSettingsPanel->setFocusController(m_focusController);
   m_contentStack->addWidget(m_cameraSettingsPanel);
 
   // 2: Astro Panel

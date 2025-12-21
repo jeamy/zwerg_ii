@@ -318,7 +318,22 @@ VirtualJoystick {
     color: rgba(39, 174, 96, 0.9);
     font-weight: bold;
     font-size: 12px;
-    letter-spacing: 1px;
+}
+
+#motorFocusGroup {
     background: transparent;
-    border: none;
+}
+
+#motorFocusGroup QPushButton {
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 11px;
+    min-height: 34px;
+}
+
+#motorAutoFocusButton {
+    background: rgba(39, 174, 96, 180);
+    border-color: rgba(39, 174, 96, 220);
+    color: white;
 }

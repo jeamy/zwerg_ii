@@ -1,5 +1,6 @@
 #include "MotorControlPanel.h"
 #include "../net/DwarfMotorController.h"
+#include "../net/DwarfFocusController.h"
 
 #include "VirtualJoystick.h"
 
@@ -48,10 +49,15 @@ void MotorControlPanel::setMotorController(DwarfMotorController *controller) {
     m_controller = controller;
 }
 
+void MotorControlPanel::setFocusController(DwarfFocusController *controller) {
+    m_focusController = controller;
+}
+
 void MotorControlPanel::setupUi() {
     setObjectName("motorControlPanel");
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(8);
 
     // Motor Control Group
     QGroupBox *motorGroup = new QGroupBox(tr("Motor Control"), this);
@@ -140,7 +146,6 @@ void MotorControlPanel::setupUi() {
     slewLayout->addWidget(m_downButton, 2, 1, Qt::AlignCenter);
 
     motorLayout->addWidget(slewArea, 0, Qt::AlignHCenter | Qt::AlignTop);
-    motorLayout->addStretch(1);
 
     // Speed Slider
     QHBoxLayout *speedLayout = new QHBoxLayout();
@@ -159,7 +164,37 @@ void MotorControlPanel::setupUi() {
     speedLayout->addWidget(m_speedLabel);
 
     motorLayout->addLayout(speedLayout);
+
     mainLayout->addWidget(motorGroup);
+
+    // Focus controls (docked below Motor Control)
+    auto *focusGroup = new QGroupBox(tr("Focus"), this);
+    focusGroup->setObjectName("motorFocusGroup");
+    auto *focusLayout = new QHBoxLayout(focusGroup);
+    focusLayout->setContentsMargins(10, 8, 10, 10);
+    focusLayout->setSpacing(8);
+
+    m_focusFarButton = new QPushButton(tr("Far -"), focusGroup);
+    m_focusFarButton->setObjectName("motorFocusFarButton");
+    m_focusFarButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    m_focusFarButton->setFixedHeight(38);
+
+    m_autoFocusButton = new QPushButton(tr("AUTO"), focusGroup);
+    m_autoFocusButton->setObjectName("motorAutoFocusButton");
+    m_autoFocusButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    m_autoFocusButton->setFixedHeight(38);
+
+    m_focusNearButton = new QPushButton(tr("Near +"), focusGroup);
+    m_focusNearButton->setObjectName("motorFocusNearButton");
+    m_focusNearButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    m_focusNearButton->setFixedHeight(38);
+
+    focusLayout->addWidget(m_focusFarButton);
+    focusLayout->addWidget(m_autoFocusButton);
+    focusLayout->addWidget(m_focusNearButton);
+
+    mainLayout->addWidget(focusGroup);
+    mainLayout->addStretch(1);
 
     m_joystickSendTimer = new QTimer(this);
     m_joystickSendTimer->setInterval(50);
@@ -179,7 +214,26 @@ void MotorControlPanel::setupUi() {
     connect(m_rightButton, &QPushButton::pressed, this, &MotorControlPanel::onRightPressed);
     connect(m_rightButton, &QPushButton::released, this, &MotorControlPanel::onRightReleased);
 
+    connect(m_focusFarButton, &QPushButton::clicked, this, &MotorControlPanel::onFocusFarClicked);
+    connect(m_focusNearButton, &QPushButton::clicked, this, &MotorControlPanel::onFocusNearClicked);
+    connect(m_autoFocusButton, &QPushButton::clicked, this, &MotorControlPanel::onAutoFocusClicked);
+
     m_lastJoystickSend.invalidate();
+}
+
+void MotorControlPanel::onFocusFarClicked() {
+    if (m_focusController)
+        m_focusController->manualStepFar();
+}
+
+void MotorControlPanel::onFocusNearClicked() {
+    if (m_focusController)
+        m_focusController->manualStepNear();
+}
+
+void MotorControlPanel::onAutoFocusClicked() {
+    if (m_focusController)
+        m_focusController->autoFocusNormal();
 }
 
 void MotorControlPanel::onUpPressed() {
