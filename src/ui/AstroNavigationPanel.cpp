@@ -430,16 +430,8 @@ void AstroNavigationPanel::setupStackingTab() {
     m_rejectedFramesLabel = new QLabel("0", progressGroup);
     progressLayout->addWidget(m_rejectedFramesLabel, 4, 1);
     
-    // Image settings (shared functionality with Camera panel)
-    m_imageSettings = new ImageSettingsWidget(tab);
-    
-    // White balance settings (shared functionality with Camera panel)
-    m_whiteBalance = new WhiteBalanceWidget(tab);
-    
     layout->addWidget(settingsGroup);
     layout->addWidget(calibrationGroup);
-    layout->addWidget(m_imageSettings);
-    layout->addWidget(m_whiteBalance);
     layout->addWidget(progressGroup);
     layout->addStretch();
     
@@ -823,14 +815,6 @@ void AstroNavigationPanel::setWebSocketClient(DwarfWebSocketClient *client) {
 
 void AstroNavigationPanel::setCameraController(DwarfCameraController *controller) {
     m_cameraController = controller;
-    
-    // Pass controller to shared widgets
-    if (m_imageSettings) {
-        m_imageSettings->setCameraController(controller);
-    }
-    if (m_whiteBalance) {
-        m_whiteBalance->setCameraController(controller);
-    }
 }
 
 void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) {

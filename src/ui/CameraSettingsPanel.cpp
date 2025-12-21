@@ -1,10 +1,18 @@
 #include "CameraSettingsPanel.h"
 #include "../net/DwarfCameraController.h"
 
+#include <QCheckBox>
+#include <QComboBox>
 #include <QGridLayout>
+#include <QGroupBox>
 #include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QSizePolicy>
+#include <QSlider>
 #include <QTimer>
 #include <QVBoxLayout>
+ #include <QPixmap>
 
 // Exposure index values for Tele camera (DWARF II API)
 // Format: {api_index, display_name} - API uses indices 0,3,6,9,...,156
@@ -58,15 +66,39 @@ CameraSettingsPanel::CameraSettingsPanel(QWidget *parent) : QWidget(parent) {
   updateButtonStates();
 }
 
+void CameraSettingsPanel::setDisplayMode(DisplayMode mode) {
+  m_displayMode = mode;
+
+  const bool compact = (m_displayMode == DisplayMode::Compact);
+  const bool captureOnly = (m_displayMode == DisplayMode::CaptureOnly);
+
+  // Rows
+  if (m_sourceRow)
+    m_sourceRow->setVisible(!compact);
+  if (m_captureRow)
+    m_captureRow->setVisible(!compact);
+
+  // Groups
+  if (m_exposureGroup)
+    m_exposureGroup->setVisible(!captureOnly);
+  if (m_imageGroup)
+    m_imageGroup->setVisible(!captureOnly);
+  if (m_wbGroup)
+    m_wbGroup->setVisible(!captureOnly);
+}
+
 void CameraSettingsPanel::setupUi() {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   mainLayout->setContentsMargins(0, 0, 0, 0);
   mainLayout->setSpacing(8);
 
   // === Camera Source Selection ===
-  QHBoxLayout *sourceLayout = new QHBoxLayout();
-  m_teleButton = new QPushButton(tr("TELE"), this);
-  m_wideButton = new QPushButton(tr("WIDE"), this);
+  m_sourceRow = new QWidget(this);
+  QHBoxLayout *sourceLayout = new QHBoxLayout(m_sourceRow);
+  sourceLayout->setContentsMargins(0, 0, 0, 0);
+  sourceLayout->setSpacing(8);
+  m_teleButton = new QPushButton(tr("TELE"), m_sourceRow);
+  m_wideButton = new QPushButton(tr("WIDE"), m_sourceRow);
   m_teleButton->setCheckable(true);
   m_wideButton->setCheckable(true);
   m_teleButton->setChecked(true);
@@ -74,7 +106,7 @@ void CameraSettingsPanel::setupUi() {
   m_wideButton->setMinimumHeight(36);
   sourceLayout->addWidget(m_teleButton);
   sourceLayout->addWidget(m_wideButton);
-  mainLayout->addLayout(sourceLayout);
+  mainLayout->addWidget(m_sourceRow);
 
   connect(m_teleButton, &QPushButton::clicked, this,
           &CameraSettingsPanel::onTeleClicked);
@@ -82,16 +114,57 @@ void CameraSettingsPanel::setupUi() {
           &CameraSettingsPanel::onWideClicked);
 
   // === Capture Buttons ===
-  QHBoxLayout *captureLayout = new QHBoxLayout();
-  m_photoButton = new QPushButton(tr("📷 PHOTO"), this);
-  m_recButton = new QPushButton(tr("⏺ REC"), this);
-  m_photoButton->setMinimumHeight(44);
-  m_recButton->setMinimumHeight(44);
+  m_captureRow = new QWidget(this);
+  auto *captureV = new QVBoxLayout(m_captureRow);
+  captureV->setContentsMargins(0, 0, 0, 0);
+  captureV->setSpacing(6);
+
+  auto *captureButtonsRow = new QWidget(m_captureRow);
+  auto *captureLayout = new QHBoxLayout(captureButtonsRow);
+  captureLayout->setContentsMargins(0, 0, 0, 0);
+  captureLayout->setSpacing(8);
+
+  m_photoButton = new QPushButton(tr("📷 PHOTO"), captureButtonsRow);
+  m_recButton = new QPushButton(tr("⏺ REC"), captureButtonsRow);
+  m_recordTimerLabel = new QLabel(tr("00:00"), captureButtonsRow);
+  m_recordTimerLabel->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
+  m_recordTimerLabel->setMinimumWidth(60);
+  m_recordTimerLabel->setVisible(false);
+
+  // Match capture button sizing to TELE/WIDE buttons
+  m_photoButton->setMinimumHeight(36);
+  m_recButton->setMinimumHeight(36);
+  m_photoButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  m_recButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+  m_captureStatusLabel = new QLabel(QString(), m_captureRow);
+  m_captureStatusLabel->setSizePolicy(QSizePolicy::Expanding,
+                                      QSizePolicy::Preferred);
+  m_captureStatusLabel->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
+
+  // Status row under buttons: status text on the left, recording timer on the right
+  auto *statusRow = new QWidget(m_captureRow);
+  auto *statusLayout = new QHBoxLayout(statusRow);
+  statusLayout->setContentsMargins(0, 0, 0, 0);
+  statusLayout->setSpacing(8);
+  statusLayout->addWidget(m_captureStatusLabel, 0);
+  statusLayout->addWidget(m_recordTimerLabel, 0);
+  statusLayout->addStretch(1);
+
+  m_capturePreviewLabel = new QLabel(m_captureRow);
+  m_capturePreviewLabel->setVisible(false);
+  m_capturePreviewLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+  m_capturePreviewLabel->setMinimumHeight(60);
+
   m_photoButton->setObjectName("photoButton");
   m_recButton->setObjectName("recButton");
-  captureLayout->addWidget(m_photoButton);
-  captureLayout->addWidget(m_recButton);
-  mainLayout->addLayout(captureLayout);
+  captureLayout->addWidget(m_photoButton, 1);
+  captureLayout->addWidget(m_recButton, 1);
+
+  captureV->addWidget(captureButtonsRow);
+  captureV->addWidget(statusRow);
+  captureV->addWidget(m_capturePreviewLabel);
+  mainLayout->addWidget(m_captureRow);
 
   connect(m_photoButton, &QPushButton::clicked, this,
           &CameraSettingsPanel::onPhotoClicked);
@@ -100,6 +173,7 @@ void CameraSettingsPanel::setupUi() {
 
   // === Exposure Group ===
   m_exposureGroup = new QGroupBox(tr("Exposure"), this);
+  m_exposureGroup->setObjectName("paramsExposureGroup");
   QGridLayout *exposureLayout = new QGridLayout(m_exposureGroup);
   exposureLayout->setColumnStretch(1, 1);
 
@@ -153,6 +227,7 @@ void CameraSettingsPanel::setupUi() {
 
   // === Image Parameters Group ===
   m_imageGroup = new QGroupBox(tr("Image"), this);
+  m_imageGroup->setObjectName("paramsImageGroup");
   QGridLayout *imageLayout = new QGridLayout(m_imageGroup);
   imageLayout->setColumnStretch(1, 1);
 
@@ -237,6 +312,7 @@ void CameraSettingsPanel::setupUi() {
 
   // === White Balance Group ===
   m_wbGroup = new QGroupBox(tr("White Balance"), this);
+  m_wbGroup->setObjectName("paramsWhiteBalanceGroup");
   QGridLayout *wbLayout = new QGridLayout(m_wbGroup);
   wbLayout->setColumnStretch(1, 1);
 
@@ -264,6 +340,8 @@ void CameraSettingsPanel::setupUi() {
   connect(m_wbTemperatureSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onWbTemperatureChanged);
 
+  setDisplayMode(m_displayMode);
+
   // Add stretch at bottom
   mainLayout->addStretch();
 }
@@ -271,6 +349,21 @@ void CameraSettingsPanel::setupUi() {
 void CameraSettingsPanel::setCameraController(
     DwarfCameraController *controller) {
   m_controller = controller;
+
+  if (m_controller) {
+    connect(m_controller, &DwarfCameraController::photoCaptureFinished, this,
+            &CameraSettingsPanel::onPhotoCaptureFinished);
+    connect(m_controller, &DwarfCameraController::recordFinished, this,
+            &CameraSettingsPanel::onRecordFinished);
+  }
+
+  if (!m_recordTimer) {
+    m_recordTimer = new QTimer(this);
+    m_recordTimer->setInterval(1000);
+    connect(m_recordTimer, &QTimer::timeout, this,
+            &CameraSettingsPanel::onRecordTimerTick);
+  }
+
   // Initialize UI from controller state so Auto modes still show a value
   syncFromController();
 }
@@ -358,8 +451,41 @@ void CameraSettingsPanel::syncFromController() {
   int wbIndex = m_controller->whiteBalanceTemperatureIndex(kind);
   setWhiteBalanceTemperature(wbIndex);
 
-  // Other sliders (brightness/contrast/etc.) bleiben wie initial gesetzt,
-  // da es aktuell keine Getter im Controller gibt.
+  // Image + IR-cut
+  setIrCut(m_controller->irCutEnabled(kind));
+  setBrightness(m_controller->brightness(kind));
+  setContrast(m_controller->contrast(kind));
+  setSaturation(m_controller->saturation(kind));
+  setHue(m_controller->hue(kind));
+  setSharpness(m_controller->sharpness(kind));
+}
+
+void CameraSettingsPanel::setCaptureStatusText(const QString &text) {
+  if (!m_captureStatusLabel)
+    return;
+  m_captureStatusLabel->setText(text);
+}
+
+void CameraSettingsPanel::setCapturePreview(const QPixmap &pixmap) {
+  if (!m_capturePreviewLabel)
+    return;
+
+  if (pixmap.isNull()) {
+    clearCapturePreview();
+    return;
+  }
+
+  const int h = 72;
+  m_capturePreviewLabel->setPixmap(
+      pixmap.scaledToHeight(h, Qt::SmoothTransformation));
+  m_capturePreviewLabel->setVisible(true);
+}
+
+void CameraSettingsPanel::clearCapturePreview() {
+  if (!m_capturePreviewLabel)
+    return;
+  m_capturePreviewLabel->clear();
+  m_capturePreviewLabel->setVisible(false);
 }
 
 void CameraSettingsPanel::updateValueLabels() {
@@ -406,38 +532,163 @@ void CameraSettingsPanel::onTeleClicked() { setCameraMode(CameraMode::Tele); }
 void CameraSettingsPanel::onWideClicked() { setCameraMode(CameraMode::Wide); }
 
 void CameraSettingsPanel::onPhotoClicked() {
-  if (m_controller) {
-    auto kind = (m_cameraMode == CameraMode::Tele)
-                    ? DwarfCameraController::CameraKind::Tele
-                    : DwarfCameraController::CameraKind::Wide;
-    m_controller->takePhoto(kind);
-  }
-  m_photoButton->setStyleSheet("background-color: #27ae60; color: white; "
-                               "font-weight: bold; border-radius: 4px;");
-  QTimer::singleShot(500, this, [this]() { m_photoButton->setStyleSheet(""); });
+  if (!m_controller || m_photoPending)
+    return;
+
+  auto kind = (m_cameraMode == CameraMode::Tele)
+                  ? DwarfCameraController::CameraKind::Tele
+                  : DwarfCameraController::CameraKind::Wide;
+
+  m_photoPending = true;
+  m_photoButton->setEnabled(false);
+  m_captureStatusLabel->setText(tr("Taking photo..."));
+  m_controller->takePhoto(kind);
   emit photoRequested();
 }
 
 void CameraSettingsPanel::onRecordClicked() {
-  if (!m_controller)
+  if (!m_controller || m_recordPending)
     return;
 
   // Only Tele supports recording
   if (m_cameraMode != CameraMode::Tele)
     return;
 
+  m_recordPending = true;
+  m_recButton->setEnabled(false);
+
   if (m_isRecording) {
+    m_captureStatusLabel->setText(tr("Stopping video..."));
     m_controller->stopRecord(DwarfCameraController::CameraKind::Tele);
-    m_isRecording = false;
-    m_recButton->setText(tr("⏺ REC"));
-    m_recButton->setStyleSheet("");
   } else {
+    m_captureStatusLabel->setText(tr("Starting video..."));
     m_controller->startRecord(DwarfCameraController::CameraKind::Tele);
-    m_isRecording = true;
+  }
+}
+
+void CameraSettingsPanel::onPhotoCaptureFinished(
+    DwarfCameraController::CameraKind kind, bool success, int code,
+    const QString &fileName) {
+  Q_UNUSED(fileName);
+
+  const auto expected = (m_cameraMode == CameraMode::Tele)
+                            ? DwarfCameraController::CameraKind::Tele
+                            : DwarfCameraController::CameraKind::Wide;
+  if (kind != expected)
+    return;
+
+  m_photoPending = false;
+  m_photoButton->setEnabled(true);
+
+  if (success) {
+    m_captureStatusLabel->setText(tr("Photo saved"));
+    m_photoButton->setStyleSheet(
+        "background-color: #27ae60; color: white; font-weight: bold; border-radius: 4px;");
+    QTimer::singleShot(800, this,
+                       [this]() { m_photoButton->setStyleSheet(""); });
+  } else {
+    m_captureStatusLabel->setText(tr("Photo failed (code %1)").arg(code));
+    m_photoButton->setStyleSheet(
+        "background-color: #e74c3c; color: white; font-weight: bold; border-radius: 4px;");
+    QTimer::singleShot(1200, this,
+                       [this]() { m_photoButton->setStyleSheet(""); });
+  }
+}
+
+void CameraSettingsPanel::onRecordFinished(DwarfCameraController::CameraKind kind,
+                                          bool recording, bool success,
+                                          int code) {
+  if (kind != DwarfCameraController::CameraKind::Tele)
+    return;
+
+  m_recordPending = false;
+  m_recButton->setEnabled(m_cameraMode == CameraMode::Tele);
+
+  if (!success) {
+    QString errText = tr("Video failed (code %1)").arg(code);
+    if (code == -10515)
+      errText = tr("Video start failed (code %1)").arg(code);
+    else if (code == -10518)
+      errText = tr("Video stop failed: not recording (code %1)").arg(code);
+    m_captureStatusLabel->setText(errText);
+
+    // Reset retry flag after any failure.
+    m_recordStartRetryPending = false;
+
+    // If START failed, keep UI in non-recording state.
+    // If STOP failed, keep UI in recording state (unknown device state).
+    if (!recording && code == -10518) {
+      // Firmware says "not recording" -> force UI to non-recording state
+      m_isRecording = false;
+      m_recButton->setText(tr("⏺ REC"));
+      m_recButton->setStyleSheet("");
+      if (m_recordTimer)
+        m_recordTimer->stop();
+      if (m_recordTimerLabel)
+        m_recordTimerLabel->setVisible(false);
+      return;
+    }
+
+    if (recording) {
+      // START failed -> not recording
+      m_isRecording = false;
+      m_recButton->setText(tr("⏺ REC"));
+      m_recButton->setStyleSheet("");
+      if (m_recordTimer)
+        m_recordTimer->stop();
+      if (m_recordTimerLabel)
+        m_recordTimerLabel->setVisible(false);
+    } else {
+      // STOP failed -> assume still recording
+      m_isRecording = true;
+      m_recButton->setText(tr("⏹ STOP"));
+      m_recButton->setStyleSheet("background-color: #e74c3c; color: white;");
+      if (m_recordTimerLabel)
+        m_recordTimerLabel->setVisible(true);
+      if (m_recordTimer && !m_recordTimer->isActive())
+        m_recordTimer->start();
+    }
+    return;
+  }
+
+  // Success clears any pending retry state
+  m_recordStartRetryPending = false;
+
+  m_isRecording = recording;
+  if (m_isRecording) {
+    m_captureStatusLabel->setText(tr("Recording..."));
     m_recButton->setText(tr("⏹ STOP"));
     m_recButton->setStyleSheet("background-color: #e74c3c; color: white;");
+
+    m_recordElapsed.restart();
+    m_recordTimerLabel->setText(tr("00:00"));
+    m_recordTimerLabel->setVisible(true);
+    if (m_recordTimer)
+      m_recordTimer->start();
+  } else {
+    m_captureStatusLabel->setText(tr("Video saved"));
+    m_recButton->setText(tr("⏺ REC"));
+    m_recButton->setStyleSheet("");
+
+    if (m_recordTimer)
+      m_recordTimer->stop();
+    m_recordTimerLabel->setVisible(false);
   }
+
   emit recordRequested(m_isRecording);
+}
+
+void CameraSettingsPanel::onRecordTimerTick() {
+  if (!m_isRecording || !m_recordTimerLabel)
+    return;
+
+  const qint64 secs = m_recordElapsed.isValid() ? (m_recordElapsed.elapsed() / 1000)
+                                                : 0;
+  const qint64 mm = secs / 60;
+  const qint64 ss = secs % 60;
+  m_recordTimerLabel->setText(QStringLiteral("%1:%2")
+                                  .arg(mm, 2, 10, QLatin1Char('0'))
+                                  .arg(ss, 2, 10, QLatin1Char('0')));
 }
 
 void CameraSettingsPanel::onExposureModeChanged(int index) {

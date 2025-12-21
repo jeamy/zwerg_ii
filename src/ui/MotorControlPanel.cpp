@@ -170,6 +170,13 @@ void MotorControlPanel::setupUi() {
     // Focus controls (docked below Motor Control)
     auto *focusGroup = new QGroupBox(tr("Focus"), this);
     focusGroup->setObjectName("motorFocusGroup");
+
+    auto *focusGlow = new QGraphicsDropShadowEffect(focusGroup);
+    focusGlow->setBlurRadius(32);
+    focusGlow->setOffset(0, 0);
+    focusGlow->setColor(QColor(39, 174, 96, 140));
+    focusGroup->setGraphicsEffect(focusGlow);
+
     auto *focusLayout = new QHBoxLayout(focusGroup);
     focusLayout->setContentsMargins(10, 8, 10, 10);
     focusLayout->setSpacing(8);
@@ -177,17 +184,17 @@ void MotorControlPanel::setupUi() {
     m_focusFarButton = new QPushButton(tr("Far -"), focusGroup);
     m_focusFarButton->setObjectName("motorFocusFarButton");
     m_focusFarButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    m_focusFarButton->setFixedHeight(38);
+    m_focusFarButton->setFixedHeight(32);
 
     m_autoFocusButton = new QPushButton(tr("AUTO"), focusGroup);
     m_autoFocusButton->setObjectName("motorAutoFocusButton");
     m_autoFocusButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    m_autoFocusButton->setFixedHeight(38);
+    m_autoFocusButton->setFixedHeight(32);
 
     m_focusNearButton = new QPushButton(tr("Near +"), focusGroup);
     m_focusNearButton->setObjectName("motorFocusNearButton");
     m_focusNearButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    m_focusNearButton->setFixedHeight(38);
+    m_focusNearButton->setFixedHeight(32);
 
     focusLayout->addWidget(m_focusFarButton);
     focusLayout->addWidget(m_autoFocusButton);

@@ -2,8 +2,12 @@
 #include "net/DwarfAstroController.h"
 #include "net/DwarfCameraController.h"
 #include "net/DwarfFocusController.h"
-#include "net/DwarfFtpDownloader.h"
+#include "net/DwarfFinder.h"
+#include "net/DwarfMessageDispatcher.h"
+#include "net/DwarfWebSocketClient.h"
+#include "net/DwarfPanoramaController.h"
 #include "net/DwarfHttpClient.h"
+#include "net/DwarfFtpDownloader.h"
 #include "net/DwarfMtpClient.h"
 #include "net/DwarfMjpegStream.h"
 #include "net/DwarfMjpegView.h"
@@ -11,6 +15,7 @@
 #include "ui/AstroNavigationPanel.h"
 #include "ui/CameraSettingsPanel.h"
 #include "ui/MotorControlPanel.h"
+#include "ui/ParametersOverlayPanel.h"
 #include "ui/MediaLightbox.h"
 #include "ui/StarMapWidget.h"
 #include <QButtonGroup>
@@ -68,6 +73,7 @@ MainWindow::MainWindow(QWidget *parent)
   m_teleStream = new DwarfMjpegStream(this);
   m_wideStream = new DwarfMjpegStream(this);
   m_astroController = new DwarfAstroController(this);
+  m_panoramaController = new DwarfPanoramaController(this);
   m_finder = new DwarfFinder(this);
   connect(m_finder, &DwarfFinder::deviceFound, this,
           &MainWindow::onDeviceFound);
@@ -82,7 +88,112 @@ MainWindow::MainWindow(QWidget *parent)
   connect(m_dispatcher, &DwarfMessageDispatcher::cameraWideMessage, this,
           &MainWindow::onCameraWideMessage);
 
+  if (m_astroController) {
+    connect(m_dispatcher, &DwarfMessageDispatcher::astroMessage, m_astroController,
+            &DwarfAstroController::handleAstroMessage);
+    connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage, m_astroController,
+            &DwarfAstroController::handleNotification);
+  }
+
+  if (m_cameraController) {
+    connect(m_cameraController, &DwarfCameraController::photoCaptureFinished,
+            this, &MainWindow::onPhotoCaptureFinished);
+    connect(m_cameraController, &DwarfCameraController::recordFinished, this,
+            &MainWindow::onRecordFinished);
+  }
+
+  if (m_panoramaController) {
+    connect(m_dispatcher, &DwarfMessageDispatcher::panoramaMessage, m_panoramaController,
+            &DwarfPanoramaController::handlePanoramaMessage);
+  }
+
   setupUi();
+}
+
+void MainWindow::ensureHttpClientForCurrentIp() {
+  QString ip = m_ipInput ? m_ipInput->text().trimmed() : QString();
+  if (ip.isEmpty())
+    return;
+
+  if (m_httpClient) {
+    return;
+  }
+
+  m_httpClient = new DwarfHttpClient(ip, this);
+  connect(m_httpClient, &DwarfHttpClient::mediaListReceived, this,
+          &MainWindow::onMediaListReceived);
+  connect(m_httpClient, &DwarfHttpClient::errorOccurred, this,
+          &MainWindow::onMediaListError);
+}
+
+void MainWindow::setCaptureStatusTextAllPanels(const QString &text) {
+  if (m_cameraSettingsPanel)
+    m_cameraSettingsPanel->setCaptureStatusText(text);
+  if (m_paramsOverlay)
+    m_paramsOverlay->setCaptureStatusText(text);
+}
+
+static void setCapturePreviewAllPanels(CameraSettingsPanel *mainPanel,
+                                       ParametersOverlayPanel *overlay,
+                                       const QPixmap &pixmap) {
+  if (mainPanel)
+    mainPanel->setCapturePreview(pixmap);
+  if (overlay)
+    overlay->setCapturePreview(pixmap);
+}
+
+static void clearCapturePreviewAllPanels(CameraSettingsPanel *mainPanel,
+                                         ParametersOverlayPanel *overlay) {
+  if (mainPanel)
+    mainPanel->clearCapturePreview();
+  if (overlay)
+    overlay->clearCapturePreview();
+}
+
+void MainWindow::onPhotoCaptureFinished(DwarfCameraController::CameraKind kind,
+                                        bool success, int code,
+                                        const QString &fileName) {
+  Q_UNUSED(code);
+  Q_UNUSED(fileName);
+
+  if (!success)
+    return;
+
+  clearCapturePreviewAllPanels(m_cameraSettingsPanel, m_paramsOverlay);
+
+  // Trigger a media refresh to obtain the latest filename.
+  // mediaType: 1=photo
+  m_pendingCaptureLookup.active = true;
+  m_pendingCaptureLookup.expectedMediaType = 1;
+  m_pendingCaptureLookup.expectedKind = kind;
+  m_pendingCaptureLookup.prefix = tr("Photo saved:");
+  m_pendingCaptureLookup.thumbnailPath.clear();
+
+  ensureHttpClientForCurrentIp();
+  if (m_httpClient)
+    m_httpClient->fetchMediaList();
+}
+
+void MainWindow::onRecordFinished(DwarfCameraController::CameraKind kind,
+                                  bool recording, bool success, int code) {
+  Q_UNUSED(code);
+  if (!success)
+    return;
+
+  // Only after STOP was confirmed (recording=false) we can resolve the filename.
+  if (kind != DwarfCameraController::CameraKind::Tele)
+    return;
+  if (recording)
+    return;
+
+  m_pendingCaptureLookup.active = true;
+  m_pendingCaptureLookup.expectedMediaType = 2; // video
+  m_pendingCaptureLookup.expectedKind = DwarfCameraController::CameraKind::Tele;
+  m_pendingCaptureLookup.prefix = tr("Video saved:");
+
+  ensureHttpClientForCurrentIp();
+  if (m_httpClient)
+    m_httpClient->fetchMediaList();
 }
 
 MainWindow::~MainWindow() {
@@ -124,6 +235,9 @@ void MainWindow::updateCameraStreamViews() {
     if (m_cameraSettingsPanel->cameraMode() != mode) {
       m_cameraSettingsPanel->setCameraMode(mode);
     }
+
+    if (m_paramsOverlay)
+      m_paramsOverlay->setCameraMode(mode);
   }
 
   // Ensure overlays stay on top
@@ -152,6 +266,8 @@ void MainWindow::updateStreamRouting() {
 void MainWindow::onGalleryOverlayRequested(bool enabled) {
   m_galleryOverlayEnabled = enabled;
 
+  updateOverlayVisibility();
+
   if (!m_galleryOverlayContainer || !m_galleryTab)
     return;
 
@@ -165,9 +281,6 @@ void MainWindow::onGalleryOverlayRequested(bool enabled) {
   if (enabled) {
     if (m_contentStack)
       m_contentStack->setVisible(false);
-
-    if (m_motorOverlay)
-      m_motorOverlay->setVisible(false);
 
     if (m_contentStack) {
       m_contentStack->removeWidget(m_galleryTab);
@@ -199,8 +312,7 @@ void MainWindow::onGalleryOverlayRequested(bool enabled) {
   if (m_contentStack && !m_starMapOverlayEnabled)
     m_contentStack->setVisible(true);
 
-  if (m_motorOverlay && !m_starMapOverlayEnabled)
-    m_motorOverlay->setVisible(true);
+  updateOverlayVisibility();
 }
 
 void MainWindow::onMotorSpeedSliderChanged(int value) {
@@ -291,6 +403,8 @@ void MainWindow::setupUi() {
       if (m_contentStack)
         m_contentStack->setCurrentIndex(index);
 
+      updateOverlayVisibility();
+
       if (m_astroTabsOverlayContainer)
         m_astroTabsOverlayContainer->setVisible(astroSelected);
 
@@ -311,6 +425,36 @@ void MainWindow::setupUi() {
   addSidebarBtn(":/icons/icons/panorama.svg", tr("PANO"), 3);
   addSidebarBtn(":/icons/icons/gallery.svg", tr("GAL"), 4);
   addSidebarBtn(":/icons/icons/settings.svg", tr("SET"), 5);
+
+  auto addOverlayToggleBtn = [&](const QString &iconPath, const QString &toolTip) {
+    QToolButton *btn = new QToolButton(m_sidebar);
+    btn->setCheckable(true);
+    btn->setChecked(true);
+    btn->setIcon(QIcon(iconPath));
+    btn->setToolTip(toolTip);
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    btn->setFixedSize(65, 75);
+    btn->setIconSize(QSize(32, 32));
+    sidebarLayout->addWidget(btn);
+    return btn;
+  };
+
+  m_motorOverlayToggleButton = addOverlayToggleBtn(
+      ":/icons/icons/overlay_motor.svg", tr("Toggle Motor Control"));
+  m_paramsOverlayToggleButton = addOverlayToggleBtn(
+      ":/icons/icons/overlay_params.svg", tr("Toggle Parameters"));
+
+  connect(m_motorOverlayToggleButton, &QToolButton::toggled, this,
+          [this](bool checked) {
+            m_motorOverlayUserVisible = checked;
+            updateOverlayVisibility();
+          });
+  connect(m_paramsOverlayToggleButton, &QToolButton::toggled, this,
+          [this](bool checked) {
+            m_paramsOverlayUserVisible = checked;
+            updateOverlayVisibility();
+          });
+
   sidebarLayout->addStretch();
   mainLayout->addWidget(m_sidebar);
 
@@ -374,6 +518,15 @@ void MainWindow::setupUi() {
   m_motorOverlay->raise();
   m_motorOverlay->show();
 
+  // Parameters Overlay (draggable, top layer)
+  m_paramsOverlay = new ParametersOverlayPanel(centralWidget);
+  m_paramsOverlay->setCameraController(m_cameraController);
+  m_paramsOverlay->setFixedSize(340, 520);
+  m_paramsOverlay->setCursor(Qt::OpenHandCursor);
+  m_paramsOverlay->setMouseTracking(true);
+  m_paramsOverlay->raise();
+  m_paramsOverlay->show();
+
   mainLayout->addWidget(m_mainStreamView, 1);
 
   // CONTENT PANELS
@@ -390,13 +543,48 @@ void MainWindow::setupUi() {
 
   m_ipInput = new QLineEdit();
   m_ipInput->setPlaceholderText("DWARF II IP");
-  m_ipInput->setText("192.168.8.223");
+  {
+    QSettings settings("DwarfLab", "DwarfController");
+    const QString ip = settings.value("ip", QStringLiteral("192.168.8.223")).toString();
+    m_ipInput->setText(ip);
+  }
 
   m_subnetInput = new QLineEdit();
   m_subnetInput->setPlaceholderText("Subnet (e.g. 192.168.1)");
-  m_subnetInput->setText("192.168.8");
+  {
+    QSettings settings("DwarfLab", "DwarfController");
+    const QString subnet = settings.value("subnet", QStringLiteral("192.168.8")).toString();
+    m_subnetInput->setText(subnet);
+  }
   connect(m_subnetInput, &QLineEdit::textChanged, this,
           &MainWindow::onSubnetTextChanged);
+
+  connect(m_ipInput, &QLineEdit::editingFinished, this, [this]() {
+    if (!m_ipInput)
+      return;
+    QSettings settings("DwarfLab", "DwarfController");
+    settings.setValue("ip", m_ipInput->text().trimmed());
+  });
+
+  connect(m_subnetInput, &QLineEdit::editingFinished, this, [this]() {
+    if (!m_subnetInput)
+      return;
+    QSettings settings("DwarfLab", "DwarfController");
+    settings.setValue("subnet", m_subnetInput->text().trimmed());
+  });
+
+  QHBoxLayout *scanBtnLayout = new QHBoxLayout();
+  m_scanButton = new QPushButton(tr("Scan Network"));
+  m_cancelScanButton = new QPushButton(tr("Cancel Scan"));
+  m_cancelScanButton->setEnabled(false);
+  scanBtnLayout->addWidget(m_scanButton);
+  scanBtnLayout->addWidget(m_cancelScanButton);
+
+  connect(m_scanButton, &QPushButton::clicked, this, &MainWindow::onScanClicked);
+  connect(m_cancelScanButton, &QPushButton::clicked, this,
+          &MainWindow::onCancelScanClicked);
+
+  cl->addLayout(scanBtnLayout);
 
   QHBoxLayout *connectBtnLayout = new QHBoxLayout();
   m_connectButton = new QPushButton(tr("Connect"));
@@ -410,26 +598,31 @@ void MainWindow::setupUi() {
   connect(m_cancelConnectButton, &QPushButton::clicked, this,
           &MainWindow::onCancelConnectClicked);
 
-  cl->addWidget(m_ipInput);
-  cl->addWidget(m_subnetInput);
+  auto *ipRow = new QWidget(connectTab);
+  auto *ipLayout = new QHBoxLayout(ipRow);
+  ipLayout->setContentsMargins(0, 0, 0, 0);
+  auto *ipLabel = new QLabel(tr("IP"), ipRow);
+  ipLayout->addWidget(ipLabel);
+  ipLayout->addWidget(m_ipInput, 1);
+  cl->addWidget(ipRow);
+
+  auto *netRow = new QWidget(connectTab);
+  auto *netLayout = new QHBoxLayout(netRow);
+  netLayout->setContentsMargins(0, 0, 0, 0);
+  auto *netLabel = new QLabel(tr("Network"), netRow);
+  netLayout->addWidget(netLabel);
+  netLayout->addWidget(m_subnetInput, 1);
+  cl->addWidget(netRow);
+
+  const int labelW = qMax(ipLabel->sizeHint().width(), netLabel->sizeHint().width());
+  ipLabel->setFixedWidth(labelW);
+  netLabel->setFixedWidth(labelW);
+
   cl->addLayout(connectBtnLayout);
 
   m_deviceList = new QListWidget();
 
-  QHBoxLayout *scanBtnLayout = new QHBoxLayout();
-  m_scanButton = new QPushButton(tr("Scan Network"));
-  m_cancelScanButton = new QPushButton(tr("Cancel Scan"));
-  m_cancelScanButton->setEnabled(false);
-  scanBtnLayout->addWidget(m_scanButton);
-  scanBtnLayout->addWidget(m_cancelScanButton);
-
-  connect(m_scanButton, &QPushButton::clicked, this,
-          &MainWindow::onScanClicked);
-  connect(m_cancelScanButton, &QPushButton::clicked, this,
-          &MainWindow::onCancelScanClicked);
-
   cl->addWidget(new QLabel(tr("Devices Found:")));
-  cl->addLayout(scanBtnLayout);
   cl->addWidget(m_deviceList);
   cl->addStretch();
   m_contentStack->addWidget(connectTab);
@@ -439,6 +632,7 @@ void MainWindow::setupUi() {
   // 1: Camera Panel
   m_cameraSettingsPanel = new CameraSettingsPanel(this);
   m_cameraSettingsPanel->setCameraController(m_cameraController);
+  m_cameraSettingsPanel->setDisplayMode(CameraSettingsPanel::DisplayMode::CaptureOnly);
   m_contentStack->addWidget(m_cameraSettingsPanel);
 
   // 2: Astro Panel
@@ -484,11 +678,99 @@ void MainWindow::setupUi() {
   QLabel *panoHeading = new QLabel(tr("Panorama Mode"));
   panoHeading->setProperty("heading", true);
   pl->addWidget(panoHeading);
-  pl->addWidget(new QLabel("Grid: 3 x 3 Tiles"));
-  auto *panoStart = new QPushButton("Execute Panorama Scan");
+
+  auto *gridRow = new QWidget(panoTab);
+  auto *gridLayout = new QHBoxLayout(gridRow);
+  gridLayout->setContentsMargins(0, 0, 0, 0);
+  gridLayout->setSpacing(10);
+
+  auto *rowsLabel = new QLabel(tr("Rows:"), gridRow);
+  auto *rowsSpin = new QSpinBox(gridRow);
+  rowsSpin->setRange(1, 10);
+  rowsSpin->setValue(3);
+
+  auto *colsLabel = new QLabel(tr("Cols:"), gridRow);
+  auto *colsSpin = new QSpinBox(gridRow);
+  colsSpin->setRange(1, 10);
+  colsSpin->setValue(3);
+
+  gridLayout->addWidget(rowsLabel);
+  gridLayout->addWidget(rowsSpin);
+  gridLayout->addSpacing(12);
+  gridLayout->addWidget(colsLabel);
+  gridLayout->addWidget(colsSpin);
+  gridLayout->addStretch(1);
+  pl->addWidget(gridRow);
+
+  auto *panoStatus = new QLabel(tr("Idle"), panoTab);
+  panoStatus->setStyleSheet("color: gray;");
+  pl->addWidget(panoStatus);
+
+  auto *btnRow = new QWidget(panoTab);
+  auto *btnLayout = new QHBoxLayout(btnRow);
+  btnLayout->setContentsMargins(0, 0, 0, 0);
+  btnLayout->setSpacing(10);
+
+  auto *panoStart = new QPushButton(tr("Start Panorama"), btnRow);
   panoStart->setStyleSheet(
       "background: #27ae60; color: white; padding: 10px; border-radius: 5px;");
-  pl->addWidget(panoStart);
+  auto *panoStop = new QPushButton(tr("Stop"), btnRow);
+  panoStop->setStyleSheet(
+      "background: #c0392b; color: white; padding: 10px; border-radius: 5px;");
+  panoStop->setEnabled(false);
+
+  btnLayout->addWidget(panoStart);
+  btnLayout->addWidget(panoStop);
+  btnLayout->addStretch(1);
+  pl->addWidget(btnRow);
+
+  connect(panoStart, &QPushButton::clicked, this, [this, rowsSpin, colsSpin, panoStatus, panoStart, panoStop]() {
+    if (!m_panoramaController) {
+      panoStatus->setText(tr("Panorama controller not available"));
+      panoStatus->setStyleSheet("color: red;");
+      return;
+    }
+    panoStatus->setText(tr("Starting..."));
+    panoStatus->setStyleSheet("color: blue;");
+    panoStart->setEnabled(false);
+    panoStop->setEnabled(true);
+    m_panoramaController->startPanoramaGrid(rowsSpin->value(), colsSpin->value());
+  });
+
+  connect(panoStop, &QPushButton::clicked, this, [this, panoStatus, panoStart, panoStop]() {
+    if (!m_panoramaController)
+      return;
+    panoStatus->setText(tr("Stopping..."));
+    panoStatus->setStyleSheet("color: blue;");
+    m_panoramaController->stopPanorama();
+    panoStop->setEnabled(false);
+    panoStart->setEnabled(true);
+  });
+
+  if (m_panoramaController) {
+    connect(m_panoramaController, &DwarfPanoramaController::panoramaStarted, this,
+            [panoStatus, panoStop, panoStart](int rows, int cols) {
+              panoStatus->setText(QObject::tr("Running (%1 x %2)...").arg(rows).arg(cols));
+              panoStatus->setStyleSheet("color: green;");
+              panoStart->setEnabled(false);
+              panoStop->setEnabled(true);
+            });
+    connect(m_panoramaController, &DwarfPanoramaController::panoramaStopped, this,
+            [panoStatus, panoStop, panoStart]() {
+              panoStatus->setText(QObject::tr("Stopped"));
+              panoStatus->setStyleSheet("color: gray;");
+              panoStart->setEnabled(true);
+              panoStop->setEnabled(false);
+            });
+    connect(m_panoramaController, &DwarfPanoramaController::panoramaFailed, this,
+            [panoStatus, panoStop, panoStart](const QString &error) {
+              panoStatus->setText(QObject::tr("Failed: %1").arg(error));
+              panoStatus->setStyleSheet("color: red;");
+              panoStart->setEnabled(true);
+              panoStop->setEnabled(false);
+            });
+  }
+
   pl->addStretch();
   m_contentStack->addWidget(panoTab);
 
@@ -537,6 +819,8 @@ void MainWindow::setupUi() {
 
   m_sidebarGroup->button(0)->setChecked(true);
   m_contentStack->setCurrentIndex(0);
+
+  updateOverlayVisibility();
 
   auto applyGlow = [](QWidget *w) {
     if (!w)
@@ -637,6 +921,30 @@ void MainWindow::setupUi() {
     
   // Ensure overlays are positioned correctly after layout is done
   QTimer::singleShot(0, this, &MainWindow::updateOverlayPositions);
+}
+
+void MainWindow::updateOverlayVisibility() {
+  const QWidget *current = m_contentStack ? m_contentStack->currentWidget() : nullptr;
+  const bool camSelected = (current == m_cameraSettingsPanel);
+  const bool astroSelected = (current == m_astroPanel);
+  const bool panoSelected = (m_contentStack && m_contentStack->currentIndex() == 3);
+
+  const bool allowOverlays = (camSelected || astroSelected || panoSelected);
+  const bool blockedByFullscreenOverlay = m_galleryOverlayEnabled;
+
+  const bool motorVisible = allowOverlays && !blockedByFullscreenOverlay && m_motorOverlayUserVisible;
+  const bool paramsVisible = allowOverlays && !blockedByFullscreenOverlay && m_paramsOverlayUserVisible;
+
+  if (m_motorOverlay)
+    m_motorOverlay->setVisible(motorVisible);
+  if (m_paramsOverlay)
+    m_paramsOverlay->setVisible(paramsVisible);
+
+  // Ensure overlays stay on top of fullscreen overlays (e.g. StarMap)
+  if (m_motorOverlay && m_motorOverlay->isVisible())
+    m_motorOverlay->raise();
+  if (m_paramsOverlay && m_paramsOverlay->isVisible())
+    m_paramsOverlay->raise();
 }
 
 void MainWindow::onScanClicked() {
@@ -740,6 +1048,8 @@ void MainWindow::onConnectClicked() {
     m_focusController->setClient(m_wsClient);
   if (m_astroController)
     m_astroController->setClient(m_wsClient);
+  if (m_panoramaController)
+    m_panoramaController->setClient(m_wsClient);
   if (m_astroPanel)
     m_astroPanel->setWebSocketClient(m_wsClient);
 
@@ -772,6 +1082,8 @@ void MainWindow::onDisconnectClicked() {
     m_focusController->setClient(nullptr);
   if (m_astroController)
     m_astroController->setClient(nullptr);
+  if (m_panoramaController)
+    m_panoramaController->setClient(nullptr);
   if (m_astroPanel)
     m_astroPanel->setWebSocketClient(nullptr);
 
@@ -1079,6 +1391,126 @@ void MainWindow::onOpenGalleryClicked() {
 void MainWindow::onMediaListReceived(const QJsonDocument &document) {
   if (m_openGalleryButton)
     m_openGalleryButton->setEnabled(true);
+
+  QJsonArray files;
+  if (document.isArray())
+    files = document.array();
+  else
+    files = document.object().value(QStringLiteral("data")).toArray();
+
+  // If we are waiting for a capture filename, try to resolve it from this list.
+  if (m_pendingCaptureLookup.active && !files.isEmpty()) {
+    QString bestName;
+    qint64 bestTs = -1;
+    QString bestThumb;
+
+    const bool wantTele = (m_pendingCaptureLookup.expectedKind ==
+                           DwarfCameraController::CameraKind::Tele);
+
+    for (const QJsonValue &v : files) {
+      QJsonObject obj = v.toObject();
+      const int mediaType = obj.value(QStringLiteral("mediaType")).toInt(-1);
+      if (mediaType != m_pendingCaptureLookup.expectedMediaType)
+        continue;
+
+      QString filePath = obj.value(QStringLiteral("filePath")).toString();
+      QString fileNameField = obj.value(QStringLiteral("fileName")).toString();
+
+      QString baseName;
+      if (!filePath.isEmpty()) {
+        QFileInfo fi(filePath);
+        baseName = fi.fileName();
+      }
+      if (baseName.isEmpty())
+        baseName = fileNameField;
+
+      // Try to infer Tele/Wide
+      const int camId = obj.value(QStringLiteral("camId")).toInt(-1);
+      bool matchesKind = false;
+      if (camId != -1) {
+        // Firmware varies; don't hard-fail on camId, but use as hint.
+        if (wantTele)
+          matchesKind = (camId == 1);
+        else
+          matchesKind = (camId == 2);
+      }
+      if (!matchesKind && !baseName.isEmpty()) {
+        if (wantTele)
+          matchesKind = baseName.contains("TELE", Qt::CaseInsensitive);
+        else
+          matchesKind = baseName.contains("WIDE", Qt::CaseInsensitive);
+      }
+
+      // Timestamp heuristics (field names vary by firmware)
+      qint64 ts = -1;
+      if (obj.contains(QStringLiteral("createTime")))
+        ts = static_cast<qint64>(obj.value(QStringLiteral("createTime")).toDouble(-1));
+      else if (obj.contains(QStringLiteral("create_time")))
+        ts = static_cast<qint64>(obj.value(QStringLiteral("create_time")).toDouble(-1));
+      else if (obj.contains(QStringLiteral("timestamp")))
+        ts = static_cast<qint64>(obj.value(QStringLiteral("timestamp")).toDouble(-1));
+
+      if (baseName.isEmpty())
+        continue;
+
+      // Prefer entries matching kind; otherwise still allow newest as fallback.
+      const int score = matchesKind ? 1 : 0;
+      const int bestScore = (!bestName.isEmpty() &&
+                             ((wantTele && bestName.contains("TELE", Qt::CaseInsensitive)) ||
+                              (!wantTele && bestName.contains("WIDE", Qt::CaseInsensitive))))
+                                ? 1
+                                : 0;
+
+      const bool choose = bestName.isEmpty() ||
+                          (score > bestScore) ||
+                          (score == bestScore && ts != -1 && bestTs != -1 && ts > bestTs);
+
+      if (choose) {
+        bestName = baseName;
+        bestTs = ts;
+        // Preview source: thumbnailPath preferred, fallback to filePath
+        bestThumb = obj.value(QStringLiteral("thumbnailPath")).toString();
+        if (bestThumb.isEmpty())
+          bestThumb = filePath;
+      }
+    }
+
+    if (!bestName.isEmpty()) {
+      setCaptureStatusTextAllPanels(
+          QStringLiteral("%1 %2").arg(m_pendingCaptureLookup.prefix, bestName));
+
+      // Try to show a preview thumbnail under the filename (photo only).
+      if (m_pendingCaptureLookup.expectedMediaType == 1 && !bestThumb.isEmpty()) {
+        QString ip = m_ipInput ? m_ipInput->text().trimmed() : QString();
+        if (!ip.isEmpty()) {
+          if (!m_ftpDownloader) {
+            m_ftpDownloader = new DwarfFtpDownloader(this);
+            connect(m_ftpDownloader, &DwarfFtpDownloader::downloadStarted, this,
+                    &MainWindow::onDownloadStarted);
+            connect(m_ftpDownloader, &DwarfFtpDownloader::downloadFinished, this,
+                    &MainWindow::onDownloadFinished);
+            connect(m_ftpDownloader, &DwarfFtpDownloader::downloadError, this,
+                    &MainWindow::onDownloadError);
+          }
+
+          m_ftpDownloader->downloadThumbnail(
+              ip, bestThumb,
+              [this](const QByteArray &data) {
+                if (data.isEmpty())
+                  return;
+                QImage img;
+                if (!img.loadFromData(data))
+                  return;
+                setCapturePreviewAllPanels(m_cameraSettingsPanel, m_paramsOverlay,
+                                           QPixmap::fromImage(img));
+              });
+        }
+      }
+
+      m_pendingCaptureLookup.active = false;
+    }
+  }
+
   if (!m_mediaTabs)
     return;
 
@@ -1102,12 +1534,6 @@ void MainWindow::onMediaListReceived(const QJsonDocument &document) {
     m_mediaAstroList->clear();
   if (m_mediaPanoList)
     m_mediaPanoList->clear();
-
-  QJsonArray files;
-  if (document.isArray())
-    files = document.array();
-  else
-    files = document.object().value(QStringLiteral("data")).toArray();
 
   if (files.isEmpty()) {
     if (m_mediaPhotoList)
@@ -1626,6 +2052,41 @@ void MainWindow::updateOverlayPositions() {
     m_motorOverlay->raise();
   }
 
+  if (m_mainVideoWidget && m_paramsOverlay && m_mainStreamView) {
+    const QPoint videoPos = m_mainStreamView->mapTo(centralWidget(), QPoint(0, 0));
+    const int videoWidth = m_mainVideoWidget->width();
+    const int videoHeight = m_mainVideoWidget->height();
+
+    // Default: under motor overlay (right-aligned)
+    int overlayX = videoPos.x() + videoWidth - m_paramsOverlay->width() - 20;
+    int overlayY = videoPos.y() + 20;
+    if (m_motorOverlay) {
+      overlayX = m_motorOverlay->x();
+      overlayY = m_motorOverlay->y() + m_motorOverlay->height() + 12;
+    }
+
+    // Bounds inside the stream area
+    const int minX = videoPos.x() + 20;
+    const int minY = videoPos.y() + 20;
+    const int maxX = videoPos.x() + videoWidth - m_paramsOverlay->width() - 20;
+    const int maxY = videoPos.y() + videoHeight - m_paramsOverlay->height() - 20;
+
+    // qBound asserts if (max < min), which can happen when the overlay is
+    // larger than the available stream area (e.g. small window).
+    if (maxX < minX)
+      overlayX = minX;
+    else
+      overlayX = qBound(minX, overlayX, maxX);
+
+    if (maxY < minY)
+      overlayY = minY;
+    else
+      overlayY = qBound(minY, overlayY, maxY);
+
+    m_paramsOverlay->move(overlayX, overlayY);
+    m_paramsOverlay->raise();
+  }
+
   if (m_starMapOverlayContainer && m_mainStreamView) {
     QPoint streamPos = m_mainStreamView->mapTo(centralWidget(), QPoint(0, 0));
     m_starMapOverlayContainer->move(streamPos);
@@ -1658,6 +2119,8 @@ void MainWindow::updateOverlayPositions() {
 void MainWindow::onStarMapOverlayRequested(bool enabled) {
   m_starMapOverlayEnabled = enabled;
 
+  updateOverlayVisibility();
+
   if (!m_starMapOverlayContainer || !m_astroPanel)
     return;
 
@@ -1682,9 +2145,6 @@ void MainWindow::onStarMapOverlayRequested(bool enabled) {
   if (enabled) {
     if (m_contentStack)
       m_contentStack->setVisible(false);
-
-    if (m_motorOverlay)
-      m_motorOverlay->setVisible(false);
 
     if (auto *starMapTabLayout = m_astroPanel->starMapTabLayout()) {
       starMapTabLayout->removeWidget(starMapContent);
@@ -1714,8 +2174,7 @@ void MainWindow::onStarMapOverlayRequested(bool enabled) {
   if (m_contentStack && !m_galleryOverlayEnabled)
     m_contentStack->setVisible(true);
 
-  if (m_motorOverlay)
-    m_motorOverlay->setVisible(true);
+  updateOverlayVisibility();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {

@@ -49,6 +49,8 @@ set(SOURCES
     src/net/DwarfFocusController.h
     src/net/DwarfAstroController.cpp
     src/net/DwarfAstroController.h
+    src/net/DwarfPanoramaController.cpp
+    src/net/DwarfPanoramaController.h
     src/net/Lx200Server.cpp
     src/net/Lx200Server.h
     src/net/DwarfMjpegStream.cpp
@@ -75,6 +77,8 @@ set(SOURCES
     src/ui/VirtualJoystick.h
     src/ui/MotorControlPanel.cpp
     src/ui/MotorControlPanel.h
+    src/ui/ParametersOverlayPanel.cpp
+    src/ui/ParametersOverlayPanel.h
     ${PROTO_SRCS}
     ${PROTO_HDRS}
     resources.qrc

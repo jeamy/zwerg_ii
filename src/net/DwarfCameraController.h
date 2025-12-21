@@ -3,6 +3,10 @@
 #include "DwarfWebSocketClient.h"
 #include "camera.pb.h"
 #include <QObject>
+#include <QSettings>
+ #include <QString>
+
+#include <memory>
 
 class DwarfCameraController : public QObject {
   Q_OBJECT
@@ -43,6 +47,14 @@ public:
   int whiteBalanceMode(CameraKind kind) const;
   int whiteBalanceTemperatureIndex(CameraKind kind) const;
 
+  // Additional getters for UI + persistence (UI scale where applicable)
+  bool irCutEnabled(CameraKind kind) const;
+  int brightness(CameraKind kind) const;   // 0-100
+  int contrast(CameraKind kind) const;     // 0-100
+  int saturation(CameraKind kind) const;   // 0-100
+  int hue(CameraKind kind) const;          // 0-100
+  int sharpness(CameraKind kind) const;    // 0-100
+
   // Fetch all parameters from device (async, emits allParamsReceived when done)
   void fetchAllParams(CameraKind kind);
 
@@ -54,11 +66,31 @@ signals:
   void allParamsReceived(CameraKind kind);  // Emitted when GET_ALL_PARAMS response arrives
   void photoTaken(CameraKind kind);  // Emitted when photo is successfully taken
 
+  void photoCaptureFinished(CameraKind kind, bool success, int code,
+                            const QString &fileName);
+  void recordFinished(CameraKind kind, bool recording, bool success, int code);
+
 private:
   DwarfWebSocketClient *m_client;
 
   dwarf::ReqSetAllParams m_teleParams;
   dwarf::ReqSetAllParams m_wideParams;
+
+  bool m_teleCameraOpenRequested = false;
+  bool m_wideCameraOpenRequested = false;
+
+  bool m_teleLastBinning = true;
+  int m_teleLastRtspEncodeType = 0;
+  bool m_wideLastBinning = false;
+  int m_wideLastRtspEncodeType = 0;
+
+  bool m_teleRecordModeOpenAttempted = false;
+
+  std::unique_ptr<QSettings> m_config;
+
+  void ensureConfigLoaded();
+  void loadConfig();
+  void saveConfig(CameraKind kind);
 
   void sendSetAllParams(CameraKind kind);
   void sendSingleInt32(CameraKind kind, quint32 cmd, int value);

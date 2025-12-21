@@ -1,13 +1,17 @@
 #pragma once
 
-#include <QCheckBox>
-#include <QComboBox>
-#include <QGroupBox>
-#include <QLabel>
-#include <QPair>
-#include <QPushButton>
-#include <QSlider>
+#include "net/DwarfCameraController.h"
 #include <QWidget>
+#include <QElapsedTimer>
+
+class QGroupBox;
+class QComboBox;
+class QSlider;
+class QLabel;
+class QPushButton;
+class QCheckBox;
+class QTimer;
+class QPixmap;
 
 class DwarfCameraController;
 
@@ -22,10 +26,12 @@ class CameraSettingsPanel : public QWidget {
 
 public:
   enum class CameraMode { Tele, Wide };
+  enum class DisplayMode { Full, Compact, CaptureOnly };
 
   explicit CameraSettingsPanel(QWidget *parent = nullptr);
 
   void setCameraController(DwarfCameraController *controller);
+  void setDisplayMode(DisplayMode mode);
   void setCameraMode(CameraMode mode);
   CameraMode cameraMode() const { return m_cameraMode; }
 
@@ -45,6 +51,10 @@ public:
 
   // Update all controls from the attached DwarfCameraController
   void syncFromController();
+
+  void setCaptureStatusText(const QString &text);
+  void setCapturePreview(const QPixmap &pixmap);
+  void clearCapturePreview();
 
 signals:
   void photoRequested();
@@ -69,6 +79,13 @@ private slots:
   void onWbModeChanged(int index);
   void onWbTemperatureChanged(int value);
 
+  void onPhotoCaptureFinished(DwarfCameraController::CameraKind kind,
+                              bool success, int code,
+                              const QString &fileName);
+  void onRecordFinished(DwarfCameraController::CameraKind kind, bool recording,
+                        bool success, int code);
+  void onRecordTimerTick();
+
 private:
   void setupUi();
   void updateRangesForMode();
@@ -79,7 +96,11 @@ private:
 
   DwarfCameraController *m_controller = nullptr;
   CameraMode m_cameraMode = CameraMode::Tele;
+  DisplayMode m_displayMode = DisplayMode::Full;
   bool m_isRecording = false;
+
+  QWidget *m_sourceRow = nullptr;
+  QWidget *m_captureRow = nullptr;
 
   // Camera source buttons
   QPushButton *m_teleButton;
@@ -88,6 +109,14 @@ private:
   // Capture buttons
   QPushButton *m_photoButton;
   QPushButton *m_recButton;
+  QLabel *m_captureStatusLabel = nullptr;
+  QLabel *m_capturePreviewLabel = nullptr;
+  QLabel *m_recordTimerLabel = nullptr;
+  QTimer *m_recordTimer = nullptr;
+  QElapsedTimer m_recordElapsed;
+  bool m_photoPending = false;
+  bool m_recordPending = false;
+  bool m_recordStartRetryPending = false;
 
   // Exposure group
   QGroupBox *m_exposureGroup;

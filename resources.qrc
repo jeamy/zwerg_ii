@@ -6,5 +6,7 @@
         <file alias="icons/panorama.svg">resources/icons/panorama.svg</file>
         <file alias="icons/gallery.svg">resources/icons/gallery.svg</file>
         <file alias="icons/settings.svg">resources/icons/settings.svg</file>
+        <file alias="icons/overlay_motor.svg">resources/icons/overlay_motor.svg</file>
+        <file alias="icons/overlay_params.svg">resources/icons/overlay_params.svg</file>
     </qresource>
 </RCC>

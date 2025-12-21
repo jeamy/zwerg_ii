@@ -165,9 +165,7 @@ private:
     QPushButton *m_captureBiasButton;
     QLabel *m_calibrationFramesStatusLabel;
     
-    // Image & White Balance (shared with Camera panel)
-    ImageSettingsWidget *m_imageSettings;
-    WhiteBalanceWidget *m_whiteBalance;
+    // Image & White Balance are controlled via the global Parameters overlay.
     
     // Stacking state
     bool m_isStacking;

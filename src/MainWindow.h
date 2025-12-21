@@ -3,6 +3,7 @@
 #include "net/DwarfFinder.h"
 #include "net/DwarfMessageDispatcher.h"
 #include "net/DwarfWebSocketClient.h"
+ #include "net/DwarfCameraController.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QElapsedTimer>
@@ -28,6 +29,7 @@ class DwarfCameraController;
 class DwarfMotorController;
 class DwarfFocusController;
 class DwarfAstroController;
+class DwarfPanoramaController;
 class DwarfMjpegStream;
 class MediaLightbox;
 class DwarfMjpegView;
@@ -40,6 +42,7 @@ class AstroNavigationPanel;
 class VirtualJoystick;
 class MotorControlPanel;
 class StarMapWidget;
+class ParametersOverlayPanel;
 
 class DraggablePiP : public QWidget {
   Q_OBJECT
@@ -133,14 +136,23 @@ private slots:
   void onDownloadFinished(const QString &fileName, const QString &localPath);
   void onDownloadError(const QString &fileName, const QString &error);
 
+  void onPhotoCaptureFinished(DwarfCameraController::CameraKind kind,
+                              bool success, int code,
+                              const QString &fileName);
+  void onRecordFinished(DwarfCameraController::CameraKind kind, bool recording,
+                        bool success, int code);
+
   void onStarMapOverlayRequested(bool enabled);
   void onGalleryOverlayRequested(bool enabled);
 
 private:
   void setupUi();
+  void updateOverlayVisibility();
   void loadThumbnails();
   void setItemThumbnail(QListWidgetItem *item, const QByteArray &data);
   void syncTimeWithDevice();
+  void ensureHttpClientForCurrentIp();
+  void setCaptureStatusTextAllPanels(const QString &text);
 
   QLineEdit *m_ipInput;
   QLineEdit *m_subnetInput;
@@ -158,6 +170,11 @@ private:
   
   // Overlays
   MotorControlPanel *m_motorOverlay = nullptr;
+  ParametersOverlayPanel *m_paramsOverlay = nullptr;
+  bool m_motorOverlayUserVisible = true;
+  bool m_paramsOverlayUserVisible = true;
+  QToolButton *m_motorOverlayToggleButton = nullptr;
+  QToolButton *m_paramsOverlayToggleButton = nullptr;
   QWidget *m_starMapOverlayContainer = nullptr;
   StarMapWidget *m_starMapOverlayWidget = nullptr;
   bool m_starMapOverlayEnabled = false;
@@ -184,6 +201,7 @@ private:
   DwarfMotorController *m_motorController;
   DwarfFocusController *m_focusController;
   DwarfAstroController *m_astroController;
+  DwarfPanoramaController *m_panoramaController;
 
   enum class CameraStream { Tele, Wide };
 
@@ -232,4 +250,15 @@ private:
   int m_thumbnailsLoading;
   QPointer<MediaLightbox> m_currentLightbox;
   static constexpr int THUMBNAIL_SIZE = 120;
+
+  struct PendingCaptureLookup {
+    bool active = false;
+    int expectedMediaType = -1; // 1=photo, 2=video
+    DwarfCameraController::CameraKind expectedKind =
+        DwarfCameraController::CameraKind::Tele;
+    QString prefix;
+    QString thumbnailPath;
+  };
+
+  PendingCaptureLookup m_pendingCaptureLookup;
 };

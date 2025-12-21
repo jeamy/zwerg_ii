@@ -1,27 +1,29 @@
 #include "DwarfCameraController.h"
+
 #include "ProtobufHelper.h"
 
-#include <QDebug>
 #include <QTimer>
-#include <algorithm>
+#include <QDir>
+#include <QSettings>
+#include <QStandardPaths>
 
 using dwarf::ReqOpenCamera;
 using dwarf::ReqPhoto;
 using dwarf::ReqSetAllParams;
-using dwarf::ReqSetBrightness;
-using dwarf::ReqSetContrast;
-using dwarf::ReqSetExp;
+using dwarf::ReqStartRecord;
+using dwarf::ReqStopRecord;
+using dwarf::ResGetAllParams;
 using dwarf::ReqSetExpMode;
 using dwarf::ReqSetGain;
 using dwarf::ReqSetGainMode;
 using dwarf::ReqSetHue;
 using dwarf::ReqSetIRCut;
+using dwarf::ReqSetBrightness;
+using dwarf::ReqSetContrast;
+using dwarf::ReqSetExp;
 using dwarf::ReqSetSaturation;
 using dwarf::ReqSetSharpness;
 using dwarf::ReqSetWBMode;
-using dwarf::ReqStartRecord;
-using dwarf::ReqStopRecord;
-using dwarf::ResGetAllParams;
 
 namespace {
 inline int clampInt(int value, int minV, int maxV) {
@@ -46,10 +48,36 @@ inline int scaleHueToApi(int value0to100) {
   int a = static_cast<int>((v * 3.6) - 180);
   return static_cast<int>((a + 180) * 255.0 / 360.0);
 }
+
+inline int scaleFromApi255(int value0to255) {
+  int b = clampInt(value0to255, 0, 255);
+  // Reverse of: B = (A + 100) * 255 / 200, with A in [-100, 100]
+  // A = B * 200 / 255 - 100
+  double a = (static_cast<double>(b) * 200.0 / 255.0) - 100.0;
+  // Our UI uses 0-100 mapped to A=-100..100 via A=(v*2-100)
+  double v = (a + 100.0) / 2.0;
+  return clampInt(static_cast<int>(std::lround(v)), 0, 100);
+}
+
+inline int scaleHueFromApi(int value0to255) {
+  int b = clampInt(value0to255, 0, 255);
+  // Reverse of: B = (A + 180) * 255 / 360, with A in [-180, 180]
+  // A = B * 360 / 255 - 180
+  double a = (static_cast<double>(b) * 360.0 / 255.0) - 180.0;
+  // UI maps 0-100 to A=-180..180 via A=(v*3.6-180)
+  double v = (a + 180.0) / 3.6;
+  return clampInt(static_cast<int>(std::lround(v)), 0, 100);
+}
+
+inline QString kindKey(DwarfCameraController::CameraKind kind) {
+  return (kind == DwarfCameraController::CameraKind::Tele) ? QStringLiteral("tele")
+                                                          : QStringLiteral("wide");
+}
 } // namespace
 
 DwarfCameraController::DwarfCameraController(QObject *parent)
-    : QObject(parent), m_client(nullptr) {
+    : QObject(parent), m_client(nullptr), m_teleCameraOpenRequested(false), m_wideCameraOpenRequested(false) {
+  qWarning() << "[DwarfCameraController] Created with" << (parent ? "valid" : "null") << "parent";
   // Initialize with sensible defaults
   // Tele camera defaults
   m_teleParams.set_exp_mode(0);      // Auto exposure
@@ -82,10 +110,89 @@ DwarfCameraController::DwarfCameraController(QObject *parent)
   m_wideParams.set_saturation(128);
   m_wideParams.set_sharpness(50);
   m_wideParams.set_jpg_quality(90);
+
+  ensureConfigLoaded();
+}
+
+void DwarfCameraController::ensureConfigLoaded() {
+  if (m_config)
+    return;
+
+  const QString baseDir =
+      QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  QDir().mkpath(baseDir);
+  const QString path = QDir(baseDir).filePath(QStringLiteral("DwarfController.ini"));
+
+  m_config = std::make_unique<QSettings>(path, QSettings::IniFormat);
+  loadConfig();
+}
+
+void DwarfCameraController::loadConfig() {
+  if (!m_config)
+    return;
+
+  auto loadKind = [this](CameraKind kind) {
+    ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+    const QString group = QStringLiteral("camera/") + kindKey(kind);
+    m_config->beginGroup(group);
+
+    p.set_exp_mode(m_config->value(QStringLiteral("exp_mode"), p.exp_mode()).toInt());
+    p.set_exp_index(m_config->value(QStringLiteral("exp_index"), p.exp_index()).toInt());
+    p.set_gain_mode(m_config->value(QStringLiteral("gain_mode"), p.gain_mode()).toInt());
+    p.set_gain_index(m_config->value(QStringLiteral("gain_index"), p.gain_index()).toInt());
+    p.set_ircut_value(m_config->value(QStringLiteral("ircut_value"), p.ircut_value()).toInt());
+    p.set_wb_mode(m_config->value(QStringLiteral("wb_mode"), p.wb_mode()).toInt());
+    p.set_wb_index_type(m_config->value(QStringLiteral("wb_index_type"), p.wb_index_type()).toInt());
+    p.set_wb_index(m_config->value(QStringLiteral("wb_index"), p.wb_index()).toInt());
+    p.set_brightness(m_config->value(QStringLiteral("brightness"), p.brightness()).toInt());
+    p.set_contrast(m_config->value(QStringLiteral("contrast"), p.contrast()).toInt());
+    p.set_saturation(m_config->value(QStringLiteral("saturation"), p.saturation()).toInt());
+    p.set_hue(m_config->value(QStringLiteral("hue"), p.hue()).toInt());
+    p.set_sharpness(m_config->value(QStringLiteral("sharpness"), p.sharpness()).toInt());
+    p.set_jpg_quality(m_config->value(QStringLiteral("jpg_quality"), p.jpg_quality()).toInt());
+
+    m_config->endGroup();
+  };
+
+  loadKind(CameraKind::Tele);
+  loadKind(CameraKind::Wide);
+}
+
+void DwarfCameraController::saveConfig(CameraKind kind) {
+  ensureConfigLoaded();
+  if (!m_config)
+    return;
+
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+
+  const QString group = QStringLiteral("camera/") + kindKey(kind);
+  m_config->beginGroup(group);
+  m_config->setValue(QStringLiteral("exp_mode"), p.exp_mode());
+  m_config->setValue(QStringLiteral("exp_index"), p.exp_index());
+  m_config->setValue(QStringLiteral("gain_mode"), p.gain_mode());
+  m_config->setValue(QStringLiteral("gain_index"), p.gain_index());
+  m_config->setValue(QStringLiteral("ircut_value"), p.ircut_value());
+  m_config->setValue(QStringLiteral("wb_mode"), p.wb_mode());
+  m_config->setValue(QStringLiteral("wb_index_type"), p.wb_index_type());
+  m_config->setValue(QStringLiteral("wb_index"), p.wb_index());
+  m_config->setValue(QStringLiteral("brightness"), p.brightness());
+  m_config->setValue(QStringLiteral("contrast"), p.contrast());
+  m_config->setValue(QStringLiteral("saturation"), p.saturation());
+  m_config->setValue(QStringLiteral("hue"), p.hue());
+  m_config->setValue(QStringLiteral("sharpness"), p.sharpness());
+  m_config->setValue(QStringLiteral("jpg_quality"), p.jpg_quality());
+  m_config->endGroup();
+  m_config->sync();
 }
 
 void DwarfCameraController::setClient(DwarfWebSocketClient *client) {
   m_client = client;
+  if (!m_client) {
+    m_teleCameraOpenRequested = false;
+    m_wideCameraOpenRequested = false;
+    m_teleRecordModeOpenAttempted = false;
+  }
   qWarning() << "[DwarfCameraController] setClient called with"
              << (client ? "valid" : "null") << "client";
 }
@@ -106,6 +213,16 @@ void DwarfCameraController::openCamera(CameraKind kind, bool binning,
   req.set_binning(binning);
   req.set_rtsp_encode_type(rtspEncodeType);
 
+  if (kind == CameraKind::Tele) {
+    m_teleCameraOpenRequested = true;
+    m_teleLastBinning = binning;
+    m_teleLastRtspEncodeType = rtspEncodeType;
+  } else {
+    m_wideCameraOpenRequested = true;
+    m_wideLastBinning = binning;
+    m_wideLastRtspEncodeType = rtspEncodeType;
+  }
+
   qDebug() << "Sending OpenCamera for kind" << (int)kind << "binning"
            << binning;
 
@@ -121,6 +238,14 @@ void DwarfCameraController::closeCamera(CameraKind kind) {
     emit errorOccurred("Camera client not connected");
     return;
   }
+
+  if (kind == CameraKind::Tele)
+    m_teleCameraOpenRequested = false;
+  else
+    m_wideCameraOpenRequested = false;
+
+  if (kind == CameraKind::Tele)
+    m_teleRecordModeOpenAttempted = false;
 
   m_client->sendCommand(moduleIdFor(kind), cmdCloseCameraFor(kind),
                         QByteArray());
@@ -145,6 +270,37 @@ void DwarfCameraController::startRecord(CameraKind kind) {
   }
   if (!m_client || !m_client->isConnected()) {
     emit errorOccurred("Camera client not connected");
+    return;
+  }
+
+  // Firmware hint: recording may require TELE camera opened with rtsp_encode_type=1 (1080p).
+  // Try switching once per connection/session to avoid flicker loops.
+  if (!m_teleRecordModeOpenAttempted && m_teleLastRtspEncodeType != 1) {
+    m_teleRecordModeOpenAttempted = true;
+    openCamera(CameraKind::Tele, m_teleLastBinning, 1);
+    QTimer::singleShot(600, this, [this]() {
+      if (!m_client || !m_client->isConnected())
+        return;
+      ReqStartRecord req;
+      const QByteArray data = ProtobufHelper::serialize(req);
+      m_client->sendCommand(moduleIdFor(CameraKind::Tele),
+                            cmdStartRecordFor(CameraKind::Tele), data);
+    });
+    return;
+  }
+
+  // Some firmware variants require the TELE camera to have been opened
+  // before startRecord works. Do this once if needed (no repeated reopen).
+  if (!m_teleCameraOpenRequested) {
+    openCamera(CameraKind::Tele, m_teleLastBinning, m_teleLastRtspEncodeType);
+    QTimer::singleShot(600, this, [this]() {
+      if (!m_client || !m_client->isConnected())
+        return;
+      ReqStartRecord req;
+      const QByteArray data = ProtobufHelper::serialize(req);
+      m_client->sendCommand(moduleIdFor(CameraKind::Tele),
+                            cmdStartRecordFor(CameraKind::Tele), data);
+    });
     return;
   }
 
@@ -178,6 +334,8 @@ void DwarfCameraController::setExposureMode(CameraKind kind, int mode) {
   // Use sendSingleInt32 which always serializes the field (even for value 0)
   sendSingleInt32(kind, cmdSetExpModeFor(kind), mode);
 
+  saveConfig(kind);
+
   // Fetch params to sync UI with actual values (especially when switching
   // Auto->Manual) Add a small delay to allow the camera to process the mode
   // change
@@ -190,6 +348,8 @@ void DwarfCameraController::setExposureIndex(CameraKind kind, int index) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   p.set_exp_index(index);
   sendSingleInt32(kind, cmdSetExpFor(kind), index);
+
+  saveConfig(kind);
 }
 
 void DwarfCameraController::setGainMode(CameraKind kind, int mode) {
@@ -200,8 +360,12 @@ void DwarfCameraController::setGainMode(CameraKind kind, int mode) {
   p.set_gain_mode(mode);
   sendSingleInt32(kind, cmdSetGainModeFor(kind), mode);
 
+  saveConfig(kind);
+
   // Fetch params to sync UI
   QTimer::singleShot(200, this, [this, kind]() { fetchAllParams(kind); });
+
+  saveConfig(kind);
 }
 
 void DwarfCameraController::setGainIndex(CameraKind kind, int index) {
@@ -210,13 +374,20 @@ void DwarfCameraController::setGainIndex(CameraKind kind, int index) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   p.set_gain_index(index);
   sendSingleInt32(kind, cmdSetGainFor(kind), index);
+
+  saveConfig(kind);
 }
 
 void DwarfCameraController::setIrCut(CameraKind kind, int value) {
+  if (kind != CameraKind::Tele)
+    return;
+
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   value = clampInt(value, 0, 1);
   p.set_ircut_value(value);
   sendSingleInt32(kind, cmdSetIrCutFor(kind), value);
+
+  saveConfig(kind);
 }
 
 void DwarfCameraController::setWhiteBalanceMode(CameraKind kind, int mode) {
@@ -249,6 +420,8 @@ void DwarfCameraController::setWhiteBalanceByTemperature(CameraKind kind,
     // Fallback for Wide
     sendSetAllParams(kind);
   }
+
+  saveConfig(kind);
 }
 
 void DwarfCameraController::setBrightness(CameraKind kind, int value) {
@@ -257,35 +430,91 @@ void DwarfCameraController::setBrightness(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   int scaledValue = scaleToApi255(value);
   p.set_brightness(scaledValue);
-  sendSetAllParams(kind);
+  sendSingleInt32(kind, cmdSetBrightnessFor(kind), scaledValue);
+
+  saveConfig(kind);
+
+  QTimer::singleShot(200, this, [this, kind]() { fetchAllParams(kind); });
 }
 
 void DwarfCameraController::setContrast(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   int scaledValue = scaleToApi255(value);
   p.set_contrast(scaledValue);
-  sendSetAllParams(kind);
+  sendSingleInt32(kind, cmdSetContrastFor(kind), scaledValue);
+
+  saveConfig(kind);
+
+  QTimer::singleShot(200, this, [this, kind]() { fetchAllParams(kind); });
 }
 
 void DwarfCameraController::setHue(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   int scaledValue = scaleHueToApi(value);
   p.set_hue(scaledValue);
-  sendSetAllParams(kind);
+  sendSingleInt32(kind, cmdSetHueFor(kind), scaledValue);
+
+  saveConfig(kind);
+
+  QTimer::singleShot(200, this, [this, kind]() { fetchAllParams(kind); });
 }
 
 void DwarfCameraController::setSaturation(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   int scaledValue = scaleToApi255(value);
   p.set_saturation(scaledValue);
-  sendSetAllParams(kind);
+  sendSingleInt32(kind, cmdSetSaturationFor(kind), scaledValue);
+
+  saveConfig(kind);
+
+  QTimer::singleShot(200, this, [this, kind]() { fetchAllParams(kind); });
 }
 
 void DwarfCameraController::setSharpness(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   value = clampInt(value, 0, 100);
   p.set_sharpness(value);
-  sendSetAllParams(kind);
+  sendSingleInt32(kind, cmdSetSharpnessFor(kind), value);
+
+  saveConfig(kind);
+
+  QTimer::singleShot(200, this, [this, kind]() { fetchAllParams(kind); });
+}
+
+bool DwarfCameraController::irCutEnabled(CameraKind kind) const {
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+  return p.ircut_value() != 0;
+}
+
+int DwarfCameraController::brightness(CameraKind kind) const {
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+  return scaleFromApi255(p.brightness());
+}
+
+int DwarfCameraController::contrast(CameraKind kind) const {
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+  return scaleFromApi255(p.contrast());
+}
+
+int DwarfCameraController::saturation(CameraKind kind) const {
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+  return scaleFromApi255(p.saturation());
+}
+
+int DwarfCameraController::hue(CameraKind kind) const {
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+  return scaleHueFromApi(p.hue());
+}
+
+int DwarfCameraController::sharpness(CameraKind kind) const {
+  const ReqSetAllParams &p =
+      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
+  return clampInt(p.sharpness(), 0, 100);
 }
 
 int DwarfCameraController::exposureMode(CameraKind kind) const {
@@ -347,9 +576,64 @@ void DwarfCameraController::handleCameraMessage(quint32 moduleId, quint32 cmd,
 
   // Handle PHOTO response (10002 for Tele, 12022 for Wide)
   if ((moduleId == 1 && cmd == 10002) || (moduleId == 2 && cmd == 12022)) {
-    qWarning() << "[DwarfCameraController] Photo taken for"
-               << (kind == CameraKind::Tele ? "Tele" : "Wide");
-    emit photoTaken(kind);
+    dwarf::ComResponse res;
+    bool ok = res.ParseFromArray(data.data(), data.size());
+    const int code = ok ? res.code() : -1;
+    const bool success = ok && (code == 0);
+
+    qWarning() << "[DwarfCameraController] Photo response for"
+               << (kind == CameraKind::Tele ? "Tele" : "Wide")
+               << "success=" << success << "code=" << code;
+
+    if (success)
+      emit photoTaken(kind);
+    emit photoCaptureFinished(kind, success, code, QString());
+    return;
+  }
+
+  // Handle START_RECORD response (Tele only: 10005)
+  if (moduleId == 1 && cmd == 10005) {
+    dwarf::ComResponse res;
+    bool ok = res.ParseFromArray(data.data(), data.size());
+    const int code = ok ? res.code() : -1;
+    const bool success = ok && (code == 0);
+
+    qWarning() << "[DwarfCameraController] StartRecord response success="
+               << success << "code=" << code;
+    emit recordFinished(CameraKind::Tele, true, success, code);
+    return;
+  }
+
+  // Some firmwares also respond on the WIDE camera module with the same cmd.
+  // We log it for diagnostics but do not treat it as recording state.
+  if (moduleId == 2 && cmd == 10005) {
+    dwarf::ComResponse res;
+    bool ok = res.ParseFromArray(data.data(), data.size());
+    const int code = ok ? res.code() : -1;
+    qWarning() << "[DwarfCameraController] Wide module returned cmd 10005 (ignored), code="
+               << code;
+    return;
+  }
+
+  // Handle STOP_RECORD response (Tele only: 10006)
+  if (moduleId == 1 && cmd == 10006) {
+    dwarf::ComResponse res;
+    bool ok = res.ParseFromArray(data.data(), data.size());
+    const int code = ok ? res.code() : -1;
+    const bool success = ok && (code == 0 || code == -10518);
+
+    qWarning() << "[DwarfCameraController] StopRecord response success="
+               << success << "code=" << code;
+    emit recordFinished(CameraKind::Tele, false, success, code);
+    return;
+  }
+
+  if (moduleId == 2 && cmd == 10006) {
+    dwarf::ComResponse res;
+    bool ok = res.ParseFromArray(data.data(), data.size());
+    const int code = ok ? res.code() : -1;
+    qWarning() << "[DwarfCameraController] Wide module returned cmd 10006 (ignored), code="
+               << code;
     return;
   }
 
