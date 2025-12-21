@@ -51,6 +51,11 @@ void ParametersOverlayPanel::clearCapturePreview() {
     m_panel->clearCapturePreview();
 }
 
+void ParametersOverlayPanel::applyDefaultParamsConfig(const QJsonDocument &document) {
+  if (m_panel)
+    m_panel->applyDefaultParamsConfig(document);
+}
+
 void ParametersOverlayPanel::mousePressEvent(QMouseEvent *event) {
   if (!m_panel) {
     QWidget::mousePressEvent(event);

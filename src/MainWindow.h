@@ -129,6 +129,7 @@ private slots:
   void onOpenGalleryClicked();
   void onMediaListReceived(const QJsonDocument &document);
   void onMediaListError(const QString &error);
+  void onDefaultParamsConfigReceived(const QJsonDocument &document);
   void onChangeDownloadDirClicked();
   void onMediaItemClicked(QListWidgetItem *item);
   void onMediaItemActivated(QListWidgetItem *item);
@@ -153,6 +154,8 @@ private:
   void syncTimeWithDevice();
   void ensureHttpClientForCurrentIp();
   void setCaptureStatusTextAllPanels(const QString &text);
+  void persistParamsConfig(const QJsonDocument &document);
+  void applyCachedParamsConfig();
 
   QLineEdit *m_ipInput;
   QLineEdit *m_subnetInput;

@@ -13,6 +13,8 @@
 #include <QTimer>
 #include <QVBoxLayout>
  #include <QPixmap>
+ #include <QJsonArray>
+ #include <QJsonObject>
 
 // Exposure index values for Tele camera (DWARF II API)
 // Format: {api_index, display_name} - API uses indices 0,3,6,9,...,156
@@ -64,6 +66,116 @@ CameraSettingsPanel::CameraSettingsPanel(QWidget *parent) : QWidget(parent) {
   setupUi();
   updateRangesForMode();
   updateButtonStates();
+}
+
+static bool parseIndexNameList(const QJsonValue &v,
+                               QVector<QPair<int, QString>> *out) {
+  if (!out)
+    return false;
+  if (!v.isArray())
+    return false;
+  QVector<QPair<int, QString>> tmp;
+  for (const auto &it : v.toArray()) {
+    if (!it.isObject())
+      continue;
+    const QJsonObject o = it.toObject();
+    const int idx = o.value(QStringLiteral("index")).toInt(
+        o.value(QStringLiteral("exp_index")).toInt(-1));
+    QString name = o.value(QStringLiteral("name")).toString(
+        o.value(QStringLiteral("exp_name")).toString());
+    if (idx < 0)
+      continue;
+    if (name.isEmpty())
+      name = QString::number(idx);
+    tmp.append(qMakePair(idx, name));
+  }
+  if (tmp.isEmpty())
+    return false;
+  *out = tmp;
+  return true;
+}
+
+static bool parseIndexValueList(const QJsonValue &v, QVector<QPair<int, int>> *out) {
+  if (!out)
+    return false;
+  if (!v.isArray())
+    return false;
+  QVector<QPair<int, int>> tmp;
+  for (const auto &it : v.toArray()) {
+    if (!it.isObject())
+      continue;
+    const QJsonObject o = it.toObject();
+    const int idx = o.value(QStringLiteral("index")).toInt(
+        o.value(QStringLiteral("gain_index")).toInt(-1));
+    const int val = o.value(QStringLiteral("value")).toInt(
+        o.value(QStringLiteral("gain_value")).toInt(-1));
+    if (idx < 0)
+      continue;
+    tmp.append(qMakePair(idx, val));
+  }
+  if (tmp.isEmpty())
+    return false;
+  *out = tmp;
+  return true;
+}
+
+void CameraSettingsPanel::applyDefaultParamsConfig(const QJsonDocument &document) {
+  const QJsonObject root = document.isObject() ? document.object() : QJsonObject();
+  if (root.isEmpty())
+    return;
+
+  // Best-effort parsing: firmware JSON structure can vary.
+  // Try common top-level keys first.
+  const QJsonValue tele = root.value(QStringLiteral("tele"));
+  const QJsonValue wide = root.value(QStringLiteral("wide"));
+
+  QVector<QPair<int, QString>> teleExp;
+  QVector<QPair<int, QString>> wideExp;
+  QVector<QPair<int, int>> teleGain;
+  QVector<QPair<int, int>> wideGain;
+
+  auto parseCameraObj = [&](const QJsonValue &cam, bool isTele) {
+    if (!cam.isObject())
+      return;
+    const QJsonObject o = cam.toObject();
+    parseIndexNameList(o.value(QStringLiteral("exposure")), isTele ? &teleExp : &wideExp);
+    parseIndexNameList(o.value(QStringLiteral("exp")), isTele ? &teleExp : &wideExp);
+    parseIndexNameList(o.value(QStringLiteral("exposure_list")), isTele ? &teleExp : &wideExp);
+
+    parseIndexValueList(o.value(QStringLiteral("gain")), isTele ? &teleGain : &wideGain);
+    parseIndexValueList(o.value(QStringLiteral("gain_list")), isTele ? &teleGain : &wideGain);
+  };
+
+  parseCameraObj(tele, true);
+  parseCameraObj(wide, false);
+
+  // Fallback: look for any array fields named exp_name/exp_index and gain_index/gain_value.
+  if (teleExp.isEmpty() || wideExp.isEmpty() || teleGain.isEmpty() || wideGain.isEmpty()) {
+    for (auto it = root.begin(); it != root.end(); ++it) {
+      const QJsonValue v = it.value();
+      if (v.isObject()) {
+        const QJsonObject o = v.toObject();
+        if (teleExp.isEmpty())
+          parseIndexNameList(o.value(QStringLiteral("exp_list")), &teleExp);
+        if (teleExp.isEmpty())
+          parseIndexNameList(o.value(QStringLiteral("exposure")), &teleExp);
+        if (teleGain.isEmpty())
+          parseIndexValueList(o.value(QStringLiteral("gain")), &teleGain);
+      }
+    }
+  }
+
+  if (!teleExp.isEmpty())
+    m_teleExposureValuesDyn = teleExp;
+  if (!wideExp.isEmpty())
+    m_wideExposureValuesDyn = wideExp;
+  if (!teleGain.isEmpty())
+    m_teleGainValuesDyn = teleGain;
+  if (!wideGain.isEmpty())
+    m_wideGainValuesDyn = wideGain;
+
+  updateRangesForMode();
+  updateValueLabels();
 }
 
 void CameraSettingsPanel::setDisplayMode(DisplayMode mode) {
@@ -386,16 +498,24 @@ void CameraSettingsPanel::updateRangesForMode() {
   m_gainSlider->blockSignals(true);
 
   if (m_cameraMode == CameraMode::Tele) {
-    m_exposureSlider->setRange(0, s_teleExposureValues.size() - 1);
-    m_gainSlider->setRange(0, s_teleGainValues.size() - 1);
+    const auto &exp = m_teleExposureValuesDyn.isEmpty() ? s_teleExposureValues
+                                                        : m_teleExposureValuesDyn;
+    const auto &gain = m_teleGainValuesDyn.isEmpty() ? s_teleGainValues
+                                                     : m_teleGainValuesDyn;
+    m_exposureSlider->setRange(0, exp.size() - 1);
+    m_gainSlider->setRange(0, gain.size() - 1);
     // Video recording and IR-Cut only available on Tele
     m_recButton->setEnabled(true);
     m_recButton->setToolTip(QString());
     m_irCutCheckBox->setEnabled(true);
     m_irCutCheckBox->setVisible(true);
   } else {
-    m_exposureSlider->setRange(0, s_wideExposureValues.size() - 1);
-    m_gainSlider->setRange(0, s_wideGainValues.size() - 1);
+    const auto &exp = m_wideExposureValuesDyn.isEmpty() ? s_wideExposureValues
+                                                        : m_wideExposureValuesDyn;
+    const auto &gain = m_wideGainValuesDyn.isEmpty() ? s_wideGainValues
+                                                     : m_wideGainValuesDyn;
+    m_exposureSlider->setRange(0, exp.size() - 1);
+    m_gainSlider->setRange(0, gain.size() - 1);
     // Video recording and IR-Cut not available on Wide
     m_recButton->setEnabled(false);
     m_recButton->setToolTip(
@@ -506,8 +626,10 @@ void CameraSettingsPanel::updateValueLabels() {
 
 QString CameraSettingsPanel::formatExposureValue(int sliderIndex) const {
   const auto &values = (m_cameraMode == CameraMode::Tele)
-                           ? s_teleExposureValues
-                           : s_wideExposureValues;
+                           ? (m_teleExposureValuesDyn.isEmpty() ? s_teleExposureValues
+                                                              : m_teleExposureValuesDyn)
+                           : (m_wideExposureValuesDyn.isEmpty() ? s_wideExposureValues
+                                                              : m_wideExposureValuesDyn);
 
   if (sliderIndex < 0 || sliderIndex >= values.size())
     return "---";
@@ -516,8 +638,11 @@ QString CameraSettingsPanel::formatExposureValue(int sliderIndex) const {
 }
 
 QString CameraSettingsPanel::formatGainValue(int sliderIndex) const {
-  const auto &values =
-      (m_cameraMode == CameraMode::Tele) ? s_teleGainValues : s_wideGainValues;
+  const auto &values = (m_cameraMode == CameraMode::Tele)
+                           ? (m_teleGainValuesDyn.isEmpty() ? s_teleGainValues
+                                                          : m_teleGainValuesDyn)
+                           : (m_wideGainValuesDyn.isEmpty() ? s_wideGainValues
+                                                          : m_wideGainValuesDyn);
 
   if (sliderIndex < 0 || sliderIndex >= values.size())
     return "---";
@@ -900,15 +1025,19 @@ void CameraSettingsPanel::setExposureMode(int mode) {
 void CameraSettingsPanel::setExposureIndex(int apiIndex) {
   // Convert API index to slider index
   const auto &values = (m_cameraMode == CameraMode::Tele)
-                           ? s_teleExposureValues
-                           : s_wideExposureValues;
+                           ? (m_teleExposureValuesDyn.isEmpty() ? s_teleExposureValues
+                                                              : m_teleExposureValuesDyn)
+                           : (m_wideExposureValuesDyn.isEmpty() ? s_wideExposureValues
+                                                              : m_wideExposureValuesDyn);
   int sliderIndex = 0;
   for (int i = 0; i < values.size(); ++i) {
     if (values[i].first == apiIndex) {
       sliderIndex = i;
       break;
     }
-    // Find closest match if exact not found
+  }
+  // Find closest match if exact not found
+  for (int i = 0; i < values.size(); ++i) {
     if (values[i].first <= apiIndex) {
       sliderIndex = i;
     }

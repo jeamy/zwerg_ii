@@ -43,6 +43,9 @@
 #include <QVBoxLayout>
 #include <QVector>
 #include <cmath>
+ #include <QStandardPaths>
+ #include <QDir>
+ #include <QFile>
 
 #include "system.pb.h"
 
@@ -122,6 +125,8 @@ void MainWindow::ensureHttpClientForCurrentIp() {
   m_httpClient = new DwarfHttpClient(ip, this);
   connect(m_httpClient, &DwarfHttpClient::mediaListReceived, this,
           &MainWindow::onMediaListReceived);
+  connect(m_httpClient, &DwarfHttpClient::defaultParamsConfigReceived, this,
+          &MainWindow::onDefaultParamsConfigReceived);
   connect(m_httpClient, &DwarfHttpClient::errorOccurred, this,
           &MainWindow::onMediaListError);
 }
@@ -1145,6 +1150,50 @@ void MainWindow::onWebSocketConnected() {
   // Start streaming now that we are connected
   QString ip = m_ipInput->text().trimmed();
   startStreaming(ip);
+
+  // Load default parameter configuration (params_config.json)
+  ensureHttpClientForCurrentIp();
+  applyCachedParamsConfig();
+  if (m_httpClient)
+    m_httpClient->fetchDefaultParamsConfig();
+}
+
+void MainWindow::persistParamsConfig(const QJsonDocument &document) {
+  const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+  if (dir.isEmpty())
+    return;
+  QDir().mkpath(dir);
+  QFile f(dir + QStringLiteral("/params_config.json"));
+  if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    return;
+  f.write(document.toJson(QJsonDocument::Indented));
+  f.close();
+}
+
+void MainWindow::applyCachedParamsConfig() {
+  const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+  if (dir.isEmpty())
+    return;
+  QFile f(dir + QStringLiteral("/params_config.json"));
+  if (!f.open(QIODevice::ReadOnly))
+    return;
+  const QByteArray raw = f.readAll();
+  f.close();
+  const QJsonDocument document = QJsonDocument::fromJson(raw);
+  if (document.isNull())
+    return;
+  if (m_cameraSettingsPanel)
+    m_cameraSettingsPanel->applyDefaultParamsConfig(document);
+  if (m_paramsOverlay)
+    m_paramsOverlay->applyDefaultParamsConfig(document);
+}
+
+void MainWindow::onDefaultParamsConfigReceived(const QJsonDocument &document) {
+  persistParamsConfig(document);
+  if (m_cameraSettingsPanel)
+    m_cameraSettingsPanel->applyDefaultParamsConfig(document);
+  if (m_paramsOverlay)
+    m_paramsOverlay->applyDefaultParamsConfig(document);
 }
 
 void MainWindow::syncTimeWithDevice() {

@@ -36,6 +36,27 @@ void DwarfHttpClient::fetchMediaList() {
   });
 }
 
+void DwarfHttpClient::fetchDefaultParamsConfig() {
+  QUrl url(QString("http://%1:%2/getDefaultParamsConfig").arg(m_ip).arg(HTTP_PORT));
+  QNetworkRequest request(url);
+
+  QNetworkReply *reply = m_manager->get(request);
+  connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+    if (reply->error() == QNetworkReply::NoError) {
+      const QByteArray raw = reply->readAll();
+      const QJsonDocument document = QJsonDocument::fromJson(raw);
+      if (!document.isNull()) {
+        emit defaultParamsConfigReceived(document);
+      } else {
+        emit errorOccurred(tr("Invalid params config JSON"));
+      }
+    } else {
+      emit errorOccurred(reply->errorString());
+    }
+    reply->deleteLater();
+  });
+}
+
 void DwarfHttpClient::deleteMedia(const QString &filePath) {
   // DWARF II HTTP API endpoint for deleting media
   // Try the /sdcard/deleteFile endpoint which is more likely to exist

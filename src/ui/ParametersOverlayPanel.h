@@ -19,6 +19,7 @@ public:
   void setCaptureStatusText(const QString &text);
   void setCapturePreview(const QPixmap &pixmap);
   void clearCapturePreview();
+  void applyDefaultParamsConfig(const QJsonDocument &document);
 
 protected:
   void mousePressEvent(QMouseEvent *event) override;

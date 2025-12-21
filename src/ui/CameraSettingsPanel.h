@@ -3,6 +3,7 @@
 #include "net/DwarfCameraController.h"
 #include <QWidget>
 #include <QElapsedTimer>
+ #include <QJsonDocument>
 
 class QGroupBox;
 class QComboBox;
@@ -55,6 +56,8 @@ public:
   void setCaptureStatusText(const QString &text);
   void setCapturePreview(const QPixmap &pixmap);
   void clearCapturePreview();
+
+  void applyDefaultParamsConfig(const QJsonDocument &document);
 
 signals:
   void photoRequested();
@@ -157,4 +160,9 @@ private:
   static const QVector<QPair<int, int>> s_wideGainValues;
   // White balance color temperature values (Kelvin)
   static const QVector<int> s_wbTemperatureValues;
+
+  QVector<QPair<int, QString>> m_teleExposureValuesDyn;
+  QVector<QPair<int, QString>> m_wideExposureValuesDyn;
+  QVector<QPair<int, int>> m_teleGainValuesDyn;
+  QVector<QPair<int, int>> m_wideGainValuesDyn;
 };
