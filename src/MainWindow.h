@@ -34,6 +34,7 @@ class DwarfMjpegView;
 class QPointF;
 class DwarfHttpClient;
 class DwarfFtpDownloader;
+class DwarfMtpClient;
 class CameraSettingsPanel;
 class AstroNavigationPanel;
 class VirtualJoystick;
@@ -216,6 +217,7 @@ private:
   QPushButton *m_changeDownloadDirButton;
   QString m_downloadDir;
   DwarfFtpDownloader *m_ftpDownloader;
+  DwarfMtpClient *m_mtpClient;
   struct PendingThumbnail {
     QPointer<QListWidget> list;
     int row;

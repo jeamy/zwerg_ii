@@ -4,6 +4,7 @@
 #include "net/DwarfFocusController.h"
 #include "net/DwarfFtpDownloader.h"
 #include "net/DwarfHttpClient.h"
+#include "net/DwarfMtpClient.h"
 #include "net/DwarfMjpegStream.h"
 #include "net/DwarfMjpegView.h"
 #include "net/DwarfMotorController.h"
@@ -52,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
       m_mediaBurstList(nullptr), m_mediaAstroList(nullptr),
       m_mediaPanoList(nullptr), m_downloadDirEdit(nullptr),
       m_changeDownloadDirButton(nullptr), m_ftpDownloader(nullptr),
+      m_mtpClient(nullptr),
       m_thumbnailsLoading(0) {
   m_mainStreamView = nullptr;
   m_pipContainer = nullptr;
@@ -1300,39 +1302,108 @@ void MainWindow::onMediaItemClicked(QListWidgetItem *item) {
                 .arg(fileName),
             QMessageBox::Yes | QMessageBox::No);
 
-        if (reply == QMessageBox::Yes && m_httpClient) {
+        if (reply == QMessageBox::Yes) {
           statusBar()->showMessage(tr("Deleting %1...").arg(fileName), 0);
 
-          // Use HTTP for deletion (more reliable than FTP)
-          // Store context for callbacks
-          auto deleteContext = new QObject(this);
-          
-          connect(m_httpClient, &DwarfHttpClient::mediaDeleted, deleteContext,
-                  [this, fileName, lightbox, deleteContext](const QString &path) {
-                    Q_UNUSED(path);
-                    statusBar()->showMessage(tr("Deleted %1").arg(fileName), 3000);
-                    if (lightbox) {
-                      lightbox->close();
-                    }
-                    // Refresh media list
-                    if (m_httpClient) {
-                      m_httpClient->fetchMediaList();
-                    }
-                    deleteContext->deleteLater();
-                  });
+          // Try HTTP delete first (network)
+          if (m_httpClient) {
+            auto deleteContext = new QObject(this);
+            
+            // HTTP Success handler
+            connect(m_httpClient, &DwarfHttpClient::mediaDeleted, deleteContext,
+                    [this, fileName, lightbox, deleteContext](const QString &path) {
+                      Q_UNUSED(path);
+                      statusBar()->showMessage(tr("Deleted %1 via HTTP").arg(fileName), 3000);
+                      if (lightbox) {
+                        lightbox->close();
+                      }
+                      if (m_httpClient) {
+                        m_httpClient->fetchMediaList();
+                      }
+                      deleteContext->deleteLater();
+                    });
 
-          connect(m_httpClient, &DwarfHttpClient::deleteError, deleteContext,
-                  [this, fileName, deleteContext](const QString &path, const QString &error) {
-                    Q_UNUSED(path);
-                    statusBar()->showMessage(tr("Delete failed: %1").arg(error), 5000);
-                    QMessageBox::warning(this, tr("Delete Failed"),
-                                       tr("Could not delete '%1':\n%2\n\n"
-                                          "Try deleting via USB/MTP connection or the DWARF app.")
-                                         .arg(fileName, error));
-                    deleteContext->deleteLater();
-                  });
+            // HTTP Error handler - fallback to MTP
+            connect(m_httpClient, &DwarfHttpClient::deleteError, deleteContext,
+                    [this, fileName, filePath, lightbox, deleteContext](const QString &path, const QString &error) {
+                      Q_UNUSED(path);
+                      
+                      // Check if error is "not implemented"
+                      if (error.contains("not implemented", Qt::CaseInsensitive)) {
+                        qDebug() << "[Delete] HTTP not supported, trying MTP...";
+                        statusBar()->showMessage(tr("HTTP delete not supported, trying USB/MTP..."), 0);
+                        
+                        // Initialize MTP client if needed
+                        if (!m_mtpClient) {
+                          m_mtpClient = new DwarfMtpClient(this);
+                        }
+                        
+                        if (!m_mtpClient->isSupported()) {
+                          statusBar()->showMessage(tr("MTP not supported on this platform"), 5000);
+                          QMessageBox::warning(this, tr("Delete Failed"),
+                                             tr("Neither HTTP nor MTP delete is supported.\n\n"
+                                                "Please delete files using the official DWARF app."));
+                          deleteContext->deleteLater();
+                          return;
+                        }
+                        
+                        // Check if MTP tools are available
+                        if (!m_mtpClient->checkTools()) {
+                          statusBar()->showMessage(tr("MTP tools not installed"), 5000);
+                          
+                          QString installMsg;
+#ifdef Q_OS_LINUX
+                          installMsg = tr("Install MTP tools with:\nsudo apt-get install mtp-tools");
+#elif defined(Q_OS_MACOS)
+                          installMsg = tr("Install MTP tools with:\nbrew install libmtp");
+#else
+                          installMsg = tr("Connect DWARF II via USB and try again.");
+#endif
+                          
+                          QMessageBox::information(this, tr("MTP Tools Required"),
+                                                 tr("MTP delete requires USB connection and tools.\n\n%1")
+                                                   .arg(installMsg));
+                          deleteContext->deleteLater();
+                          return;
+                        }
+                        
+                        // Try MTP delete
+                        m_mtpClient->deleteFile(filePath, 
+                          [this, fileName, lightbox, deleteContext](bool success, const QString &mtpError) {
+                            if (success) {
+                              statusBar()->showMessage(tr("Deleted %1 via MTP").arg(fileName), 3000);
+                              if (lightbox) {
+                                lightbox->close();
+                              }
+                              if (m_httpClient) {
+                                m_httpClient->fetchMediaList();
+                              }
+                            } else {
+                              statusBar()->showMessage(tr("MTP delete failed: %1").arg(mtpError), 5000);
+                              QMessageBox::warning(this, tr("Delete Failed"),
+                                                 tr("Could not delete '%1' via MTP:\n%2\n\n"
+                                                    "Make sure DWARF II is connected via USB.")
+                                                   .arg(fileName, mtpError));
+                            }
+                            deleteContext->deleteLater();
+                          });
+                        
+                      } else {
+                        // Other HTTP error
+                        statusBar()->showMessage(tr("HTTP delete failed: %1").arg(error), 5000);
+                        QMessageBox::warning(this, tr("Delete Failed"),
+                                           tr("Could not delete '%1' via HTTP:\n%2")
+                                             .arg(fileName, error));
+                        deleteContext->deleteLater();
+                      }
+                    });
 
-          m_httpClient->deleteMedia(filePath);
+            m_httpClient->deleteMedia(filePath);
+            
+          } else {
+            QMessageBox::warning(this, tr("Delete Failed"),
+                               tr("Not connected to DWARF II."));
+          }
         }
       });
 

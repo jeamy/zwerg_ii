@@ -59,6 +59,8 @@ set(SOURCES
     src/net/DwarfFtpDownloader.h
     src/net/DwarfFtpClient.cpp
     src/net/DwarfFtpClient.h
+    src/net/DwarfMtpClient.cpp
+    src/net/DwarfMtpClient.h
     src/ui/MediaLightbox.cpp
     src/ui/MediaLightbox.h
     src/ui/CameraSettingsPanel.cpp
