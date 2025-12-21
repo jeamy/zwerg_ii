@@ -118,6 +118,40 @@ QListWidget {
     outline: none;
 }
 
+/* Gallery should not be transparent behind media */
+QWidget#galleryTab {
+    background-color: rgba(10, 10, 10, 230);
+}
+
+QWidget#galleryOverlayContainer {
+    background-color: rgba(0, 0, 0, 255);
+}
+
+QTabWidget#galleryMediaTabs::pane {
+    background-color: rgba(10, 10, 10, 230);
+}
+
+QListWidget#galleryMediaList {
+    background-color: rgba(10, 10, 10, 230);
+}
+
+/* Astro StarMap: right side panel should be opaque (no stream bleed-through) */
+QWidget#astroStarMapSidePanel {
+    background-color: rgba(10, 10, 10, 230);
+}
+
+QWidget#astroStarMapSidePanel QGroupBox {
+    background-color: rgba(10, 10, 10, 230);
+}
+
+QWidget#astroStarMapSidePanel QListWidget {
+    background-color: rgba(10, 10, 10, 230);
+}
+
+QWidget#starMapOverlayContainer {
+    background-color: rgba(0, 0, 0, 255);
+}
+
 QListWidget::item {
     padding: 15px;
     color: #bbb;

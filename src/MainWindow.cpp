@@ -149,6 +149,60 @@ void MainWindow::updateStreamRouting() {
   }
 }
 
+void MainWindow::onGalleryOverlayRequested(bool enabled) {
+  m_galleryOverlayEnabled = enabled;
+
+  if (!m_galleryOverlayContainer || !m_galleryTab)
+    return;
+
+  auto *overlayLayout = qobject_cast<QVBoxLayout *>(m_galleryOverlayContainer->layout());
+  if (!overlayLayout) {
+    overlayLayout = new QVBoxLayout(m_galleryOverlayContainer);
+    overlayLayout->setContentsMargins(0, 0, 0, 0);
+    overlayLayout->setSpacing(0);
+  }
+
+  if (enabled) {
+    if (m_contentStack)
+      m_contentStack->setVisible(false);
+
+    if (m_motorOverlay)
+      m_motorOverlay->setVisible(false);
+
+    if (m_contentStack) {
+      m_contentStack->removeWidget(m_galleryTab);
+    }
+
+    m_galleryTab->setParent(m_galleryOverlayContainer);
+    overlayLayout->addWidget(m_galleryTab);
+    m_galleryTab->show();
+
+    m_galleryOverlayContainer->setVisible(true);
+    updateOverlayPositions();
+    m_galleryOverlayContainer->raise();
+    return;
+  }
+
+  // Restore
+  overlayLayout->removeWidget(m_galleryTab);
+  if (m_contentStack)
+    m_galleryTab->setParent(m_contentStack);
+  if (m_contentStack && m_contentStack->indexOf(m_galleryTab) < 0) {
+    // Gallery is at index 4
+    m_contentStack->insertWidget(4, m_galleryTab);
+  }
+
+  // Let QStackedWidget control visibility of non-current pages.
+  m_galleryTab->setVisible(false);
+
+  m_galleryOverlayContainer->setVisible(false);
+  if (m_contentStack && !m_starMapOverlayEnabled)
+    m_contentStack->setVisible(true);
+
+  if (m_motorOverlay && !m_starMapOverlayEnabled)
+    m_motorOverlay->setVisible(true);
+}
+
 void MainWindow::onMotorSpeedSliderChanged(int value) {
   int idx = value;
   if (idx < 0)
@@ -219,11 +273,24 @@ void MainWindow::setupUi() {
     m_sidebarGroup->addButton(btn, index);
     sidebarLayout->addWidget(btn);
     connect(btn, &QToolButton::clicked, this, [this, index]() {
-      m_contentStack->setCurrentIndex(index);
-      if (index == 4)
-        onOpenGalleryClicked();
-
+      const bool gallerySelected = (index == 4);
       const bool astroSelected = (index == 2);
+
+      if (gallerySelected) {
+        // Ensure other overlays are off before enabling Gallery overlay.
+        onStarMapOverlayRequested(false);
+        if (m_astroTabsOverlayContainer)
+          m_astroTabsOverlayContainer->setVisible(false);
+        onGalleryOverlayRequested(true);
+        onOpenGalleryClicked();
+        return;
+      }
+
+      onGalleryOverlayRequested(false);
+
+      if (m_contentStack)
+        m_contentStack->setCurrentIndex(index);
+
       if (m_astroTabsOverlayContainer)
         m_astroTabsOverlayContainer->setVisible(astroSelected);
 
@@ -257,10 +324,19 @@ void MainWindow::setupUi() {
 
   // StarMap overlay (over stream)
   m_starMapOverlayContainer = new QWidget(centralWidget);
+  m_starMapOverlayContainer->setObjectName("starMapOverlayContainer");
   m_starMapOverlayContainer->setVisible(false);
   QVBoxLayout *starMapOverlayLayout = new QVBoxLayout(m_starMapOverlayContainer);
   starMapOverlayLayout->setContentsMargins(0, 0, 0, 0);
   starMapOverlayLayout->setSpacing(0);
+
+  // Gallery overlay (over stream)
+  m_galleryOverlayContainer = new QWidget(centralWidget);
+  m_galleryOverlayContainer->setObjectName("galleryOverlayContainer");
+  m_galleryOverlayContainer->setVisible(false);
+  auto *galleryOverlayLayout = new QVBoxLayout(m_galleryOverlayContainer);
+  galleryOverlayLayout->setContentsMargins(0, 0, 0, 0);
+  galleryOverlayLayout->setSpacing(0);
 
   // Astro tabs overlay (over stream)
   m_astroTabsOverlayContainer = new QWidget(centralWidget);
@@ -417,21 +493,28 @@ void MainWindow::setupUi() {
   m_contentStack->addWidget(panoTab);
 
   // 4: Gallery Panel
-  QWidget *galleryTab = new QWidget();
-  auto *gl = new QVBoxLayout(galleryTab);
+  m_galleryTab = new QWidget();
+  m_galleryTab->setObjectName("galleryTab");
+  auto *gl = new QVBoxLayout(m_galleryTab);
   m_mediaTabs = new QTabWidget();
+  m_mediaTabs->setObjectName("galleryMediaTabs");
   m_mediaPhotoList = new QListWidget();
+  m_mediaPhotoList->setObjectName("galleryMediaList");
   m_mediaVideoList = new QListWidget();
+  m_mediaVideoList->setObjectName("galleryMediaList");
   m_mediaBurstList = new QListWidget();
+  m_mediaBurstList->setObjectName("galleryMediaList");
   m_mediaAstroList = new QListWidget();
+  m_mediaAstroList->setObjectName("galleryMediaList");
   m_mediaPanoList = new QListWidget();
+  m_mediaPanoList->setObjectName("galleryMediaList");
   m_mediaTabs->addTab(m_mediaPhotoList, "Photos");
   m_mediaTabs->addTab(m_mediaVideoList, "Videos");
   m_mediaTabs->addTab(m_mediaBurstList, "Burst");
   m_mediaTabs->addTab(m_mediaAstroList, "Astro");
   m_mediaTabs->addTab(m_mediaPanoList, "Panorama");
   gl->addWidget(m_mediaTabs);
-  m_contentStack->addWidget(galleryTab);
+  m_contentStack->addWidget(m_galleryTab);
 
   // 5: Settings Panel
   QWidget *settingsTab = new QWidget();
@@ -473,7 +556,7 @@ void MainWindow::setupUi() {
                     static_cast<QWidget *>(m_cameraSettingsPanel),
                     static_cast<QWidget *>(m_astroPanel),
                     static_cast<QWidget *>(panoTab),
-                    static_cast<QWidget *>(galleryTab),
+                    static_cast<QWidget *>(m_galleryTab),
                     static_cast<QWidget *>(settingsTab)}) {
     applyGlow(w);
   }
@@ -1562,6 +1645,14 @@ void MainWindow::updateOverlayPositions() {
       m_astroTabsOverlayContainer->raise();
     }
   }
+
+  if (m_galleryOverlayContainer && m_mainStreamView) {
+    const QPoint streamPos = m_mainStreamView->mapTo(centralWidget(), QPoint(0, 0));
+    m_galleryOverlayContainer->move(streamPos);
+    m_galleryOverlayContainer->resize(m_mainStreamView->size());
+    if (m_galleryOverlayEnabled)
+      m_galleryOverlayContainer->raise();
+  }
 }
 
 void MainWindow::onStarMapOverlayRequested(bool enabled) {
@@ -1620,7 +1711,7 @@ void MainWindow::onStarMapOverlayRequested(bool enabled) {
   starMapContent->show();
 
   m_starMapOverlayContainer->setVisible(false);
-  if (m_contentStack)
+  if (m_contentStack && !m_galleryOverlayEnabled)
     m_contentStack->setVisible(true);
 
   if (m_motorOverlay)

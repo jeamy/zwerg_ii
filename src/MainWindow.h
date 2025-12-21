@@ -134,6 +134,7 @@ private slots:
   void onDownloadError(const QString &fileName, const QString &error);
 
   void onStarMapOverlayRequested(bool enabled);
+  void onGalleryOverlayRequested(bool enabled);
 
 private:
   void setupUi();
@@ -160,6 +161,10 @@ private:
   QWidget *m_starMapOverlayContainer = nullptr;
   StarMapWidget *m_starMapOverlayWidget = nullptr;
   bool m_starMapOverlayEnabled = false;
+
+  QWidget *m_galleryOverlayContainer = nullptr;
+  QWidget *m_galleryTab = nullptr;
+  bool m_galleryOverlayEnabled = false;
 
   QWidget *m_astroTabsOverlayContainer = nullptr;
   QTabBar *m_astroTabsOverlayBar = nullptr;
