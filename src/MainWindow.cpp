@@ -1112,6 +1112,8 @@ void MainWindow::onDisconnectClicked() {
     m_wsClient = nullptr;
   }
 
+  updateSidebarForConnectionState(false);
+
   m_connectButton->setText(tr("Connect"));
   m_cancelConnectButton->setEnabled(false);
   m_statusLabel->setText(tr("Disconnected"));
@@ -1140,6 +1142,8 @@ void MainWindow::onCancelConnectClicked() {
     m_wsClient->deleteLater();
     m_wsClient = nullptr;
   }
+
+  updateSidebarForConnectionState(false);
 
   m_connectButton->setEnabled(true);
   m_connectButton->setText(tr("Connect"));
