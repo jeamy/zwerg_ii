@@ -577,6 +577,17 @@ void DwarfCameraController::handleCameraMessage(quint32 moduleId, quint32 cmd,
   // Determine camera kind from module ID
   CameraKind kind = (moduleId == 1) ? CameraKind::Tele : CameraKind::Wide;
 
+  // Handle SET_EXP response (Tele: 10009, Wide: 12004)
+  if ((moduleId == 1 && cmd == 10009) || (moduleId == 2 && cmd == 12004)) {
+    dwarf::ComResponse res;
+    const bool ok = res.ParseFromArray(data.data(), data.size());
+    const int code = ok ? res.code() : -1;
+    qWarning() << "[DwarfCameraController] SetExposure response for"
+               << (kind == CameraKind::Tele ? "Tele" : "Wide")
+               << "ok=" << ok << "code=" << code;
+    return;
+  }
+
   // Handle PHOTO response (10002 for Tele, 12022 for Wide)
   if ((moduleId == 1 && cmd == 10002) || (moduleId == 2 && cmd == 12022)) {
     dwarf::ComResponse res;
@@ -660,8 +671,11 @@ void DwarfCameraController::handleCameraMessage(quint32 moduleId, quint32 cmd,
         int autoMode = param.auto_mode(); // 0=Auto, 1=Manual
         int index = param.index();
 
-        qWarning() << "[DwarfCameraController] Param id=" << id
-                   << "auto_mode=" << autoMode << "index=" << index;
+        // Keep logging focused; full spam makes debugging harder.
+        if (id == 1 || id == 2) {
+          qWarning() << "[DwarfCameraController] Param id=" << id
+                     << "auto_mode=" << autoMode << "index=" << index;
+        }
 
         // Map parameter IDs to our local params
         // Based on typical DWARF parameter IDs:
