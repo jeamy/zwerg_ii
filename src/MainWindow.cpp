@@ -1300,29 +1300,39 @@ void MainWindow::onMediaItemClicked(QListWidgetItem *item) {
                 .arg(fileName),
             QMessageBox::Yes | QMessageBox::No);
 
-        if (reply == QMessageBox::Yes && m_ftpDownloader) {
-          QString ip = m_ipInput->text().trimmed();
+        if (reply == QMessageBox::Yes && m_httpClient) {
           statusBar()->showMessage(tr("Deleting %1...").arg(fileName), 0);
 
-          // Use FTP for deletion
-          m_ftpDownloader->deleteFile(
-              ip, filePath,
-              [this, fileName, lightbox](bool success, const QString &error) {
-                if (success) {
-                  statusBar()->showMessage(tr("Deleted %1").arg(fileName),
-                                           3000);
-                  if (lightbox) {
-                    lightbox->close();
-                  }
-                  // Refresh media list
-                  if (m_httpClient) {
-                    m_httpClient->fetchMediaList();
-                  }
-                } else {
-                  statusBar()->showMessage(tr("Delete failed: %1").arg(error),
-                                           5000);
-                }
-              });
+          // Use HTTP for deletion (more reliable than FTP)
+          // Store context for callbacks
+          auto deleteContext = new QObject(this);
+          
+          connect(m_httpClient, &DwarfHttpClient::mediaDeleted, deleteContext,
+                  [this, fileName, lightbox, deleteContext](const QString &path) {
+                    Q_UNUSED(path);
+                    statusBar()->showMessage(tr("Deleted %1").arg(fileName), 3000);
+                    if (lightbox) {
+                      lightbox->close();
+                    }
+                    // Refresh media list
+                    if (m_httpClient) {
+                      m_httpClient->fetchMediaList();
+                    }
+                    deleteContext->deleteLater();
+                  });
+
+          connect(m_httpClient, &DwarfHttpClient::deleteError, deleteContext,
+                  [this, fileName, deleteContext](const QString &path, const QString &error) {
+                    Q_UNUSED(path);
+                    statusBar()->showMessage(tr("Delete failed: %1").arg(error), 5000);
+                    QMessageBox::warning(this, tr("Delete Failed"),
+                                       tr("Could not delete '%1':\n%2\n\n"
+                                          "Try deleting via USB/MTP connection or the DWARF app.")
+                                         .arg(fileName, error));
+                    deleteContext->deleteLater();
+                  });
+
+          m_httpClient->deleteMedia(filePath);
         }
       });
 
