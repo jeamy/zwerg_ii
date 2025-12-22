@@ -70,10 +70,7 @@ void DwarfPanoramaController::handleNotificationProgress(int total_count, int co
     if (!pano_running || expected_tiles <= 0)
         return;
 
-    const float firmware_progress_max = (total_count > 0) ? static_cast<float>(total_count) : 30.0f;
-    if (firmware_progress_max <= 0.0f)
-        return;
-
+    constexpr float firmware_progress_max = 30.0f;
     float firmware_ratio = static_cast<float>(completed_count) / firmware_progress_max;
 
     if (firmware_ratio < 0.0f)
