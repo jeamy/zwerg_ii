@@ -34,7 +34,7 @@ database/*.db-journal
 database/*.db-wal
 
 # Projekt-Daten
-node_modules/
+script/node_modules/
 
 # IDE
 .vscode/
