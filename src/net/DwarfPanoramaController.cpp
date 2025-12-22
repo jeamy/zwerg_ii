@@ -35,6 +35,7 @@ void DwarfPanoramaController::sendCommand(quint32 cmd, const QByteArray &data) {
 void DwarfPanoramaController::startPanoramaGrid(int rows, int cols) {
     m_lastRows = rows;
     m_lastCols = cols;
+    m_justCompleted = false;  // Reset for new panorama
 
     dwarf::ReqStartPanoramaByGrid req;
     req.set_rows(static_cast<std::uint32_t>(rows));
@@ -66,10 +67,13 @@ void DwarfPanoramaController::handlePanoramaMessage(quint32 cmd, const QByteArra
     switch (cmd) {
         case PanoramaCmd::START_GRID:
             // Only emit started if not already running (prevents duplicate starts)
-            if (!m_isRunning) {
+            if (!m_isRunning && !m_justCompleted) {
                 m_isRunning = true;
                 qWarning() << "[PanoramaController] Starting panorama" << m_lastRows << "x" << m_lastCols;
                 emit panoramaStarted(m_lastRows, m_lastCols);
+            } else if (m_justCompleted) {
+                qWarning() << "[PanoramaController] Ignoring late START_GRID response (just completed)";
+                m_justCompleted = false;  // Reset for next panorama
             } else {
                 qWarning() << "[PanoramaController] Ignoring duplicate START_GRID response (already running)";
             }
@@ -93,6 +97,16 @@ void DwarfPanoramaController::handleNotification(quint32 cmd, const QByteArray &
         if (data.size() > 0 && progress.ParseFromArray(data.data(), data.size())) {
             int completed = progress.completed_count();
             int total = progress.total_count();
+            int expected = m_lastRows * m_lastCols;
+            
+            // DWARF sometimes reports wrong total_count (e.g. 9 instead of 20)
+            // Use expected count if mismatch detected
+            if (total != expected && expected > 0) {
+                qWarning() << "[PanoramaController] DWARF reported total=" << total 
+                          << "but expected" << expected << "(" << m_lastRows << "x" << m_lastCols << ")";
+                qWarning() << "[PanoramaController] Using expected count for UI";
+                total = expected;
+            }
             
             qWarning() << "[PanoramaController] Progress:" << completed << "/" << total;
             emit panoramaProgress(completed, total);
@@ -101,6 +115,7 @@ void DwarfPanoramaController::handleNotification(quint32 cmd, const QByteArray &
             if (completed >= total && total > 0) {
                 qWarning() << "[PanoramaController] Panorama completed!";
                 m_isRunning = false;
+                m_justCompleted = true;  // Block late START_GRID response
                 emit panoramaStopped();
             }
         } else {

@@ -31,4 +31,5 @@ private:
     int m_lastRows = 0;
     int m_lastCols = 0;
     bool m_isRunning = false;
+    bool m_justCompleted = false;  // Prevent restart from late response
 };
