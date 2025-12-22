@@ -43,6 +43,7 @@ class VirtualJoystick;
 class MotorControlPanel;
 class StarMapWidget;
 class ParametersOverlayPanel;
+class QSpinBox;
 
 class DraggablePiP : public QWidget {
   Q_OBJECT
@@ -192,6 +193,7 @@ private:
 
 private:
   void updateOverlayPositions();
+  void updatePanoramaGridOverlayTarget();
   
 protected:
   bool eventFilter(QObject *obj, QEvent *event) override;
@@ -231,6 +233,11 @@ private:
 
   QTimer *m_recordTimer;
   QElapsedTimer m_recordElapsed;
+
+  QWidget *m_panoTab = nullptr;
+  QSpinBox *m_panoRowsSpin = nullptr;
+  QSpinBox *m_panoColsSpin = nullptr;
+  QWidget *m_panoGridOverlay = nullptr;
 
   DwarfHttpClient *m_httpClient;
   QPushButton *m_openGalleryButton;

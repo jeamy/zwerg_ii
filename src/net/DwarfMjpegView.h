@@ -14,6 +14,7 @@ public:
   explicit DwarfMjpegView(QWidget *parent = nullptr);
 
   void setSourceImage(const QImage *image);
+  QRect imageRect() const;
 
 signals:
   void pointClicked(const QPointF &normalizedPos);
@@ -24,4 +25,5 @@ protected:
 
 private:
   const QImage *m_image;
+  QRect m_lastImageRect;
 };

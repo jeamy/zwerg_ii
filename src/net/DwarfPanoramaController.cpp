@@ -26,6 +26,8 @@ void DwarfPanoramaController::sendCommand(quint32 cmd, const QByteArray &data) {
     }
 
     // Module 10 = Panorama
+    qWarning() << "[DwarfPanoramaController] sendCommand module=10 cmd=" << cmd
+               << "payloadSize=" << data.size();
     m_client->sendCommand(10, cmd, data);
 }
 
@@ -37,12 +39,17 @@ void DwarfPanoramaController::startPanoramaGrid(int rows, int cols) {
     req.set_rows(static_cast<std::uint32_t>(rows));
     req.set_cols(static_cast<std::uint32_t>(cols));
 
-    sendCommand(PanoramaCmd::START_GRID, QByteArray::fromStdString(req.SerializeAsString()));
+    const QByteArray payload = QByteArray::fromStdString(req.SerializeAsString());
+    qWarning() << "[DwarfPanoramaController] startPanoramaGrid rows=" << rows
+               << "cols=" << cols << "payloadSize=" << payload.size();
+    sendCommand(PanoramaCmd::START_GRID, payload);
 }
 
 void DwarfPanoramaController::stopPanorama() {
     dwarf::ReqStopPanorama req;
-    sendCommand(PanoramaCmd::STOP, QByteArray::fromStdString(req.SerializeAsString()));
+    const QByteArray payload = QByteArray::fromStdString(req.SerializeAsString());
+    qWarning() << "[DwarfPanoramaController] stopPanorama payloadSize=" << payload.size();
+    sendCommand(PanoramaCmd::STOP, payload);
 }
 
 void DwarfPanoramaController::handlePanoramaMessage(quint32 cmd, const QByteArray &data) {

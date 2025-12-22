@@ -9,11 +9,16 @@ DwarfMjpegView::DwarfMjpegView(QWidget *parent)
     : QWidget(parent), m_image(nullptr) {
   setAttribute(Qt::WA_OpaquePaintEvent);
   setAutoFillBackground(false);
+  m_lastImageRect = QRect();
 }
 
 void DwarfMjpegView::setSourceImage(const QImage *image) {
   m_image = image;
   update();
+}
+
+QRect DwarfMjpegView::imageRect() const {
+  return m_lastImageRect;
 }
 
 void DwarfMjpegView::paintEvent(QPaintEvent *event) {
@@ -22,14 +27,18 @@ void DwarfMjpegView::paintEvent(QPaintEvent *event) {
   QPainter p(this);
   p.fillRect(rect(), Qt::black);
 
-  if (!m_image || m_image->isNull())
+  if (!m_image || m_image->isNull()) {
+    m_lastImageRect = QRect();
     return;
+  }
 
   QImage scaled =
       m_image->scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
   QPoint topLeft((width() - scaled.width()) / 2,
                  (height() - scaled.height()) / 2);
   p.drawImage(topLeft, scaled);
+
+  m_lastImageRect = QRect(topLeft, scaled.size());
 }
 
 void DwarfMjpegView::mouseDoubleClickEvent(QMouseEvent *event) {

@@ -37,27 +37,204 @@
 #include <QGraphicsDropShadowEffect>
 #include <QSettings>
 #include <QStandardPaths>
+#include <QPainter>
+#include <QPen>
+#include <QSpinBox>
+#include <functional>
 #include <QStatusBar>
 #include <QStyle>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QVector>
 #include <cmath>
- #include <QStandardPaths>
- #include <QDir>
- #include <QFile>
 
 #include "system.pb.h"
+
+namespace {
+class PanoramaGridOverlayWidget : public QWidget {
+public:
+  explicit PanoramaGridOverlayWidget(QWidget *parent = nullptr) : QWidget(parent) {
+    setAttribute(Qt::WA_TransparentForMouseEvents, false);
+    setAttribute(Qt::WA_NoSystemBackground, true);
+    setAttribute(Qt::WA_TranslucentBackground, true);
+    setMouseTracking(true);
+  }
+
+  void setGrid(int rows, int cols) {
+    m_rows = rows;
+    m_cols = cols;
+    update();
+  }
+
+  int rows() const { return m_rows; }
+  int cols() const { return m_cols; }
+
+  void setOnGridSelected(std::function<void(int, int)> cb) { m_onGridSelected = std::move(cb); }
+
+protected:
+  QRect effectiveImageRect() const {
+    const auto *view = qobject_cast<const DwarfMjpegView *>(parentWidget());
+    if (!view)
+      return rect();
+    const QRect r = view->imageRect();
+    return r.isValid() ? r : rect();
+  }
+
+  void paintEvent(QPaintEvent *event) override {
+    Q_UNUSED(event);
+    if (m_rows <= 0 || m_cols <= 0)
+      return;
+
+    const QRect imgRect = effectiveImageRect();
+    const int w = imgRect.width();
+    const int h = imgRect.height();
+    if (w <= 2 || h <= 2)
+      return;
+
+    const qreal cellW = static_cast<qreal>(w) / static_cast<qreal>(MAX_COLS);
+    const qreal cellH = static_cast<qreal>(h) / static_cast<qreal>(MAX_ROWS);
+
+    const qreal selW = cellW * m_cols;
+    const qreal selH = cellH * m_rows;
+    const QPointF center(imgRect.center().x(), imgRect.center().y());
+    QRectF selRect(center.x() - selW / 2.0, center.y() - selH / 2.0, selW, selH);
+    selRect = selRect.intersected(QRectF(imgRect));
+
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing, false);
+
+    QPen pen(QColor(39, 174, 96));
+    pen.setWidth(1);
+    p.setPen(pen);
+
+    p.drawRect(selRect);
+
+    for (int c = 1; c < m_cols; ++c) {
+      const qreal x = selRect.left() + c * cellW;
+      p.drawLine(QPointF(x, selRect.top()), QPointF(x, selRect.bottom()));
+    }
+    for (int r = 1; r < m_rows; ++r) {
+      const qreal y = selRect.top() + r * cellH;
+      p.drawLine(QPointF(selRect.left(), y), QPointF(selRect.right(), y));
+    }
+
+    if (m_dragging) {
+      QPen dragPen(QColor(39, 174, 96, 180));
+      dragPen.setStyle(Qt::DashLine);
+      p.setPen(dragPen);
+      p.drawRect(m_dragRect.normalized());
+    }
+  }
+
+  void resizeEvent(QResizeEvent *event) override {
+    QWidget::resizeEvent(event);
+    update();
+  }
+
+  void mousePressEvent(QMouseEvent *event) override {
+    if (event->button() != Qt::LeftButton)
+      return;
+    m_dragging = true;
+    const QRect imgRect = effectiveImageRect();
+    m_dragCenter = imgRect.center();
+    m_dragRect = QRect(m_dragCenter, m_dragCenter);
+    update();
+  }
+
+  void mouseMoveEvent(QMouseEvent *event) override {
+    if (!m_dragging)
+      return;
+
+    const QRect imgRect = effectiveImageRect();
+    const QPoint p = event->pos();
+    const int dx = std::abs(p.x() - m_dragCenter.x());
+    const int dy = std::abs(p.y() - m_dragCenter.y());
+    QRect r(m_dragCenter.x() - dx, m_dragCenter.y() - dy, dx * 2, dy * 2);
+    m_dragRect = r.intersected(imgRect);
+    update();
+  }
+
+  void mouseReleaseEvent(QMouseEvent *event) override {
+    if (event->button() != Qt::LeftButton)
+      return;
+    if (!m_dragging)
+      return;
+
+    m_dragging = false;
+
+    const QRect imgRect = effectiveImageRect();
+    QRect rect = m_dragRect.normalized().intersected(imgRect);
+    if (rect.width() < 4 || rect.height() < 4) {
+      update();
+      return;
+    }
+
+    const qreal cellW = static_cast<qreal>(imgRect.width()) / static_cast<qreal>(MAX_COLS);
+    const qreal cellH = static_cast<qreal>(imgRect.height()) / static_cast<qreal>(MAX_ROWS);
+    if (cellW <= 0.0 || cellH <= 0.0) {
+      update();
+      return;
+    }
+
+    int cols = static_cast<int>(qRound(rect.width() / cellW));
+    int rows = static_cast<int>(qRound(rect.height() / cellH));
+    cols = qBound(MIN_COLS, cols, MAX_COLS);
+    rows = qBound(MIN_ROWS, rows, MAX_ROWS);
+
+    m_cols = cols;
+    m_rows = rows;
+    if (m_onGridSelected)
+      m_onGridSelected(m_rows, m_cols);
+    update();
+  }
+
+private:
+  static constexpr int MIN_ROWS = 3;
+  static constexpr int MAX_ROWS = 30;
+  static constexpr int MIN_COLS = 3;
+  static constexpr int MAX_COLS = 60;
+
+  int m_rows = 3;
+  int m_cols = 3;
+  bool m_dragging = false;
+  QPoint m_dragCenter;
+  QRect m_dragRect;
+
+  std::function<void(int, int)> m_onGridSelected;
+};
+} // namespace
+
+void MainWindow::updatePanoramaGridOverlayTarget() {
+  if (!m_panoGridOverlay || !m_mainVideoWidget || !m_pipVideoWidget)
+    return;
+
+  QWidget *wideWidget = (m_mainStream == CameraStream::Wide)
+                            ? static_cast<QWidget *>(m_mainVideoWidget)
+                            : static_cast<QWidget *>(m_pipVideoWidget);
+
+  if (m_panoGridOverlay->parentWidget() != wideWidget)
+    m_panoGridOverlay->setParent(wideWidget);
+
+  m_panoGridOverlay->setGeometry(wideWidget->rect());
+  if (m_panoGridOverlay->isVisible())
+    m_panoGridOverlay->raise();
+}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), m_wsClient(nullptr), m_dispatcher(nullptr),
       m_scanCancelled(false), m_cameraController(nullptr),
       m_motorController(nullptr), m_focusController(nullptr),
       m_mainVideoWidget(nullptr), m_pipVideoWidget(nullptr),
-      m_cameraSettingsPanel(nullptr), m_teleStream(nullptr),
-      m_wideStream(nullptr), m_recordTimer(nullptr), m_httpClient(nullptr),
-      m_openGalleryButton(nullptr), m_mediaTabs(nullptr),
-      m_mediaPhotoList(nullptr), m_mediaVideoList(nullptr),
+      m_mainStream(CameraStream::Tele), m_pipStream(CameraStream::Wide),
+      m_motorOverlay(nullptr), m_paramsOverlay(nullptr),
+      m_motorOverlayUserVisible(true), m_paramsOverlayUserVisible(true),
+      m_motorOverlayToggleButton(nullptr), m_paramsOverlayToggleButton(nullptr),
+      m_starMapOverlayContainer(nullptr), m_starMapOverlayWidget(nullptr),
+      m_starMapOverlayEnabled(false), m_galleryOverlayContainer(nullptr),
+      m_galleryTab(nullptr), m_galleryOverlayEnabled(false),
+      m_astroTabsOverlayContainer(nullptr), m_astroTabsOverlayBar(nullptr),
+      m_finder(nullptr), m_httpClient(nullptr), m_openGalleryButton(nullptr),
+      m_mediaTabs(nullptr), m_mediaPhotoList(nullptr), m_mediaVideoList(nullptr),
       m_mediaBurstList(nullptr), m_mediaAstroList(nullptr),
       m_mediaPanoList(nullptr), m_downloadDirEdit(nullptr),
       m_changeDownloadDirButton(nullptr), m_ftpDownloader(nullptr),
@@ -68,11 +245,12 @@ MainWindow::MainWindow(QWidget *parent)
 
   m_recordTimer = new QTimer(this);
   m_recordTimer->setInterval(500);
-  m_mainStream = CameraStream::Tele;
-  m_pipStream = CameraStream::Wide;
-  m_cameraController = new DwarfCameraController(this);
-  m_motorController = new DwarfMotorController(this);
-  m_focusController = new DwarfFocusController(this);
+  connect(m_recordTimer, &QTimer::timeout, this, [this]() {
+    // UI timer label is handled inside CameraSettingsPanel; keep this timer for
+    // any future MainWindow-level use.
+    (void)this;
+  });
+
   m_teleStream = new DwarfMjpegStream(this);
   m_wideStream = new DwarfMjpegStream(this);
   m_astroController = new DwarfAstroController(this);
@@ -127,6 +305,12 @@ void MainWindow::ensureHttpClientForCurrentIp() {
           &MainWindow::onMediaListReceived);
   connect(m_httpClient, &DwarfHttpClient::defaultParamsConfigReceived, this,
           &MainWindow::onDefaultParamsConfigReceived);
+
+  if (m_mainVideoWidget && m_panoGridOverlay) {
+    m_panoGridOverlay->setGeometry(m_mainVideoWidget->rect());
+    if (m_panoGridOverlay->isVisible())
+      m_panoGridOverlay->raise();
+  }
   connect(m_httpClient, &DwarfHttpClient::errorOccurred, this,
           &MainWindow::onMediaListError);
 }
@@ -267,6 +451,8 @@ void MainWindow::updateStreamRouting() {
     m_mainVideoWidget->setSourceImage(&m_wideStream->currentFrame());
     m_pipVideoWidget->setSourceImage(&m_teleStream->currentFrame());
   }
+
+  updatePanoramaGridOverlayTarget();
 }
 
 void MainWindow::onGalleryOverlayRequested(bool enabled) {
@@ -314,6 +500,7 @@ void MainWindow::onGalleryOverlayRequested(bool enabled) {
   // Let QStackedWidget control visibility of non-current pages.
   m_galleryTab->setVisible(false);
 
+
   m_galleryOverlayContainer->setVisible(false);
   if (m_contentStack && !m_starMapOverlayEnabled)
     m_contentStack->setVisible(true);
@@ -334,10 +521,15 @@ void MainWindow::updateSidebarForConnectionState(bool connected) {
       btn->setVisible(connected);
   }
 
-  if (m_motorOverlayToggleButton)
-    m_motorOverlayToggleButton->setVisible(connected);
-  if (m_paramsOverlayToggleButton)
-    m_paramsOverlayToggleButton->setVisible(connected);
+  // Overlay toggle buttons are controlled in updateOverlayVisibility() based on
+  // current tab and connection state. Here we only force-hide them when not
+  // connected.
+  if (!connected) {
+    if (m_motorOverlayToggleButton)
+      m_motorOverlayToggleButton->setVisible(false);
+    if (m_paramsOverlayToggleButton)
+      m_paramsOverlayToggleButton->setVisible(false);
+  }
 
   // Stream viewport should not be shown while disconnected.
   // Keep the container visible so the sidebar stays anchored left in the layout.
@@ -358,6 +550,13 @@ void MainWindow::updateSidebarForConnectionState(bool connected) {
     m_astroTabsOverlayContainer->setVisible(false);
 
   if (!connected) {
+    // Reset fullscreen overlays that would otherwise hide the stream view even
+    // after a later reconnect.
+    if (m_galleryOverlayEnabled)
+      onGalleryOverlayRequested(false);
+    if (m_starMapOverlayEnabled)
+      onStarMapOverlayRequested(false);
+
     // Ensure we don't stay on a hidden tab.
     if (auto *scanBtn = m_sidebarGroup->button(0))
       scanBtn->setChecked(true);
@@ -392,6 +591,14 @@ void MainWindow::startStreaming(const QString &ip) {
     return;
 
   qWarning() << "[MainWindow] startStreaming called for IP" << ip;
+
+  // Start MJPEG streams immediately. Some firmware versions do not reliably
+  // send OpenCamera ACKs, but the MJPEG endpoints are still available.
+  const QUrl teleUrl(QStringLiteral("http://%1:8092/mainstream").arg(ip));
+  const QUrl wideUrl(QStringLiteral("http://%1:8092/secondstream").arg(ip));
+  m_teleStream->start(teleUrl);
+  m_wideStream->start(wideUrl);
+  updateStreamRouting();
 
   qDebug() << "Sending OpenCamera commands...";
   // Ensure camera is opened on both Tele and Wide before requesting RTSP
@@ -447,6 +654,7 @@ void MainWindow::setupUi() {
     connect(btn, &QToolButton::clicked, this, [this, index]() {
       const bool gallerySelected = (index == 4);
       const bool astroSelected = (index == 2);
+      const bool panoSelected = (index == 3);
 
       if (gallerySelected) {
         // Ensure other overlays are off before enabling Gallery overlay.
@@ -462,6 +670,13 @@ void MainWindow::setupUi() {
 
       if (m_contentStack)
         m_contentStack->setCurrentIndex(index);
+
+      if (panoSelected) {
+        // Panorama mode should always operate on the Wide stream.
+        m_mainStream = CameraStream::Wide;
+        m_pipStream = CameraStream::Tele;
+        updateCameraStreamViews();
+      }
 
       updateOverlayVisibility();
 
@@ -733,40 +948,40 @@ void MainWindow::setupUi() {
   }
 
   // 3: Pano Panel
-  QWidget *panoTab = new QWidget();
-  auto *pl = new QVBoxLayout(panoTab);
+  m_panoTab = new QWidget();
+  auto *pl = new QVBoxLayout(m_panoTab);
   QLabel *panoHeading = new QLabel(tr("Panorama Mode"));
   panoHeading->setProperty("heading", true);
   pl->addWidget(panoHeading);
 
-  auto *gridRow = new QWidget(panoTab);
+  auto *gridRow = new QWidget(m_panoTab);
   auto *gridLayout = new QHBoxLayout(gridRow);
   gridLayout->setContentsMargins(0, 0, 0, 0);
   gridLayout->setSpacing(10);
 
   auto *rowsLabel = new QLabel(tr("Rows:"), gridRow);
-  auto *rowsSpin = new QSpinBox(gridRow);
-  rowsSpin->setRange(1, 10);
-  rowsSpin->setValue(3);
+  m_panoRowsSpin = new QSpinBox(gridRow);
+  m_panoRowsSpin->setRange(3, 30);
+  m_panoRowsSpin->setValue(3);
 
   auto *colsLabel = new QLabel(tr("Cols:"), gridRow);
-  auto *colsSpin = new QSpinBox(gridRow);
-  colsSpin->setRange(1, 10);
-  colsSpin->setValue(3);
+  m_panoColsSpin = new QSpinBox(gridRow);
+  m_panoColsSpin->setRange(3, 60);
+  m_panoColsSpin->setValue(3);
 
   gridLayout->addWidget(rowsLabel);
-  gridLayout->addWidget(rowsSpin);
+  gridLayout->addWidget(m_panoRowsSpin);
   gridLayout->addSpacing(12);
   gridLayout->addWidget(colsLabel);
-  gridLayout->addWidget(colsSpin);
+  gridLayout->addWidget(m_panoColsSpin);
   gridLayout->addStretch(1);
   pl->addWidget(gridRow);
 
-  auto *panoStatus = new QLabel(tr("Idle"), panoTab);
+  auto *panoStatus = new QLabel(tr("Idle"), m_panoTab);
   panoStatus->setStyleSheet("color: gray;");
   pl->addWidget(panoStatus);
 
-  auto *btnRow = new QWidget(panoTab);
+  auto *btnRow = new QWidget(m_panoTab);
   auto *btnLayout = new QHBoxLayout(btnRow);
   btnLayout->setContentsMargins(0, 0, 0, 0);
   btnLayout->setSpacing(10);
@@ -784,7 +999,7 @@ void MainWindow::setupUi() {
   btnLayout->addStretch(1);
   pl->addWidget(btnRow);
 
-  connect(panoStart, &QPushButton::clicked, this, [this, rowsSpin, colsSpin, panoStatus, panoStart, panoStop]() {
+  connect(panoStart, &QPushButton::clicked, this, [this, panoStatus, panoStart, panoStop]() {
     if (!m_panoramaController) {
       panoStatus->setText(tr("Panorama controller not available"));
       panoStatus->setStyleSheet("color: red;");
@@ -794,7 +1009,8 @@ void MainWindow::setupUi() {
     panoStatus->setStyleSheet("color: blue;");
     panoStart->setEnabled(false);
     panoStop->setEnabled(true);
-    m_panoramaController->startPanoramaGrid(rowsSpin->value(), colsSpin->value());
+    m_panoramaController->startPanoramaGrid(m_panoRowsSpin ? m_panoRowsSpin->value() : 3,
+                                            m_panoColsSpin ? m_panoColsSpin->value() : 3);
   });
 
   connect(panoStop, &QPushButton::clicked, this, [this, panoStatus, panoStart, panoStop]() {
@@ -803,8 +1019,9 @@ void MainWindow::setupUi() {
     panoStatus->setText(tr("Stopping..."));
     panoStatus->setStyleSheet("color: blue;");
     m_panoramaController->stopPanorama();
+    // Don't assume stop succeeded. Keep start disabled until we receive an ACK.
     panoStop->setEnabled(false);
-    panoStart->setEnabled(true);
+    panoStart->setEnabled(false);
   });
 
   if (m_panoramaController) {
@@ -831,8 +1048,51 @@ void MainWindow::setupUi() {
             });
   }
 
+  // After STOP, resolve pano filename/preview via media list.
+  if (m_panoramaController) {
+    connect(m_panoramaController, &DwarfPanoramaController::panoramaStopped, this, [this]() {
+      clearCapturePreviewAllPanels(m_cameraSettingsPanel, m_paramsOverlay);
+
+      m_pendingCaptureLookup.active = true;
+      m_pendingCaptureLookup.expectedMediaType = 5; // panorama
+      m_pendingCaptureLookup.expectedKind = DwarfCameraController::CameraKind::Wide;
+      m_pendingCaptureLookup.prefix = tr("Panorama saved:");
+      m_pendingCaptureLookup.thumbnailPath.clear();
+      m_pendingCaptureLookup.attempts = 0;
+
+      ensureHttpClientForCurrentIp();
+      if (m_httpClient)
+        m_httpClient->fetchMediaList();
+    });
+  }
+
   pl->addStretch();
-  m_contentStack->addWidget(panoTab);
+  m_contentStack->addWidget(m_panoTab);
+
+  // Panorama grid overlay over the main (wide) stream
+  if (m_mainVideoWidget) {
+    auto *overlay = new PanoramaGridOverlayWidget(m_mainVideoWidget);
+    overlay->setGeometry(m_mainVideoWidget->rect());
+    overlay->raise();
+    overlay->hide();
+    m_panoGridOverlay = overlay;
+
+    overlay->setOnGridSelected([this](int rows, int cols) {
+      if (m_panoRowsSpin)
+        m_panoRowsSpin->setValue(rows);
+      if (m_panoColsSpin)
+        m_panoColsSpin->setValue(cols);
+    });
+
+    if (m_panoRowsSpin && m_panoColsSpin) {
+      connect(m_panoRowsSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+              [overlay](int v) { overlay->setGrid(v, overlay->cols()); });
+      connect(m_panoColsSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+              [overlay](int v) { overlay->setGrid(overlay->rows(), v); });
+      overlay->setGrid(m_panoRowsSpin->value(), m_panoColsSpin->value());
+    }
+
+  }
 
   // 4: Gallery Panel
   m_galleryTab = new QWidget();
@@ -901,7 +1161,7 @@ void MainWindow::setupUi() {
                     static_cast<QWidget *>(connectTab),
                     static_cast<QWidget *>(m_cameraSettingsPanel),
                     static_cast<QWidget *>(m_astroPanel),
-                    static_cast<QWidget *>(panoTab),
+                    static_cast<QWidget *>(m_panoTab),
                     static_cast<QWidget *>(m_galleryTab),
                     static_cast<QWidget *>(settingsTab)}) {
     applyGlow(w);
@@ -950,7 +1210,13 @@ void MainWindow::setupUi() {
       if (m_pipStream == CameraStream::Tele)
         m_pipVideoWidget->update();
     });
+
+    connect(m_teleStream, &DwarfMjpegStream::errorOccurred, this,
+            [this](const QString &msg) {
+              qWarning() << "[MainWindow] Tele MJPEG:" << msg;
+            });
   }
+
   if (m_wideStream) {
     connect(m_wideStream, &DwarfMjpegStream::frameUpdated, this, [this]() {
       if (!m_mainVideoWidget || !m_pipVideoWidget)
@@ -960,7 +1226,15 @@ void MainWindow::setupUi() {
       if (m_pipStream == CameraStream::Wide)
         m_pipVideoWidget->update();
     });
+
+    connect(m_wideStream, &DwarfMjpegStream::errorOccurred, this,
+            [this](const QString &msg) {
+              qWarning() << "[MainWindow] Wide MJPEG:" << msg;
+            });
   }
+
+  // Ensure views are routed immediately (so first frames paint as soon as they arrive).
+  updateStreamRouting();
 
   statusBar()->showMessage(tr("Ready"));
 
@@ -994,6 +1268,21 @@ void MainWindow::updateOverlayVisibility() {
   const bool allowOverlays = (camSelected || astroSelected || panoSelected);
   const bool blockedByFullscreenOverlay = m_galleryOverlayEnabled;
 
+  const bool connected = (m_wsClient && m_wsClient->isConnected());
+
+  if (panoSelected && connected) {
+    if (m_mainStream != CameraStream::Wide || m_pipStream != CameraStream::Tele) {
+      m_mainStream = CameraStream::Wide;
+      m_pipStream = CameraStream::Tele;
+      updateCameraStreamViews();
+    }
+  }
+  const bool showOverlayToggles = connected && allowOverlays && !blockedByFullscreenOverlay;
+  if (m_motorOverlayToggleButton)
+    m_motorOverlayToggleButton->setVisible(showOverlayToggles);
+  if (m_paramsOverlayToggleButton)
+    m_paramsOverlayToggleButton->setVisible(showOverlayToggles);
+
   const bool motorVisible = allowOverlays && !blockedByFullscreenOverlay && m_motorOverlayUserVisible;
   const bool paramsVisible = allowOverlays && !blockedByFullscreenOverlay && m_paramsOverlayUserVisible;
 
@@ -1001,6 +1290,14 @@ void MainWindow::updateOverlayVisibility() {
     m_motorOverlay->setVisible(motorVisible);
   if (m_paramsOverlay)
     m_paramsOverlay->setVisible(paramsVisible);
+
+  // Panorama grid overlay is only relevant in PANO tab and when connected.
+  if (m_panoGridOverlay) {
+    const bool panoGridVisible = connected && panoSelected && !blockedByFullscreenOverlay;
+    m_panoGridOverlay->setVisible(panoGridVisible);
+    if (panoGridVisible)
+      updatePanoramaGridOverlayTarget();
+  }
 
   // Ensure overlays stay on top of fullscreen overlays (e.g. StarMap)
   if (m_motorOverlay && m_motorOverlay->isVisible())
@@ -1577,7 +1874,7 @@ void MainWindow::onMediaListReceived(const QJsonDocument &document) {
 
       const bool choose = bestName.isEmpty() ||
                           (score > bestScore) ||
-                          (score == bestScore && ts != -1 && bestTs != -1 && ts > bestTs);
+                          (score == bestScore && ts != -1 && (bestTs == -1 || ts > bestTs));
 
       if (choose) {
         bestName = baseName;
@@ -1593,8 +1890,10 @@ void MainWindow::onMediaListReceived(const QJsonDocument &document) {
       setCaptureStatusTextAllPanels(
           QStringLiteral("%1 %2").arg(m_pendingCaptureLookup.prefix, bestName));
 
-      // Try to show a preview thumbnail under the filename (photo only).
-      if (m_pendingCaptureLookup.expectedMediaType == 1 && !bestThumb.isEmpty()) {
+      // Try to show a preview thumbnail under the filename (photo/panorama).
+      if ((m_pendingCaptureLookup.expectedMediaType == 1 ||
+           m_pendingCaptureLookup.expectedMediaType == 5) &&
+          !bestThumb.isEmpty()) {
         QString ip = m_ipInput ? m_ipInput->text().trimmed() : QString();
         if (!ip.isEmpty()) {
           if (!m_ftpDownloader) {
@@ -2105,7 +2404,6 @@ void MainWindow::onMediaItemActivated(QListWidgetItem *item) {
 
   QString targetDir = QDir(m_downloadDir).filePath(subDir);
   QDir().mkpath(targetDir);
-
   if (!m_ftpDownloader) {
     m_ftpDownloader = new DwarfFtpDownloader(this);
     connect(m_ftpDownloader, &DwarfFtpDownloader::downloadStarted, this,
@@ -2145,6 +2443,16 @@ void MainWindow::onMediaListError(const QString &error) {
 }
 
 void MainWindow::onPipStreamClicked() {
+  if (m_contentStack && m_contentStack->currentIndex() == 3) {
+    // In panorama mode, keep WIDE as the main stream.
+    if (m_mainStream != CameraStream::Wide || m_pipStream != CameraStream::Tele) {
+      m_mainStream = CameraStream::Wide;
+      m_pipStream = CameraStream::Tele;
+      updateCameraStreamViews();
+    }
+    return;
+  }
+
   qWarning() << "[MainWindow] PiP double-click: BEFORE switch mainStream="
              << (m_mainStream == CameraStream::Tele ? "Tele" : "Wide")
              << "pipStream="
@@ -2241,6 +2549,8 @@ void MainWindow::updateOverlayPositions() {
     if (m_galleryOverlayEnabled)
       m_galleryOverlayContainer->raise();
   }
+
+  updatePanoramaGridOverlayTarget();
 }
 
 void MainWindow::onStarMapOverlayRequested(bool enabled) {
