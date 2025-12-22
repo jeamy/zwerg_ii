@@ -16,13 +16,13 @@ mkdir -p "$BUILD_DIR"
 
 case "$MODE" in
   clean)
-    echo "[zwergii] Clean build: führe 'cmake --build . --target clean' aus und baue danach (Debug)."
+    echo "[zwergii] Clean build: Lösche komplettes Build-Verzeichnis und baue neu (Debug)."
+    rm -rf "$BUILD_DIR"
+    mkdir -p "$BUILD_DIR"
     cd "$BUILD_DIR"
-    if [ ! -f "CMakeCache.txt" ]; then
-      echo "[zwergii] Build-Verzeichnis noch nicht konfiguriert, führe CMake-Konfiguration (Debug) aus."
-      cmake -DCMAKE_BUILD_TYPE=Debug ..
-    fi
-    cmake --build . --target clean
+    echo "[zwergii] CMake-Konfiguration (Debug)..."
+    cmake -DCMAKE_BUILD_TYPE=Debug ..
+    echo "[zwergii] Baue Projekt..."
     cmake --build .
     ;;
 
