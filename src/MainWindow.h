@@ -246,6 +246,10 @@ private:
   int m_panoRunRows = 0;
   int m_panoRunCols = 0;
 
+  bool m_panoStartPending = false;
+  int m_panoStartPendingRows = 0;
+  int m_panoStartPendingCols = 0;
+
   DwarfHttpClient *m_httpClient;
   QPushButton *m_openGalleryButton;
   QTabWidget *m_mediaTabs;
