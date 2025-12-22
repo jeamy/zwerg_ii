@@ -75,22 +75,26 @@ void DwarfPanoramaController::handlePanoramaMessage(quint32 cmd, const QByteArra
 }
 
 void DwarfPanoramaController::handleNotification(quint32 cmd, const QByteArray &data) {
+    qWarning() << "[PanoramaController::handleNotification] Cmd:" << cmd << "Size:" << data.size();
+    
     if (cmd == PanoramaCmd::NOTIFY_PROGRESS) {
+        qWarning() << "[PanoramaController] Got NOTIFY_PROGRESS (15219)";
         dwarf::ResNotifyPanoramaProgress progress;
         if (data.size() > 0 && progress.ParseFromArray(data.data(), data.size())) {
             int completed = progress.completed_count();
             int total = progress.total_count();
             
-            qDebug() << "[DwarfPanoramaController] Progress:" << completed << "/" << total;
+            qWarning() << "[PanoramaController] Progress:" << completed << "/" << total;
             emit panoramaProgress(completed, total);
             
             // Auto-emit stop when completed
             if (completed >= total && total > 0) {
-                qDebug() << "[DwarfPanoramaController] Panorama completed!";
+                qWarning() << "[PanoramaController] Panorama completed!";
                 emit panoramaStopped();
             }
         } else {
-            qWarning() << "[DwarfPanoramaController] Failed to parse progress notification";
+            qWarning() << "[PanoramaController] Failed to parse progress notification, size:" << data.size();
+            qWarning() << "[PanoramaController] Data hex:" << data.toHex();
         }
     }
 }
