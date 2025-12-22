@@ -39,6 +39,9 @@ void DwarfMessageDispatcher::dispatch(std::uint32_t moduleId,
   case MODULE_NOTIFY:
     emit notifyMessage(cmd, data);
     break;
+  case MODULE_NOTIFY_EXT:
+    emit notifyMessage(cmd, data);
+    break;
   case MODULE_PANORAMA:
     emit panoramaMessage(cmd, data);
     break;

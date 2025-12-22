@@ -45,4 +45,5 @@ private:
   static constexpr std::uint32_t MODULE_ASTRO = 8;        // Astro module (GOTO, Stacking, etc.)
   static constexpr std::uint32_t MODULE_NOTIFY = 9;
   static constexpr std::uint32_t MODULE_PANORAMA = 10;
+  static constexpr std::uint32_t MODULE_NOTIFY_EXT = 15;
 };

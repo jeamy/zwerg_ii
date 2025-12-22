@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DWARF set_isp_settings command",
+  "type": "object",
+  "required": ["cmd", "params"],
+  "properties": {
+    "cmd": {
+      "const": "set_isp_settings"
+    },
+    "params": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "brightness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "contrast": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "saturation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "sharpness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "exposure": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30000000,
+          "description": "Exposure time in microseconds"
+        },
+        "gain": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 300
+        },
+        "iso": {
+          "type": "integer",
+          "enum": [100, 200, 400, 800, 1600, 3200]
+        },
+        "gamma": {
+          "type": "number",
+          "minimum": 1.0,
+          "maximum": 3.0
+        },
+        "denoise": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "auto_exposure": {
+          "type": "boolean"
+        },
+        "auto_white_balance": {
+          "type": "boolean"
+        },
+        "white_balance_mode": {
+          "type": "string",
+          "enum": ["auto", "manual"]
+        },
+        "wb_r_gain": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "wb_g_gain": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "wb_b_gain": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "flip": {
+          "type": "boolean"
+        },
+        "mirror": {
+          "type": "boolean"
+        },
+        "hdr": {
+          "type": "boolean"
+        }
+      },
+      "anyOf": [
+        {
+          "required": ["white_balance_mode"]
+        },
+        {
+          "required": ["exposure"]
+        },
+        {
+          "required": ["gain"]
+        }
+      ]
+    }
+  }
+}

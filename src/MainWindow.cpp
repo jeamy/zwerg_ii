@@ -269,6 +269,11 @@ MainWindow::MainWindow(QWidget *parent)
   connect(m_dispatcher, &DwarfMessageDispatcher::cameraWideMessage, this,
           &MainWindow::onCameraWideMessage);
 
+  // Core controllers used by UI overlays.
+  m_cameraController = new DwarfCameraController(this);
+  m_motorController = new DwarfMotorController(this);
+  m_focusController = new DwarfFocusController(this);
+
   if (m_astroController) {
     connect(m_dispatcher, &DwarfMessageDispatcher::astroMessage, m_astroController,
             &DwarfAstroController::handleAstroMessage);
@@ -980,6 +985,7 @@ void MainWindow::setupUi() {
   auto *panoStatus = new QLabel(tr("Idle"), m_panoTab);
   panoStatus->setStyleSheet("color: gray;");
   pl->addWidget(panoStatus);
+  m_panoStatusLabel = panoStatus;
 
   auto *btnRow = new QWidget(m_panoTab);
   auto *btnLayout = new QHBoxLayout(btnRow);
@@ -993,6 +999,9 @@ void MainWindow::setupUi() {
   panoStop->setStyleSheet(
       "background: #c0392b; color: white; padding: 10px; border-radius: 5px;");
   panoStop->setEnabled(false);
+
+  m_panoStartButton = panoStart;
+  m_panoStopButton = panoStop;
 
   btnLayout->addWidget(panoStart);
   btnLayout->addWidget(panoStop);
@@ -1009,8 +1018,31 @@ void MainWindow::setupUi() {
     panoStatus->setStyleSheet("color: blue;");
     panoStart->setEnabled(false);
     panoStop->setEnabled(true);
-    m_panoramaController->startPanoramaGrid(m_panoRowsSpin ? m_panoRowsSpin->value() : 3,
-                                            m_panoColsSpin ? m_panoColsSpin->value() : 3);
+
+    if (m_panoRowsSpin)
+      m_panoRowsSpin->interpretText();
+    if (m_panoColsSpin)
+      m_panoColsSpin->interpretText();
+
+    const int rows = m_panoRowsSpin ? m_panoRowsSpin->value() : 3;
+    const int cols = m_panoColsSpin ? m_panoColsSpin->value() : 3;
+    m_panoRunActive = true;
+    m_panoRunRows = rows;
+    m_panoRunCols = cols;
+
+    m_panoramaController->startPanoramaGrid(rows, cols);
+
+    panoStatus->setText(QObject::tr("Running (%1 x %2)...").arg(rows).arg(cols));
+    panoStatus->setStyleSheet("color: green;");
+
+    // Poll album to detect when the panorama is actually written (auto-complete).
+    ensureHttpClientForCurrentIp();
+    if (m_httpClient) {
+      QTimer::singleShot(2500, this, [this]() {
+        if (m_httpClient && m_panoRunActive)
+          m_httpClient->fetchMediaList();
+      });
+    }
   });
 
   connect(panoStop, &QPushButton::clicked, this, [this, panoStatus, panoStart, panoStop]() {
@@ -1026,7 +1058,10 @@ void MainWindow::setupUi() {
 
   if (m_panoramaController) {
     connect(m_panoramaController, &DwarfPanoramaController::panoramaStarted, this,
-            [panoStatus, panoStop, panoStart](int rows, int cols) {
+            [this, panoStatus, panoStop, panoStart](int rows, int cols) {
+              m_panoRunActive = true;
+              m_panoRunRows = rows;
+              m_panoRunCols = cols;
               panoStatus->setText(QObject::tr("Running (%1 x %2)...").arg(rows).arg(cols));
               panoStatus->setStyleSheet("color: green;");
               panoStart->setEnabled(false);
@@ -1883,12 +1918,37 @@ void MainWindow::onMediaListReceived(const QJsonDocument &document) {
         bestThumb = obj.value(QStringLiteral("thumbnailPath")).toString();
         if (bestThumb.isEmpty())
           bestThumb = filePath;
+
+        // Some firmwares return panorama thumbnail names as relative (e.g. "00_00.jpg").
+        // In that case, resolve it relative to the filePath directory.
+        if (m_pendingCaptureLookup.expectedMediaType == 5 &&
+            !bestThumb.isEmpty() && !bestThumb.startsWith('/') &&
+            !filePath.isEmpty() && filePath.startsWith('/')) {
+          qWarning() << "[MainWindow] Panorama relative thumbnail detected:" << bestThumb
+                     << "filePath=" << filePath;
+          const QString dir = QFileInfo(filePath).path();
+          bestThumb = dir + '/' + bestThumb;
+        }
       }
     }
 
     if (!bestName.isEmpty()) {
       setCaptureStatusTextAllPanels(
           QStringLiteral("%1 %2").arg(m_pendingCaptureLookup.prefix, bestName));
+
+      if (m_pendingCaptureLookup.expectedMediaType == 5 && m_panoRunActive) {
+        m_panoRunActive = false;
+        if (m_panoStatusLabel) {
+          m_panoStatusLabel->setText(QObject::tr("Completed (%1 x %2)")
+                                         .arg(m_panoRunRows)
+                                         .arg(m_panoRunCols));
+          m_panoStatusLabel->setStyleSheet("color: gray;");
+        }
+        if (m_panoStartButton)
+          m_panoStartButton->setEnabled(true);
+        if (m_panoStopButton)
+          m_panoStopButton->setEnabled(false);
+      }
 
       // Try to show a preview thumbnail under the filename (photo/panorama).
       if ((m_pendingCaptureLookup.expectedMediaType == 1 ||

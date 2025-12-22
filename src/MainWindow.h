@@ -238,6 +238,13 @@ private:
   QSpinBox *m_panoRowsSpin = nullptr;
   QSpinBox *m_panoColsSpin = nullptr;
   QWidget *m_panoGridOverlay = nullptr;
+  QLabel *m_panoStatusLabel = nullptr;
+  QPushButton *m_panoStartButton = nullptr;
+  QPushButton *m_panoStopButton = nullptr;
+
+  bool m_panoRunActive = false;
+  int m_panoRunRows = 0;
+  int m_panoRunCols = 0;
 
   DwarfHttpClient *m_httpClient;
   QPushButton *m_openGalleryButton;
