@@ -49,7 +49,8 @@ void DwarfPanoramaController::startPanoramaGrid(int rows, int cols) {
 void DwarfPanoramaController::stopPanorama() {
     dwarf::ReqStopPanorama req;
     const QByteArray payload = QByteArray::fromStdString(req.SerializeAsString());
-    qWarning() << "[DwarfPanoramaController] stopPanorama payloadSize=" << payload.size();
+    qWarning() << "[DwarfPanoramaController] stopPanorama (manual) payloadSize=" << payload.size();
+    m_isRunning = false;  // Reset immediately on manual stop
     sendCommand(PanoramaCmd::STOP, payload);
 }
 
@@ -64,9 +65,18 @@ void DwarfPanoramaController::handlePanoramaMessage(quint32 cmd, const QByteArra
 
     switch (cmd) {
         case PanoramaCmd::START_GRID:
-            emit panoramaStarted(m_lastRows, m_lastCols);
+            // Only emit started if not already running (prevents duplicate starts)
+            if (!m_isRunning) {
+                m_isRunning = true;
+                qWarning() << "[PanoramaController] Starting panorama" << m_lastRows << "x" << m_lastCols;
+                emit panoramaStarted(m_lastRows, m_lastCols);
+            } else {
+                qWarning() << "[PanoramaController] Ignoring duplicate START_GRID response (already running)";
+            }
             break;
         case PanoramaCmd::STOP:
+            m_isRunning = false;
+            qWarning() << "[PanoramaController] Stopping panorama";
             emit panoramaStopped();
             break;
         default:
@@ -90,6 +100,7 @@ void DwarfPanoramaController::handleNotification(quint32 cmd, const QByteArray &
             // Auto-emit stop when completed
             if (completed >= total && total > 0) {
                 qWarning() << "[PanoramaController] Panorama completed!";
+                m_isRunning = false;
                 emit panoramaStopped();
             }
         } else {

@@ -30,4 +30,5 @@ private:
     DwarfWebSocketClient *m_client = nullptr;
     int m_lastRows = 0;
     int m_lastCols = 0;
+    bool m_isRunning = false;
 };
