@@ -291,6 +291,8 @@ MainWindow::MainWindow(QWidget *parent)
   if (m_panoramaController) {
     connect(m_dispatcher, &DwarfMessageDispatcher::panoramaMessage, m_panoramaController,
             &DwarfPanoramaController::handlePanoramaMessage);
+    connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage, m_panoramaController,
+            &DwarfPanoramaController::handleNotification);
   }
 
   setupUi();
@@ -1062,10 +1064,15 @@ void MainWindow::setupUi() {
               m_panoRunActive = true;
               m_panoRunRows = rows;
               m_panoRunCols = cols;
-              panoStatus->setText(QObject::tr("Running (%1 x %2)...").arg(rows).arg(cols));
-              panoStatus->setStyleSheet("color: green;");
+              panoStatus->setText(QObject::tr("Starting (%1 x %2)...").arg(rows).arg(cols));
+              panoStatus->setStyleSheet("color: orange;");
               panoStart->setEnabled(false);
               panoStop->setEnabled(true);
+            });
+    connect(m_panoramaController, &DwarfPanoramaController::panoramaProgress, this,
+            [this, panoStatus](int completed, int total) {
+              panoStatus->setText(QObject::tr("Running (%1/%2 photos)").arg(completed).arg(total));
+              panoStatus->setStyleSheet("color: green;");
             });
     connect(m_panoramaController, &DwarfPanoramaController::panoramaStopped, this,
             [panoStatus, panoStop, panoStart]() {

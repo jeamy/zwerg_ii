@@ -16,9 +16,11 @@ public:
     void stopPanorama();
 
     void handlePanoramaMessage(quint32 cmd, const QByteArray &data);
+    void handleNotification(quint32 cmd, const QByteArray &data);
 
 signals:
     void panoramaStarted(int rows, int cols);
+    void panoramaProgress(int completed, int total);
     void panoramaStopped();
     void panoramaFailed(const QString &error);
 

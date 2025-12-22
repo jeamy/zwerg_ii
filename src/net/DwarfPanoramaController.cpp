@@ -9,6 +9,7 @@
 namespace PanoramaCmd {
     constexpr quint32 START_GRID = 15500;
     constexpr quint32 STOP = 15501;
+    constexpr quint32 NOTIFY_PROGRESS = 15219;  // Progress notification
 }
 
 DwarfPanoramaController::DwarfPanoramaController(QObject *parent)
@@ -70,5 +71,26 @@ void DwarfPanoramaController::handlePanoramaMessage(quint32 cmd, const QByteArra
             break;
         default:
             break;
+    }
+}
+
+void DwarfPanoramaController::handleNotification(quint32 cmd, const QByteArray &data) {
+    if (cmd == PanoramaCmd::NOTIFY_PROGRESS) {
+        dwarf::ResNotifyPanoramaProgress progress;
+        if (data.size() > 0 && progress.ParseFromArray(data.data(), data.size())) {
+            int completed = progress.completed_count();
+            int total = progress.total_count();
+            
+            qDebug() << "[DwarfPanoramaController] Progress:" << completed << "/" << total;
+            emit panoramaProgress(completed, total);
+            
+            // Auto-emit stop when completed
+            if (completed >= total && total > 0) {
+                qDebug() << "[DwarfPanoramaController] Panorama completed!";
+                emit panoramaStopped();
+            }
+        } else {
+            qWarning() << "[DwarfPanoramaController] Failed to parse progress notification";
+        }
     }
 }

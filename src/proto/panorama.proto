@@ -11,3 +11,9 @@ message ReqStartPanoramaByGrid {
 
 message ReqStopPanorama {
 }
+
+// Notification: Panorama progress (CMD 15219)
+message ResNotifyPanoramaProgress {
+    int32 total_count = 1;      // Total number of photos to take
+    int32 completed_count = 2;  // Number of photos completed
+}
