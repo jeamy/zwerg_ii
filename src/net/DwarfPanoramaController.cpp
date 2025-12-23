@@ -51,6 +51,8 @@ void DwarfPanoramaController::startPanoramaGrid(int rows, int cols) {
     dwarf::ReqStartPanoramaByGrid req;
     req.set_rows(static_cast<std::uint32_t>(rows));
     req.set_cols(static_cast<std::uint32_t>(cols));
+    req.set_overlap(0.25f);  // 25% overlap (standard value)
+    req.set_mode(0);         // 0 = wide camera
 
     const QByteArray payload = QByteArray::fromStdString(req.SerializeAsString());
     qWarning() << "[DwarfPanoramaController] startPanoramaGrid rows=" << rows
