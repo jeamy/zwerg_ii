@@ -43,7 +43,8 @@ void DwarfPanoramaController::startPanoramaGrid(int rows, int cols) {
     m_lastRows = rows;
     m_lastCols = cols;
     m_justCompleted = false;  // Reset for new panorama
-    m_isRunning = true;
+    // Don't set m_isRunning here - let START_GRID response set it
+    // Otherwise the response is treated as completion and panoramaStarted is never emitted
     m_lastProgressCompleted = 0;
     m_loggedProgressHexThisRun = false;
 
@@ -53,24 +54,39 @@ void DwarfPanoramaController::startPanoramaGrid(int rows, int cols) {
 
     const QByteArray payload = QByteArray::fromStdString(req.SerializeAsString());
     qWarning() << "[DwarfPanoramaController] startPanoramaGrid rows=" << rows
-               << "cols=" << cols << "payloadSize=" << payload.size();
+               << "cols=" << cols << "payloadSize=" << payload.size()
+               << "payloadHex=" << payload.toHex();
+    qWarning() << "[DwarfPanoramaController] State before START: m_isRunning=" << m_isRunning
+               << "pano_running=" << pano_running << "m_justCompleted=" << m_justCompleted;
     sendCommand(PanoramaCmd::START_GRID, payload);
 }
 
 void DwarfPanoramaController::stopPanorama() {
+    qWarning() << "[DwarfPanoramaController] stopPanorama() called";
+    qWarning() << "[DwarfPanoramaController] State before STOP: m_isRunning=" << m_isRunning
+               << "pano_running=" << pano_running << "m_justCompleted=" << m_justCompleted
+               << "m_lastRows=" << m_lastRows << "m_lastCols=" << m_lastCols
+               << "m_lastProgressCompleted=" << m_lastProgressCompleted;
+    
     dwarf::ReqStopPanorama req;
     const QByteArray payload = QByteArray::fromStdString(req.SerializeAsString());
-    qWarning() << "[DwarfPanoramaController] stopPanorama (manual) payloadSize=" << payload.size();
-    m_isRunning = false;  // Reset immediately on manual stop
-    pano_running = false;
+    qWarning() << "[DwarfPanoramaController] Sending STOP command, payloadSize=" << payload.size();
+    
+    // Don't reset pano_running here - let it be cleared when STOP response arrives
+    // Otherwise we ignore progress updates after sending stop
     sendCommand(PanoramaCmd::STOP, payload);
+    
+    qWarning() << "[DwarfPanoramaController] STOP command sent";
 }
 
 void DwarfPanoramaController::handleNotificationProgress(int total_count, int completed_count) {
     if (!pano_running || expected_tiles <= 0)
         return;
 
-    constexpr float firmware_progress_max = 30.0f;
+    const float firmware_progress_max = (total_count > 0) ? static_cast<float>(total_count) : 30.0f;
+    if (firmware_progress_max <= 0.0f)
+        return;
+
     float firmware_ratio = static_cast<float>(completed_count) / firmware_progress_max;
 
     if (firmware_ratio < 0.0f)
@@ -127,7 +143,8 @@ void DwarfPanoramaController::handlePanoramaMessage(quint32 cmd, const QByteArra
             break;
         case PanoramaCmd::STOP:
             m_isRunning = false;
-            qWarning() << "[PanoramaController] Stopping panorama";
+            pano_running = false;
+            qWarning() << "[PanoramaController] Received STOP response - panorama stopped";
             emit panoramaStopped();
             break;
         default:
@@ -143,24 +160,38 @@ void DwarfPanoramaController::handleNotification(quint32 cmd, const QByteArray &
         dwarf::ResNotifyPanoramaProgress progress;
         if (data.size() > 0 && progress.ParseFromArray(data.data(), data.size())) {
             int completed = progress.completed_count();
-            int dwarfTotal = progress.total_count();  // DWARF's reported total
+            int total = progress.total_count();
             int expected = m_lastRows * m_lastCols;
+
             if (!m_loggedProgressHexThisRun) {
                 m_loggedProgressHexThisRun = true;
                 qWarning() << "[PanoramaController] NOTIFY_PROGRESS raw hex:" << data.toHex();
-                qWarning() << "[PanoramaController] NOTIFY_PROGRESS decoded total_count=" << dwarfTotal
+                qWarning() << "[PanoramaController] NOTIFY_PROGRESS decoded total_count=" << total
                            << "completed_count=" << completed
                            << "requested rows/cols=" << m_lastRows << "x" << m_lastCols;
             }
 
-            m_lastProgressCompleted = completed;
-
-            if (dwarfTotal != expected && expected > 0 && dwarfTotal > 0) {
-                qWarning() << "[PanoramaController] DWARF reported total=" << dwarfTotal
-                           << "but requested grid was" << expected << "(" << m_lastRows << "x" << m_lastCols << ")";
+            // DWARF always reports total_count=30 (constant), ignore it and use expected
+            if (total != expected && expected > 0) {
+                qWarning() << "[PanoramaController] DWARF reported total=" << total
+                           << "but expected" << expected << "(" << m_lastRows << "x" << m_lastCols << ")";
+                qWarning() << "[PanoramaController] Using expected count (DWARF total is always 30)";
+                total = expected;  // Override with correct value
             }
+            
+            qWarning() << "[PanoramaController] Progress:" << completed << "/" << total;
+            emit panoramaProgress(completed, total);
 
-            handleNotificationProgress(dwarfTotal, completed);
+            m_lastProgressCompleted = completed;
+            handleNotificationProgress(total, completed);
+            
+            // Auto-stop when completed reaches expected tile count
+            if (completed >= total && total > 0) {
+                qWarning() << "[PanoramaController] Panorama completed!";
+                m_isRunning = false;
+                m_justCompleted = true;
+                emit panoramaStopped();
+            }
             
             // Note: Don't auto-stop here - DWARF will send completion via cmd 15500
             // We just track progress and let the device signal completion

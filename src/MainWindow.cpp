@@ -1054,6 +1054,7 @@ void MainWindow::setupUi() {
   connect(panoStop, &QPushButton::clicked, this, [this, panoStatus, panoStart, panoStop]() {
     if (!m_panoramaController)
       return;
+    qWarning() << "[MainWindow] Panorama STOP clicked";
     panoStatus->setText(tr("Stopping..."));
     panoStatus->setStyleSheet("color: blue;");
     m_panoramaController->stopPanorama();
@@ -1074,9 +1075,17 @@ void MainWindow::setupUi() {
               panoStop->setEnabled(true);
             });
     connect(m_panoramaController, &DwarfPanoramaController::panoramaProgress, this,
-            [this, panoStatus](int completed, int total) {
+            [this, panoStatus, panoStop, panoStart](int completed, int total) {
               panoStatus->setText(QObject::tr("Running (%1/%2 photos)").arg(completed).arg(total));
               panoStatus->setStyleSheet("color: green;");
+
+              if (panoStop && !panoStop->isEnabled()) {
+                qWarning() << "[MainWindow] Enabling panorama STOP due to progress";
+                panoStop->setEnabled(true);
+              }
+              if (panoStart && panoStart->isEnabled()) {
+                panoStart->setEnabled(false);
+              }
             });
     connect(m_panoramaController, &DwarfPanoramaController::panoramaStopped, this,
             [this, panoStatus, panoStop, panoStart]() {
@@ -1096,10 +1105,17 @@ void MainWindow::setupUi() {
                   m_cameraController->openCamera(DwarfCameraController::CameraKind::Wide, false, 0);
                 }
 
-                QTimer::singleShot(600, this, [this, rows, cols, panoStatus]() {
+                QTimer::singleShot(600, this, [this, rows, cols, panoStatus, panoStop, panoStart]() {
                   if (!m_panoramaController)
                     return;
                   qWarning() << "[MainWindow] Starting panorama grid" << rows << "x" << cols;
+                  if (panoStop && !panoStop->isEnabled()) {
+                    qWarning() << "[MainWindow] Enabling panorama STOP due to startPanoramaGrid";
+                    panoStop->setEnabled(true);
+                  }
+                  if (panoStart && panoStart->isEnabled()) {
+                    panoStart->setEnabled(false);
+                  }
                   m_panoramaController->startPanoramaGrid(rows, cols);
                   panoStatus->setText(QObject::tr("Running (%1 x %2)...").arg(rows).arg(cols));
                   panoStatus->setStyleSheet("color: green;");
