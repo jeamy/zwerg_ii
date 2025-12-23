@@ -104,11 +104,18 @@ void DwarfPanoramaController::handleNotificationProgress(int total_count, int co
         mapped_tiles = expected_tiles;
 
     estimated_completed_tiles = mapped_tiles;
+    
+    qWarning() << "[PanoramaController] Mapped progress:" << estimated_completed_tiles 
+               << "/" << expected_tiles << "(from firmware" << completed_count << "/" << total_count << ")";
+    
     emit panoramaProgress(estimated_completed_tiles, expected_tiles);
 
     if (estimated_completed_tiles >= expected_tiles) {
+        qWarning() << "[PanoramaController] Panorama completed via mapping!";
         pano_running = false;
-        emit panoramaFinished();
+        m_isRunning = false;
+        m_justCompleted = true;
+        emit panoramaStopped();
     }
 }
 
@@ -173,30 +180,15 @@ void DwarfPanoramaController::handleNotification(quint32 cmd, const QByteArray &
                            << "requested rows/cols=" << m_lastRows << "x" << m_lastCols;
             }
 
-            // DWARF always reports total_count=30 (constant), ignore it and use expected
-            if (total != expected && expected > 0) {
-                qWarning() << "[PanoramaController] DWARF reported total=" << total
-                           << "but expected" << expected << "(" << m_lastRows << "x" << m_lastCols << ")";
-                qWarning() << "[PanoramaController] Using expected count (DWARF total is always 30)";
-                total = expected;  // Override with correct value
-            }
-            
-            qWarning() << "[PanoramaController] Progress:" << completed << "/" << total;
-            emit panoramaProgress(completed, total);
-
+            // DWARF always reports total_count=30 (constant progress scale)
+            // Use handleNotificationProgress() to map to actual tile count
             m_lastProgressCompleted = completed;
+            
+            qWarning() << "[PanoramaController] Raw progress: completed=" << completed
+                       << "total=" << total << "(constant scale)";
+            
+            // Let handleNotificationProgress() do the mapping and emit signals
             handleNotificationProgress(total, completed);
-            
-            // Auto-stop when completed reaches expected tile count
-            if (completed >= total && total > 0) {
-                qWarning() << "[PanoramaController] Panorama completed!";
-                m_isRunning = false;
-                m_justCompleted = true;
-                emit panoramaStopped();
-            }
-            
-            // Note: Don't auto-stop here - DWARF will send completion via cmd 15500
-            // We just track progress and let the device signal completion
         } else {
             qWarning() << "[PanoramaController] Failed to parse progress notification, size:" << data.size();
             qWarning() << "[PanoramaController] Data hex:" << data.toHex();
