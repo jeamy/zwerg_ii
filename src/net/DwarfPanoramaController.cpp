@@ -51,8 +51,16 @@ void DwarfPanoramaController::startPanoramaGrid(int rows, int cols) {
     dwarf::ReqStartPanoramaByGrid req;
     req.set_rows(static_cast<std::uint32_t>(rows));
     req.set_cols(static_cast<std::uint32_t>(cols));
-    req.set_overlap(0.25f);  // 25% overlap (standard value)
-    req.set_mode(0);         // 0 = wide camera
+    
+    // Motor parameters (from dwarfii_api documentation)
+    req.set_mstep1(16);      // Motor step: 16 is common default
+    req.set_mstep2(16);
+    req.set_speed1(800);     // Speed: 800 (moderate speed)
+    req.set_speed2(800);
+    req.set_pulse1(10);      // Pulse: 10 (>=2 required)
+    req.set_pulse2(10);
+    req.set_accelstep1(500); // Accel: 500 (mid-range 0-1000)
+    req.set_accelstep2(500);
 
     const QByteArray payload = QByteArray::fromStdString(req.SerializeAsString());
     qWarning() << "[DwarfPanoramaController] startPanoramaGrid rows=" << rows
