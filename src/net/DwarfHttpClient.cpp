@@ -6,6 +6,8 @@
 #include <QJsonObject>
 #include <QNetworkRequest>
 #include <QUrl>
+#include <functional>
+#include <memory>
 
 DwarfHttpClient::DwarfHttpClient(const QString &ip, QObject *parent)
     : QObject(parent), m_manager(new QNetworkAccessManager(this)), m_ip(ip) {}
@@ -37,24 +39,51 @@ void DwarfHttpClient::fetchMediaList() {
 }
 
 void DwarfHttpClient::fetchDefaultParamsConfig() {
-  QUrl url(QString("http://%1:%2/getDefaultParamsConfig").arg(m_ip).arg(HTTP_PORT));
-  QNetworkRequest request(url);
+  auto fetchOnPort = std::make_shared<std::function<void(int, bool)>>();
+  *fetchOnPort = [this, fetchOnPort](int port, bool allowFallback) {
+    QUrl url(QString("http://%1:%2/getDefaultParamsConfig").arg(m_ip).arg(port));
+    QNetworkRequest request(url);
 
-  QNetworkReply *reply = m_manager->get(request);
-  connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-    if (reply->error() == QNetworkReply::NoError) {
-      const QByteArray raw = reply->readAll();
-      const QJsonDocument document = QJsonDocument::fromJson(raw);
-      if (!document.isNull()) {
-        emit defaultParamsConfigReceived(document);
-      } else {
-        emit errorOccurred(tr("Invalid params config JSON"));
-      }
-    } else {
-      emit errorOccurred(reply->errorString());
-    }
-    reply->deleteLater();
-  });
+    QNetworkReply *reply = m_manager->get(request);
+    connect(reply, &QNetworkReply::finished, this,
+            [this, reply, port, allowFallback, fetchOnPort]() {
+              if (reply->error() == QNetworkReply::NoError) {
+                const QByteArray raw = reply->readAll();
+                const QJsonDocument document = QJsonDocument::fromJson(raw);
+                if (!document.isNull()) {
+                  bool looksEmpty = false;
+                  if (document.isObject()) {
+                    const QJsonObject obj = document.object();
+                    const QJsonObject dataObj =
+                        obj.value(QStringLiteral("data")).toObject();
+                    const QJsonArray cameras =
+                        dataObj.value(QStringLiteral("cameras")).toArray();
+                    const QJsonArray featureParams =
+                        dataObj.value(QStringLiteral("featureParams")).toArray();
+                    looksEmpty = cameras.isEmpty() && featureParams.isEmpty();
+                  }
+
+                  if (looksEmpty && allowFallback && port == HTTP_PORT) {
+                    qWarning()
+                        << "[HttpClient] getDefaultParamsConfig returned empty arrays on" << port
+                        << "- retrying on 8080";
+                    reply->deleteLater();
+                    (*fetchOnPort)(8080, false);
+                    return;
+                  }
+
+                  emit defaultParamsConfigReceived(document);
+                } else {
+                  emit errorOccurred(tr("Invalid params config JSON"));
+                }
+              } else {
+                emit errorOccurred(reply->errorString());
+              }
+              reply->deleteLater();
+            });
+  };
+
+  (*fetchOnPort)(HTTP_PORT, true);
 }
 
 void DwarfHttpClient::deleteMedia(const QString &filePath) {

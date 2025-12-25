@@ -19,11 +19,18 @@ public:
 
     void setClient(DwarfWebSocketClient *client);
 
+    void setPanoramaRows(int rows);
+    void setPanoramaCols(int cols);
+
+    void sendPanoramaUiOpen();
+
     void startPanoramaGrid(int rows, int cols);
     void stopPanorama();
 
+public slots:
     void handlePanoramaMessage(quint32 cmd, const QByteArray &data);
     void handleNotification(quint32 cmd, const QByteArray &data);
+    void handlePanoramaUiMessage(quint32 cmd, const QByteArray &data);
 
 signals:
     void panoramaStarted(int rows, int cols);
@@ -34,6 +41,8 @@ signals:
 
 private:
     void sendCommand(quint32 cmd, const QByteArray &data);
+    void sendFeatureParam(int id, int value);
+    void sendStartGrid();
     void handleNotificationProgress(int total_count, int completed_count);
 
     DwarfWebSocketClient *m_client = nullptr;
