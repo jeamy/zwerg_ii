@@ -86,10 +86,10 @@ def encode_ws_packet(major_version, minor_version, device_id, module_id, cmd, ms
     result.extend(b'\x30')  # tag: (6 << 3) | 0
     result.extend(encode_varint(msg_type))
     
-    # Field 7: data (bytes)
+    # Field 7: data (bytes) - always include even if empty
+    result.extend(b'\x3a')  # tag: (7 << 3) | 2
+    result.extend(encode_varint(len(data)))
     if data:
-        result.extend(b'\x3a')  # tag: (7 << 3) | 2
-        result.extend(encode_varint(len(data)))
         result.extend(data)
     
     # Field 8: client_id (string)
@@ -247,51 +247,63 @@ class DwarfProtobufTester:
             
             self.ws.send(packet, opcode=0x2)  # Binary frame
             
-            # Wait for response with timeout
+            # Wait for response, ignoring notifications
+            # Type 0 = Request, Type 1 = Response, Type 2 = Notification, Type 3 = Response
             self.ws.settimeout(3.0)
-            response = self.ws.recv()
+            max_attempts = 10  # Try up to 10 messages to find response
             
-            try:
-                # Parse response
-                resp_packet = decode_ws_packet(response)
+            for attempt in range(max_attempts):
+                try:
+                    response = self.ws.recv()
+                except WebSocketTimeoutException:
+                    break
                 
-                resp_module = resp_packet.get('module_id', 0)
-                resp_cmd = resp_packet.get('cmd', 0)
-                resp_type = resp_packet.get('type', 0)
-                resp_data = resp_packet.get('data', b'')
-                
-                print(f'  ← Module {resp_module}, Cmd {resp_cmd}, Type {resp_type}, Data size {len(resp_data)}')
-                
-                # Try to parse ComResponse
-                code = 'UNKNOWN'
-                if len(resp_data) > 0 and resp_type == 1:  # Response type
-                    code = decode_com_response(resp_data)
-                    if code is None:
-                        code = 'UNKNOWN'
-                
-                success = code == 0 or resp_type == 1  # Accept any response
-                status = '✓' if success else '✗'
-                extra = f' (code: {code})' if code != 'UNKNOWN' else ''
-                print(f'  {status} {desc}{extra}')
-                
-                return {
-                    'module': module_id,
-                    'cmd': cmd,
-                    'desc': desc,
-                    'success': success,
-                    'code': code,
-                    'response': resp_packet
-                }
-                
-            except Exception as e:
-                print(f'  ✗ Failed to parse response: {e}')
-                return {
-                    'module': module_id,
-                    'cmd': cmd,
-                    'desc': desc,
-                    'success': False,
-                    'code': f'PARSE_ERROR: {e}'
-                }
+                try:
+                    # Parse response
+                    resp_packet = decode_ws_packet(response)
+                    
+                    resp_module = resp_packet.get('module_id', 0)
+                    resp_cmd = resp_packet.get('cmd', 0)
+                    resp_type = resp_packet.get('type', 0)
+                    resp_data = resp_packet.get('data', b'')
+                    
+                    # Skip notifications (Type 2, usually Module 9)
+                    if resp_type == 2:
+                        continue
+                    
+                    # This is a response (Type 1 or 3)
+                    print(f'  ← Module {resp_module}, Cmd {resp_cmd}, Type {resp_type}, Data size {len(resp_data)}')
+                    
+                    # Try to parse ComResponse
+                    code = 'UNKNOWN'
+                    if len(resp_data) > 0 and resp_type in (1, 3):
+                        code = decode_com_response(resp_data)
+                        if code is None:
+                            code = 'UNKNOWN'
+                    
+                    # Success if we got a response matching our request and code is 0
+                    # Or if response has no data (empty response = success for some commands)
+                    matches = (resp_module == module_id and resp_cmd == cmd)
+                    success = matches and (code == 0 or len(resp_data) == 0)
+                    
+                    status = '✓' if success else '✗'
+                    extra = f' (code: {code})' if code != 'UNKNOWN' else ''
+                    if not matches:
+                        extra += f' [mismatch: expected M{module_id}/C{cmd}]'
+                    print(f'  {status} {desc}{extra}')
+                    
+                    return {
+                        'module': module_id,
+                        'cmd': cmd,
+                        'desc': desc,
+                        'success': success,
+                        'code': code,
+                        'response': resp_packet
+                    }
+                    
+                except Exception as e:
+                    print(f'  ✗ Failed to parse message: {e}')
+                    continue
                 
         except WebSocketTimeoutException:
             print(f'  ⚠ Timeout')
