@@ -12,7 +12,7 @@ import time
 import struct
 from websocket import create_connection, WebSocketTimeoutException
 
-DWARF_IP = os.environ.get('DWARF_IP', '192.168.88.1')
+DWARF_IP = os.environ.get('DWARF_IP', '10.42.0.209')
 WS_URL = f'ws://{DWARF_IP}:9900'
 
 # Module IDs
