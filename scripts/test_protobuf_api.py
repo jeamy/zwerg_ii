@@ -2,18 +2,15 @@
 
 """
 Test script for DWARF II Protobuf API
-Uses ws://IP:9900 endpoint with Protobuf protocol
+Uses ws://IP:9900 endpoint with manual Protobuf encoding
 Tests all available commands except firmware update
 """
 
 import os
 import sys
 import time
+import struct
 from websocket import create_connection, WebSocketTimeoutException
-from google.protobuf.message import Message as ProtobufMessage
-from google.protobuf.descriptor_pb2 import FileDescriptorProto, DescriptorProto, FieldDescriptorProto
-from google.protobuf.message_factory import MessageFactory
-from google.protobuf import descriptor_pool
 
 DWARF_IP = os.environ.get('DWARF_IP', '192.168.88.1')
 WS_URL = f'ws://{DWARF_IP}:9900'
@@ -30,56 +27,140 @@ MODULE_FOCUS = 8
 MODULE_NOTIFY = 9
 MODULE_PANORAMA = 10
 
-# Build minimal proto definitions dynamically
-def build_proto_classes():
-    """Build Protobuf message classes dynamically"""
-    pool = descriptor_pool.Default()
-    factory = MessageFactory(pool)
+
+def encode_varint(value):
+    """Encode integer as Protobuf varint"""
+    result = bytearray()
+    while value > 0x7f:
+        result.append((value & 0x7f) | 0x80)
+        value >>= 7
+    result.append(value & 0x7f)
+    return bytes(result)
+
+
+def decode_varint(data, offset=0):
+    """Decode Protobuf varint from data"""
+    result = 0
+    shift = 0
+    pos = offset
+    while True:
+        if pos >= len(data):
+            return None, pos
+        byte = data[pos]
+        pos += 1
+        result |= (byte & 0x7f) << shift
+        if not (byte & 0x80):
+            break
+        shift += 7
+    return result, pos
+
+
+def encode_ws_packet(major_version, minor_version, device_id, module_id, cmd, msg_type, data, client_id):
+    """Manually encode WsPacket as Protobuf"""
+    result = bytearray()
     
-    # File descriptor for our proto
-    file_proto = FileDescriptorProto()
-    file_proto.name = 'dwarf.proto'
-    file_proto.package = 'dwarf'
+    # Field 1: major_version (uint32)
+    if major_version:
+        result.extend(b'\x08')  # tag: (1 << 3) | 0
+        result.extend(encode_varint(major_version))
     
-    # WsPacket message
-    ws_packet = file_proto.message_type.add()
-    ws_packet.name = 'WsPacket'
+    # Field 2: minor_version (uint32)
+    if minor_version:
+        result.extend(b'\x10')  # tag: (2 << 3) | 0
+        result.extend(encode_varint(minor_version))
     
-    fields = [
-        ('major_version', 1, FieldDescriptorProto.TYPE_UINT32),
-        ('minor_version', 2, FieldDescriptorProto.TYPE_UINT32),
-        ('device_id', 3, FieldDescriptorProto.TYPE_UINT32),
-        ('module_id', 4, FieldDescriptorProto.TYPE_UINT32),
-        ('cmd', 5, FieldDescriptorProto.TYPE_UINT32),
-        ('type', 6, FieldDescriptorProto.TYPE_UINT32),
-        ('data', 7, FieldDescriptorProto.TYPE_BYTES),
-        ('client_id', 8, FieldDescriptorProto.TYPE_STRING),
-    ]
+    # Field 3: device_id (uint32)
+    if device_id:
+        result.extend(b'\x18')  # tag: (3 << 3) | 0
+        result.extend(encode_varint(device_id))
     
-    for name, number, field_type in fields:
-        field = ws_packet.field.add()
-        field.name = name
-        field.number = number
-        field.type = field_type
-        field.label = FieldDescriptorProto.LABEL_OPTIONAL
+    # Field 4: module_id (uint32)
+    result.extend(b'\x20')  # tag: (4 << 3) | 0
+    result.extend(encode_varint(module_id))
     
-    # ComResponse message
-    com_response = file_proto.message_type.add()
-    com_response.name = 'ComResponse'
-    field = com_response.field.add()
-    field.name = 'code'
-    field.number = 1
-    field.type = FieldDescriptorProto.TYPE_INT32
-    field.label = FieldDescriptorProto.LABEL_OPTIONAL
+    # Field 5: cmd (uint32)
+    result.extend(b'\x28')  # tag: (5 << 3) | 0
+    result.extend(encode_varint(cmd))
     
-    # Register file descriptor
-    pool.Add(file_proto)
+    # Field 6: type (uint32)
+    result.extend(b'\x30')  # tag: (6 << 3) | 0
+    result.extend(encode_varint(msg_type))
     
-    # Create message classes
-    WsPacket = factory.GetPrototype(pool.FindMessageTypeByName('dwarf.WsPacket'))
-    ComResponse = factory.GetPrototype(pool.FindMessageTypeByName('dwarf.ComResponse'))
+    # Field 7: data (bytes)
+    if data:
+        result.extend(b'\x3a')  # tag: (7 << 3) | 2
+        result.extend(encode_varint(len(data)))
+        result.extend(data)
     
-    return WsPacket, ComResponse
+    # Field 8: client_id (string)
+    if client_id:
+        client_bytes = client_id.encode('utf-8')
+        result.extend(b'\x42')  # tag: (8 << 3) | 2
+        result.extend(encode_varint(len(client_bytes)))
+        result.extend(client_bytes)
+    
+    return bytes(result)
+
+
+def decode_ws_packet(data):
+    """Decode WsPacket from Protobuf data"""
+    result = {}
+    pos = 0
+    
+    while pos < len(data):
+        # Read field tag
+        tag, pos = decode_varint(data, pos)
+        if tag is None:
+            break
+        
+        field_num = tag >> 3
+        wire_type = tag & 0x7
+        
+        if wire_type == 0:  # Varint
+            value, pos = decode_varint(data, pos)
+            if field_num == 1:
+                result['major_version'] = value
+            elif field_num == 2:
+                result['minor_version'] = value
+            elif field_num == 3:
+                result['device_id'] = value
+            elif field_num == 4:
+                result['module_id'] = value
+            elif field_num == 5:
+                result['cmd'] = value
+            elif field_num == 6:
+                result['type'] = value
+        
+        elif wire_type == 2:  # Length-delimited
+            length, pos = decode_varint(data, pos)
+            if length is None:
+                break
+            value = data[pos:pos+length]
+            pos += length
+            
+            if field_num == 7:
+                result['data'] = value
+            elif field_num == 8:
+                result['client_id'] = value.decode('utf-8', errors='ignore')
+        
+        else:
+            # Unknown wire type, skip
+            break
+    
+    return result
+
+
+def decode_com_response(data):
+    """Decode ComResponse message (field 1 = code)"""
+    if len(data) < 2:
+        return None
+    
+    # Expect tag 0x08 (field 1, varint)
+    if data[0] != 0x08:
+        return None
+    
+    code, _ = decode_varint(data, 1)
+    return code
 
 
 # Command definitions (module_id, cmd, description)
@@ -131,7 +212,6 @@ class DwarfProtobufTester:
     def __init__(self):
         self.ws = None
         self.results = []
-        self.WsPacket, self.ComResponse = build_proto_classes()
         self.client_id = f'test-{int(time.time())}'
         
     def connect(self):
@@ -153,20 +233,19 @@ class DwarfProtobufTester:
         print(f'→ {desc}')
         
         try:
-            # Build WsPacket
-            packet = self.WsPacket()
-            packet.major_version = 1
-            packet.minor_version = 1
-            packet.device_id = 1
-            packet.module_id = module_id
-            packet.cmd = cmd
-            packet.type = 0  # Request
-            packet.data = data
-            packet.client_id = self.client_id
+            # Build and send packet
+            packet = encode_ws_packet(
+                major_version=1,
+                minor_version=1,
+                device_id=1,
+                module_id=module_id,
+                cmd=cmd,
+                msg_type=0,  # Request
+                data=data,
+                client_id=self.client_id
+            )
             
-            # Serialize and send
-            buffer = packet.SerializeToString()
-            self.ws.send(buffer, opcode=0x2)  # Binary frame
+            self.ws.send(packet, opcode=0x2)  # Binary frame
             
             # Wait for response with timeout
             self.ws.settimeout(3.0)
@@ -174,22 +253,23 @@ class DwarfProtobufTester:
             
             try:
                 # Parse response
-                resp_packet = self.WsPacket()
-                resp_packet.ParseFromString(response)
+                resp_packet = decode_ws_packet(response)
                 
-                print(f'  ← Module {resp_packet.module_id}, Cmd {resp_packet.cmd}, Type {resp_packet.type}, Data size {len(resp_packet.data)}')
+                resp_module = resp_packet.get('module_id', 0)
+                resp_cmd = resp_packet.get('cmd', 0)
+                resp_type = resp_packet.get('type', 0)
+                resp_data = resp_packet.get('data', b'')
+                
+                print(f'  ← Module {resp_module}, Cmd {resp_cmd}, Type {resp_type}, Data size {len(resp_data)}')
                 
                 # Try to parse ComResponse
                 code = 'UNKNOWN'
-                if len(resp_packet.data) > 0 and resp_packet.type == 1:  # Response type
-                    try:
-                        com_resp = self.ComResponse()
-                        com_resp.ParseFromString(resp_packet.data)
-                        code = com_resp.code
-                    except:
-                        pass
+                if len(resp_data) > 0 and resp_type == 1:  # Response type
+                    code = decode_com_response(resp_data)
+                    if code is None:
+                        code = 'UNKNOWN'
                 
-                success = code == 0 or resp_packet.type == 1  # Accept any response
+                success = code == 0 or resp_type == 1  # Accept any response
                 status = '✓' if success else '✗'
                 extra = f' (code: {code})' if code != 'UNKNOWN' else ''
                 print(f'  {status} {desc}{extra}')
