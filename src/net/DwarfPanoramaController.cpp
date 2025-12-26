@@ -117,31 +117,34 @@ void DwarfPanoramaController::setPanoramaGrid(int rows, int cols) {
     
     qWarning() << "[DwarfPanoramaController] setPanoramaGrid rows=" << rows << "cols=" << cols;
     
-    // Step 1: Open Panorama UI (Module 20, CMD 16402)
-    // Data payload: 0x0807 (from PCAP)
-    QByteArray uiOpenData;
-    uiOpenData.append(static_cast<char>(0x08));
-    uiOpenData.append(static_cast<char>(0x07));
-    
+    // Step 1: Send Panorama UI Open (Module 20, CMD 16402)
+    // Android sends this before setting grid parameters and waits for 4 responses
     qWarning() << "[DwarfPanoramaController] Sending Panorama UI Open...";
-    sendCommandModule20(PanoramaCmd::UI_OPEN, uiOpenData);
+    QByteArray uiOpenPayload = QByteArray::fromHex("0807");
+    sendCommandModule20(PanoramaCmd::UI_OPEN, uiOpenPayload);
     
-    // Small delay to let UI open (Android has ~500ms between commands)
-    QThread::msleep(500);
+    // Android waits for 4 responses here - we use longer delay
+    QThread::msleep(200);
     
     // Step 2: Set ROW parameter (Module 20, CMD 16703)
     // Selector: 0x9c (row selector from PCAP)
+    // Android waits for 2 responses after this
     qWarning() << "[DwarfPanoramaController] Setting ROW=" << rows;
     QByteArray rowPayload = buildGridCommand(0x9c, rows);
     sendCommandModule20(PanoramaCmd::GRID_PARAM, rowPayload);
     
-    QThread::msleep(500);
+    // Android waits for 2 responses here
+    QThread::msleep(200);
     
     // Step 3: Set COL parameter (Module 20, CMD 16703)
     // Selector: 0x9d (col selector from PCAP)
+    // Android waits for 2 responses after this
     qWarning() << "[DwarfPanoramaController] Setting COL=" << cols;
     QByteArray colPayload = buildGridCommand(0x9d, cols);
     sendCommandModule20(PanoramaCmd::GRID_PARAM, colPayload);
+    
+    // Final delay to let DWARF process the COL setting
+    QThread::msleep(200);
     
     qWarning() << "[DwarfPanoramaController] Grid parameters set successfully";
 }
