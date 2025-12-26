@@ -1,0 +1,1 @@
+/media/data/programming/zwergII/capture/ctrl_20251226_144543.pcapng: pcap capture file, microsecond ts (little-endian) - version 2.4 (Ethernet, capture length 262144)

@@ -741,8 +741,6 @@ ReqGetAllParams = _msg("ReqGetAllParams")
 ResGetAllParams = _msg("ResGetAllParams")
 ReqStartTimelapsePhoto = _msg("ReqStartTimelapsePhoto")
 ResSystemWorkingState = _msg("ResSystemWorkingState")
-CommonParam = _msg("CommonParam")
-ReqSetFeatureParams = _msg("ReqSetFeatureParams")
 
 ReqNormalAutoFocus = _msg("ReqNormalAutoFocus")
 ReqAstroAutoFocus = _msg("ReqAstroAutoFocus")
@@ -816,6 +814,8 @@ __all__ = [
     "ResGetAllParams",
     "ReqStartTimelapsePhoto",
     "ResSystemWorkingState",
+    "CommonParam",
+    "ReqSetFeatureParams",
     # Fokus
     "ReqNormalAutoFocus",
     "ReqAstroAutoFocus",
