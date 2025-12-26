@@ -1,0 +1,41 @@
+MANUAL HEX COMPARISON - ROW=3
+
+Android (from PCAP ctrl_20251226_113958.pcapng):
+080110141801200f28bf82013a0c089c8080808080bc81071003422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+
+C++ (from user log):
+080110141801200f28bf82013a0c089c80808080bc81071003422432303939643762392d323537612d343166632d613161622d37653531616532663033303000
+
+Length:
+Android: 128 hex chars = 64 bytes ✓
+C++:     130 hex chars = 65 bytes ✗ (1 byte too long!)
+
+Detailed comparison:
+Offset 0-23: IDENTICAL
+  080110141801200f28bf82013a0c089c80808080
+
+Offset 24-27: DIFFERENT!
+  Android: 80bc8107  (4 bytes: 80 bc 81 07)
+  C++:     bc810710  (shifted by 1 byte!)
+
+The problem: C++ is missing ONE 0x80 byte in the varint encoding!
+
+Android selector varint (offset 15-22):
+  9c 80 80 80 80 80 bc 81
+  ^^              ^^^^^^^
+  selector value  continuation
+
+C++ selector varint (offset 15-22):
+  9c 80 80 80 80 bc 81 07
+  ^^           ^^^^^^^
+  selector     continuation (TOO SHORT!)
+
+CRITICAL: Android has FIVE 0x80 bytes, C++ has only FOUR!
+
+Also at end:
+Android ends with: ...30 (byte 63, total 64 bytes)
+C++ ends with:     ...30 00 (byte 64 = null terminator, total 65 bytes)
+
+FIXES NEEDED:
+1. Add ONE more 0x80 byte in varint encoding (byte 20)
+2. Remove null terminator at end (C++ QByteArray issue)

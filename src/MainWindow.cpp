@@ -1175,9 +1175,21 @@ void MainWindow::setupUi() {
 
     if (m_panoRowsSpin && m_panoColsSpin) {
       connect(m_panoRowsSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
-              [overlay](int v) { overlay->setGrid(v, overlay->cols()); });
+              [this, overlay](int v) { 
+                overlay->setGrid(v, overlay->cols()); 
+                // Send grid command to DWARF immediately (like Android app does)
+                if (m_panoramaController && m_panoColsSpin) {
+                  m_panoramaController->setPanoramaGrid(v, m_panoColsSpin->value());
+                }
+              });
       connect(m_panoColsSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
-              [overlay](int v) { overlay->setGrid(overlay->rows(), v); });
+              [this, overlay](int v) { 
+                overlay->setGrid(overlay->rows(), v); 
+                // Send grid command to DWARF immediately (like Android app does)
+                if (m_panoramaController && m_panoRowsSpin) {
+                  m_panoramaController->setPanoramaGrid(m_panoRowsSpin->value(), v);
+                }
+              });
       overlay->setGrid(m_panoRowsSpin->value(), m_panoColsSpin->value());
     }
 

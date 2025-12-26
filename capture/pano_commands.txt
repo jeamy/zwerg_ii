@@ -1,0 +1,64 @@
+File: /media/data/programming/zwergII/capture/ctrl_20251226_1.pcapng
+Size: 35713 bytes
+Magic: d4c3b2a1
+Format: Classic PCAP (little endian)
+Packets: 140
+TCP port 9900 payloads: 62
+WebSocket binary commands: 36
+  C->S: 8
+  S->C: 28
+
+================================================================================
+CLIENT->SERVER COMMANDS:
+================================================================================
+
+Command 1:
+  Length: 54 bytes
+  Hex: 080110141801200e289280013a020807422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+  Offset[15]: 0x07
+  Offset[25]: 0x39 (decimal=57)
+
+Command 2:
+  Length: 64 bytes
+  Hex: 080110141801200f28bf82013a0c089c8080808080bc81071004422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+  Offset[15]: 0x9c <- ROW selector
+  Offset[25]: 0x04 (decimal=4)
+
+Command 3:
+  Length: 64 bytes
+  Hex: 080110141801200f28bf82013a0c089c8080808080bc81071003422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+  Offset[15]: 0x9c <- ROW selector
+  Offset[25]: 0x03 (decimal=3)
+
+Command 4:
+  Length: 64 bytes
+  Hex: 080110141801200f28bf82013a0c089d8080808080bc81071004422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+  Offset[15]: 0x9d <- COL selector
+  Offset[25]: 0x04 (decimal=4)
+
+Command 5:
+  Length: 49 bytes
+  Hex: 080110141801200a288c79422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+  Offset[15]: 0x39
+  Offset[25]: 0x61 (decimal=97)
+
+Command 6:
+  Length: 49 bytes
+  Hex: 080110141801200a288d79422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+  Offset[15]: 0x39
+  Offset[25]: 0x61 (decimal=97)
+
+Command 7:
+  Length: 64 bytes
+  Hex: 080110141801200f28bf82013a0c089c8080808080bc81071005422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+  Offset[15]: 0x9c <- ROW selector
+  Offset[25]: 0x05 (decimal=5)
+
+Command 8:
+  Length: 64 bytes
+  Hex: 080110141801200f28bf82013a0c089d8080808080bc81071005422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+  Offset[15]: 0x9d <- COL selector
+  Offset[25]: 0x05 (decimal=5)
+
+✓ Saved JSON to: ctrl_20251226_1_commands.json
+✓ Done.

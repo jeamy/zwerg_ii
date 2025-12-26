@@ -1,0 +1,4 @@
+File: /media/data/programming/zwergII/capture/ctrl_20251226_1.pcapng
+Size: 35713 bytes
+Magic: d4c3b2a1
+ERROR: Not pcapng format

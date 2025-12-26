@@ -1,0 +1,27 @@
+================================================================================
+COMPLETE SESSION REPLAY - WITH INIT COMMANDS
+Target: 10.42.0.209:9900
+Goal: 3 rows x 4 cols = 12 images
+================================================================================
+
+✓ Connected
+
+PHASE 1: Init Sequence (6 commands)
+  Init 1/6...
+  Init 2/6...
+  Init 3/6...
+  Init 4/6...
+  Init 5/6...
+  Init 6/6...
+  ✓ Init complete
+
+PHASE 2: Panorama Sequence
+  Step 1: Panorama UI Open
+  Step 2: Set ROW=3
+  Step 3: Set COL=4
+  Step 4: Start Panorama
+
+PHASE 3: Monitor Progress (120s timeout)
+Error: Connection to remote host was lost.
+
+Session complete.

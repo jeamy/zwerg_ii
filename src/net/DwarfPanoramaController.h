@@ -19,6 +19,7 @@ public:
 
     void setClient(DwarfWebSocketClient *client);
 
+    void setPanoramaGrid(int rows, int cols);
     void startPanoramaGrid(int rows, int cols);
     void stopPanorama();
 
@@ -34,6 +35,8 @@ signals:
 
 private:
     void sendCommand(quint32 cmd, const QByteArray &data);
+    void sendCommandModule20(quint32 cmd, const QByteArray &data);
+    QByteArray buildGridCommand(quint8 selector, int value);
     void handleNotificationProgress(int total_count, int completed_count);
 
     DwarfWebSocketClient *m_client = nullptr;
