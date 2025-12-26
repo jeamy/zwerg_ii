@@ -304,6 +304,16 @@ class DwarfProtobufTester:
                 except Exception as e:
                     print(f'  ✗ Failed to parse message: {e}')
                     continue
+            
+            # If we exhausted all attempts without finding a response
+            print(f'  ⚠ No response after {max_attempts} messages')
+            return {
+                'module': module_id,
+                'cmd': cmd,
+                'desc': desc,
+                'success': False,
+                'code': 'NO_RESPONSE'
+            }
                 
         except WebSocketTimeoutException:
             print(f'  ⚠ Timeout')
