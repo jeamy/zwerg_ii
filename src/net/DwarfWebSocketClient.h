@@ -46,6 +46,6 @@ private:
 
   static constexpr int WEBSOCKET_PORT = 9900;
   static constexpr uint32_t MAJOR_VERSION = 1;
-  static constexpr uint32_t MINOR_VERSION = 1;
+  static constexpr uint32_t MINOR_VERSION = 20;
   static constexpr uint32_t DEVICE_ID = 1; // DWARF II
 };
