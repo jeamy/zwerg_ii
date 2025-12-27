@@ -78,46 +78,6 @@ void DwarfPanoramaController::sendPanoramaUiOpen() {
     m_client->sendCommand(PanoramaUiCmd::MODULE_ID, PanoramaUiCmd::OPEN, payload);
 }
 
-void DwarfPanoramaController::setPanoramaRows(int rows) {
-    requested_rows = rows;
-    qWarning() << "[DwarfPanoramaController] setPanoramaRows rows=" << rows;
-    sendFeatureParam(6, toGridIndexValue(rows));
-
-    if (m_client) {
-        dwarf::ReqSetFeatureParams req;
-        fillLegacyPanoFeatureParam(req, 6, rows);
-        const QByteArray payload = QByteArray::fromStdString(req.SerializeAsString());
-        // Panorama uses the WIDE camera. Send to both modules for compatibility.
-        m_client->sendCommand(2, CameraCmd::WIDE_SET_FEATURE_PARAM, payload);
-        m_client->sendCommand(2, CameraCmd::SET_FEATURE_PARAM, payload);
-        m_client->sendCommand(1, CameraCmd::SET_FEATURE_PARAM, payload);
-
-        // Ask the device to echo current feature params so we can see whether it applied.
-        m_client->sendCommand(2, CameraCmd::WIDE_GET_ALL_FEATURE_PARAMS, QByteArray());
-        m_client->sendCommand(2, CameraCmd::GET_ALL_FEATURE_PARAMS, QByteArray());
-    }
-}
-
-void DwarfPanoramaController::setPanoramaCols(int cols) {
-    requested_cols = cols;
-    qWarning() << "[DwarfPanoramaController] setPanoramaCols cols=" << cols;
-    sendFeatureParam(7, toGridIndexValue(cols));
-
-    if (m_client) {
-        dwarf::ReqSetFeatureParams req;
-        fillLegacyPanoFeatureParam(req, 7, cols);
-        const QByteArray payload = QByteArray::fromStdString(req.SerializeAsString());
-        // Panorama uses the WIDE camera. Send to both modules for compatibility.
-        m_client->sendCommand(2, CameraCmd::WIDE_SET_FEATURE_PARAM, payload);
-        m_client->sendCommand(2, CameraCmd::SET_FEATURE_PARAM, payload);
-        m_client->sendCommand(1, CameraCmd::SET_FEATURE_PARAM, payload);
-
-        // Ask the device to echo current feature params so we can see whether it applied.
-        m_client->sendCommand(2, CameraCmd::WIDE_GET_ALL_FEATURE_PARAMS, QByteArray());
-        m_client->sendCommand(2, CameraCmd::GET_ALL_FEATURE_PARAMS, QByteArray());
-    }
-}
-
 void DwarfPanoramaController::sendCommand(quint32 cmd, const QByteArray &data) {
     if (!m_client) {
         qWarning() << "PanoramaController: No client set";

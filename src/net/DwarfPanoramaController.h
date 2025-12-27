@@ -20,6 +20,9 @@ public:
     void setClient(DwarfWebSocketClient *client);
 
     void setPanoramaGrid(int rows, int cols);
+
+    void sendPanoramaUiOpen();
+
     void startPanoramaGrid(int rows, int cols);
     void stopPanorama();
 
