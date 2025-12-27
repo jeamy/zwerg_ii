@@ -1,0 +1,44 @@
+================================================================================
+REPLAY WITH RESPONSE HANDLING
+Target: 10.42.0.209:9900
+Goal: 3 rows x 4 cols = 12 images
+================================================================================
+
+✓ Connected
+
+PHASE 1: Init (6 commands with response handling)
+  Init 1/6 (expect 1 response(s))...
+    Warning: Expected 1 responses, got 0 (timeout)
+    Got 0 response(s)
+  Init 2/6 (expect 1 response(s))...
+    Warning: Expected 1 responses, got 0 (timeout)
+    Got 0 response(s)
+  Init 3/6 (expect 4 response(s))...
+    Warning: Expected 4 responses, got 0 (timeout)
+    Got 0 response(s)
+  Init 4/6 (expect 0 response(s))...
+  Init 5/6 (expect 1 response(s))...
+    Warning: Expected 1 responses, got 0 (timeout)
+    Got 0 response(s)
+  Init 6/6 (expect 2 response(s))...
+    Warning: Expected 2 responses, got 0 (timeout)
+    Got 0 response(s)
+  ✓ Init complete
+
+PHASE 2: Panorama Sequence
+  UI Open (expect 4 response(s))...
+    Warning: Expected 4 responses, got 0 (timeout)
+    Got 0 response(s)
+  ROW=3 (expect 2 response(s))...
+    Warning: Expected 2 responses, got 0 (timeout)
+    Got 0 response(s)
+  COL=4 (expect 2 response(s))...
+    Warning: Expected 2 responses, got 0 (timeout)
+    Got 0 response(s)
+
+  Sending Panorama START...
+
+PHASE 3: Monitor Progress
+Error: Connection to remote host was lost.
+
+Done.

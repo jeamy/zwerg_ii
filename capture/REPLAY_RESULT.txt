@@ -1,0 +1,21 @@
+================================================================================
+EXACT ANDROID REPLAY - ctrl_20251226_1.pcapng
+Target: 10.42.0.209:9900
+Goal: 3 rows x 4 cols = 12 images
+================================================================================
+
+Connected!
+
+Step 1: Panorama UI Open
+  Sent
+Step 2: ROW=3
+  Sent
+Step 3: COL=4
+  Sent
+Step 4: Start Panorama
+  Sent
+
+Monitoring progress (120s timeout)...
+Error: Connection to remote host was lost.
+
+Done.

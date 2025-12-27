@@ -1,0 +1,6 @@
+path=capture/wide_brightness_contrast_20251227_183049.pcapng
+exists=True
+size=24
+head_hex=d4c3b2a10200040000000000000000000000040001000000
+magic4=d4c3b2a1
+format=classic_pcap

@@ -26,9 +26,9 @@ void ImageSettingsWidget::setupUi() {
     // Brightness
     gridLayout->addWidget(new QLabel(tr("Brightness:"), group), 0, 0);
     m_brightnessSlider = new QSlider(Qt::Horizontal, group);
-    m_brightnessSlider->setRange(0, 100);
-    m_brightnessSlider->setValue(50);
-    m_brightnessValueLabel = new QLabel("50", group);
+    m_brightnessSlider->setRange(-100, 100);
+    m_brightnessSlider->setValue(0);
+    m_brightnessValueLabel = new QLabel("0", group);
     m_brightnessValueLabel->setMinimumWidth(30);
     m_brightnessValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     gridLayout->addWidget(m_brightnessSlider, 0, 1);
@@ -37,9 +37,9 @@ void ImageSettingsWidget::setupUi() {
     // Contrast
     gridLayout->addWidget(new QLabel(tr("Contrast:"), group), 1, 0);
     m_contrastSlider = new QSlider(Qt::Horizontal, group);
-    m_contrastSlider->setRange(0, 100);
-    m_contrastSlider->setValue(50);
-    m_contrastValueLabel = new QLabel("50", group);
+    m_contrastSlider->setRange(-100, 100);
+    m_contrastSlider->setValue(0);
+    m_contrastValueLabel = new QLabel("0", group);
     m_contrastValueLabel->setMinimumWidth(30);
     m_contrastValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     gridLayout->addWidget(m_contrastSlider, 1, 1);
@@ -48,9 +48,9 @@ void ImageSettingsWidget::setupUi() {
     // Saturation
     gridLayout->addWidget(new QLabel(tr("Saturation:"), group), 2, 0);
     m_saturationSlider = new QSlider(Qt::Horizontal, group);
-    m_saturationSlider->setRange(0, 100);
-    m_saturationSlider->setValue(50);
-    m_saturationValueLabel = new QLabel("50", group);
+    m_saturationSlider->setRange(-100, 100);
+    m_saturationSlider->setValue(0);
+    m_saturationValueLabel = new QLabel("0", group);
     m_saturationValueLabel->setMinimumWidth(30);
     m_saturationValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     gridLayout->addWidget(m_saturationSlider, 2, 1);
@@ -70,9 +70,9 @@ void ImageSettingsWidget::setupUi() {
     // Hue
     gridLayout->addWidget(new QLabel(tr("Hue:"), group), 4, 0);
     m_hueSlider = new QSlider(Qt::Horizontal, group);
-    m_hueSlider->setRange(0, 100);
-    m_hueSlider->setValue(50);
-    m_hueValueLabel = new QLabel("50", group);
+    m_hueSlider->setRange(-180, 180);
+    m_hueSlider->setValue(0);
+    m_hueValueLabel = new QLabel("0", group);
     m_hueValueLabel->setMinimumWidth(30);
     m_hueValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     gridLayout->addWidget(m_hueSlider, 4, 1);

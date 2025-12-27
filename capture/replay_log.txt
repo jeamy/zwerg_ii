@@ -1,0 +1,24 @@
+================================================================================
+ANDROID SEQUENCE REPLAY
+Host: 10.42.0.209:9900
+Goal: Replicate full Android sequence for 3x4 panorama
+================================================================================
+
+✓ Connected
+
+PHASE 1: Open Panorama UI (Module 14, CMD 16402)
+  Sent 19 bytes
+
+PHASE 2: Set Grid Parameters
+  Step 2a: Set ROWS = 3
+    Sent 77 bytes (selector=0x9c, value=3)
+  Step 2b: Set COLS = 4
+    Sent 77 bytes (selector=0x9d, value=4)
+
+PHASE 3: Start Panorama (Module 10, CMD 15500)
+  Sent 16 bytes
+
+PHASE 4: Monitor Panorama Progress
+  Error/Timeout: Connection to remote host was lost.
+
+Replay complete.

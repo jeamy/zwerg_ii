@@ -1,0 +1,69 @@
+================================================================================
+WEBSOCKET HANDSHAKE EXTRACTION
+================================================================================
+
+Total packets: 334
+HTTP packets found: 2
+
+================================================================================
+HTTP TRAFFIC
+================================================================================
+
+Packet 9 | 55708 -> 9900
+--------------------------------------------------------------------------------
+GET / HTTP/1.1
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: kYmZerRBmIwdK2qFL5+img==
+Sec-WebSocket-Version: 13
+Sec-WebSocket-Extensions: permessage-deflate
+Host: 10.42.0.209:9900
+Accept-Encoding: gzip
+User-Agent: okhttp3.convergence/4.12.0
+
+
+
+
+Packet 11 | 9900 -> 55708
+--------------------------------------------------------------------------------
+HTTP/1.1 101 Switching Protocols
+Connection: Upgrade
+Content-Length: 0
+Date: Fri, 26 Dec 2025 10:39:59 GMT
+Sec-WebSocket-Accept: gN41ZP121XH2DM2THPxdYhUpnJ4=
+Server: httpd/1.23.8.19
+Upgrade: websocket
+
+
+
+================================================================================
+WEBSOCKET UPGRADE ANALYSIS
+================================================================================
+
+✓ WebSocket Upgrade Request found!
+
+Full Request:
+--------------------------------------------------------------------------------
+GET / HTTP/1.1
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: kYmZerRBmIwdK2qFL5+img==
+Sec-WebSocket-Version: 13
+Sec-WebSocket-Extensions: permessage-deflate
+Host: 10.42.0.209:9900
+Accept-Encoding: gzip
+User-Agent: okhttp3.convergence/4.12.0
+
+
+--------------------------------------------------------------------------------
+
+Key Headers:
+  Upgrade: websocket
+  Connection: Upgrade
+  Sec-WebSocket-Key: kYmZerRBmIwdK2qFL5+img==
+  Sec-WebSocket-Version: 13
+  Sec-WebSocket-Extensions: permessage-deflate
+  Host: 10.42.0.209:9900
+  User-Agent: okhttp3.convergence/4.12.0
+
+✓ Done.

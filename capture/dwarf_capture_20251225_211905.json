@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "host": "192.168.88.15",
+    "started_at": "2025-12-25T21:19:08.140357+00:00",
+    "http_health": {
+      "ok": false,
+      "error": "ConnectTimeout(MaxRetryError(\"HTTPConnectionPool(host='192.168.88.15', port=8082): Max retries exceeded with url: /deviceInfo (Caused by ConnectTimeoutError(<HTTPConnection(host='192.168.88.15', port=8082) at 0x7fd5d004ef90>, 'Connection to 192.168.88.15 timed out. (connect timeout=3.0)'))\"))"
+    },
+    "finished_at": "2025-12-25T21:19:16.148052+00:00"
+  },
+  "ws_results": [],
+  "http_results": [],
+  "errors": [
+    {
+      "phase": "ws_connect",
+      "error": "TimeoutError('timed out')"
+    }
+  ]
+}

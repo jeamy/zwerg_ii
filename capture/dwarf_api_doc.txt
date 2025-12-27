@@ -1,0 +1,596 @@
+DWARF-II API Übersicht (Stand: Capture-Skript)
+=============================================
+
+1. HTTP-API
+-----------
+
+Basis-URLs
+~~~~~~~~~~
+- HTTP (REST):  http://HOST:8082
+- JPG-Streams:  http://HOST:8092
+
+Alle Endpunkte werden im Skript `dwarf_capture.py` über `build_http_endpoints()`
+definiert.
+
+Album / Medien
+~~~~~~~~~~~~~~
+
+1. album_media_counts
+   - Methode: POST
+   - Pfad:   /album/list/mediaCounts
+   - Body:   {}
+   - Zweck:  Liefert pro Medien-Typ (Normalfoto, Video, Astro, Panorama, ...)
+             die Anzahl der Dateien.
+
+2. album_media_infos
+   - Methode: POST
+   - Pfad:   /album/list/mediaInfos
+   - Body (Beispiel):
+     {
+       "mediaType": 0,   // 0=alle Typen, 1=Normalfoto, 2=Video, 3=Serienbild, ...
+       "pageIndex": 0,   // Startindex (0-basiert)
+       "pageSize": 0     // 0=alle, sonst Seitengröße
+     }
+   - Zweck:  Liefert eine Liste von Medienobjekten mit Pfad, Größe, Typ, usw.
+
+3. album_delete (nur mit --include-dangerous-http)
+   - Methode: POST
+   - Pfad:   /album/delete
+   - Body (allgemein):
+     {
+       "datas": [
+         { "mediaType": int, "filePath": string, "fileName": string },
+         ...
+       ]
+     }
+   - Im Capture-Skript wird aktuell eine leere Liste gesendet, um nichts
+     versehentlich zu löschen.
+
+Firmware / Konfiguration
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+4. firmware_version
+   - Methode: POST
+   - Pfad:   /firmwareVersion
+   - Body:   {}
+   - Antwort (erfolgreich):
+     {
+       "code": 0,
+       "data": {
+         "majorVersion": int,
+         "minorVersion": int,
+         "patchVersion": int
+       }
+     }
+
+5. get_default_params_config
+   - Methode: GET
+   - Pfad:   /getDefaultParamsConfig
+   - Zweck:  Liefert eine JSON-Konfiguration mit Kamera-Parameter-Definitionen
+             (z.B. Indizes und Werte für Belichtungszeiten, Gains usw.).
+
+Logs
+~~~~
+
+6. log_info
+   - Methode: GET
+   - Pfad:   /logInfo
+   - Antwort:
+     {
+       "code": 0,
+       "data": {
+         "hasLogFile": bool,
+         "fileName": string,
+         "timestamp": string,
+         "fileSize": int64
+       }
+     }
+
+7. download_log
+   - Methode: GET
+   - Pfad:   /downloadLog
+   - Antwort: ZIP-Datei (Binär-Download) mit Logdaten.
+
+Device / Reset
+~~~~~~~~~~~~~~~
+
+8. device_info
+   - Methode: POST
+   - Pfad:   /deviceInfo
+   - Body:   {}
+   - Zweck:  Liefert Informationen wie Device-ID, Name, Passwort,
+             AP-/STA-IP, SD-Kartenstatus, usw.
+
+9. set_device_name_and_psd (nur mit --include-dangerous-http)
+   - Methode: POST
+   - Pfad:   /setDeviceNameAndPsd
+   - Body (allgemein):
+     {
+       "mode": 0 | 1,       // 0: Passwort ändern, 1: Name ändern
+       "oldValue": string,  // aktueller Wert (für Passwort-Änderung nötig)
+       "newValue": string   // neuer Name oder neues Passwort
+     }
+
+10. reset_device_info (nur mit --include-dangerous-http)
+    - Methode: POST
+    - Pfad:   /resetDeviceInfo
+    - Body:   {}
+    - Zweck:  Setzt Gerätedaten (Name/Passwort) auf Werkseinstellungen.
+
+11. get_reset_state
+    - Methode: POST
+    - Pfad:   /getResetState
+    - Body:   {}
+    - Antwort:
+      {
+        "code": 0,
+        "data": {
+          "isReseted": bool,
+          "deviceName": string,
+          "devicePwd": string
+        }
+      }
+
+JPG-Streams (8092)
+~~~~~~~~~~~~~~~~~~
+
+12. tele_jpg_stream
+    - Methode: GET
+    - Pfad:   /mainstream (Port 8092)
+    - Zweck:  Endloser JPEG-Stream des Tele-Kanals.
+
+13. wide_jpg_stream
+    - Methode: GET
+    - Pfad:   /secondstream (Port 8092)
+    - Zweck:  Endloser JPEG-Stream des Wide-Kanals.
+
+
+2. WebSocket-API
+----------------
+
+Transport
+~~~~~~~~~
+- URL: ws://HOST:9900/
+- Protokoll: Protobuf, äußere Hülle ist stets "WsPacket".
+
+WsPacket
+~~~~~~~~
+
+message WsPacket {
+    uint32 major_version = 1;  // Protokoll-Hauptversion (hier: 1)
+    uint32 minor_version = 2;  // Protokoll-Minor (variiert je nach Firmware)
+    uint32 device_id     = 3;  // Geräte-ID (variiert je nach Gerät/Firmware)
+    uint32 module_id     = 4;  // Modul-ID, siehe unten
+    uint32 cmd           = 5;  // Befehlscode im Modul
+    uint32 type          = 6;  // 0=Request, 1=Response, 2=Notification
+    bytes  data          = 7;  // serialisierte Protobuf-Payload
+    string client_id     = 8;  // freie Client-Kennung
+}
+
+Im Capture-Skript:
+- major_version = 1
+- minor_version / device_id werden aus Antworten beobachtet und können abweichen
+  (Beispiel aus Logs: minor_version=8, device_id=2).
+- client_id     = "dwarf-capture"
+
+Module
+~~~~~~
+- 1:  MODULE_CAMERA_TELE     (Tele-Kamera)
+- 2:  MODULE_CAMERA_WIDE     (Weitwinkel-Kamera)
+- 3:  MODULE_ASTRO           (Astronomiemodul)
+- 4:  MODULE_SYSTEM          (Systemzeit, CPU, MTP)
+- 5:  MODULE_RGB_POWER       (Ringlicht, Power-Indikator)
+- 6:  MODULE_MOTOR           (Montierungs-Motoren)
+- 8:  MODULE_FOCUS           (Fokussiereinheit)
+- 10: MODULE_PANORAMA        (Panoramamodul)
+
+Zusätzliche Module aus Captures/Logs:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- 14: MODULE_PANORAMA_UI     (Panorama-UI / Screen-Open Handshake)
+- 15: MODULE_NOTIFY_EXT      (u.a. Panorama-Grid Parameter / erweiterte Notifies)
+
+
+2.1 Kamera Tele / Wide
+~~~~~~~~~~~~~~~~~~~~~~
+(implementiert in dwarf_proto_runtime.py, verwendet in dwarf_capture.py)
+
+Wichtige Messages
+-----------------
+
+ReqOpenCamera {
+    bool binning          = 1;
+    int32 rtsp_encode_type = 2;  // 0=H264, 1=H265
+}
+
+ReqPhoto   {}
+ReqBurst   { int32 count = 1; }
+ReqStartRecord {}
+ReqStopRecord  {}
+
+ReqSetAllParams {
+    int32 exp_mode      = 1;
+    int32 exp_index     = 2;
+    int32 gain_mode     = 3;
+    int32 gain_index    = 4;
+    int32 ircut_value   = 5;
+    int32 wb_mode       = 6;
+    int32 wb_index_type = 7;
+    int32 wb_index      = 8;
+    int32 brightness    = 9;
+    int32 contrast      = 10;
+    int32 hue           = 11;
+    int32 saturation    = 12;
+    int32 sharpness     = 13;
+    int32 jpg_quality   = 14;
+}
+
+ReqGetAllParams  {}
+ResGetAllParams  {
+    // gleiche Felder wie ReqSetAllParams +
+    int32 code = 15;  // Fehlercode (0=OK)
+}
+
+ReqStartTimelapsePhoto {
+    int32 interval = 1;  // Sekunden
+    int32 count    = 2;  // Anzahl Bilder
+}
+
+ResSystemWorkingState {
+    int32 code  = 1;
+    int32 state = 2;
+}
+
+Typische Kommandos (Tele, module_id=1)
+--------------------------------------
+- cmd=10039: GetSystemWorkingState (ResSystemWorkingState)
+- cmd=10000: OpenCamera (ReqOpenCamera)
+- cmd=10002: Photo      (ReqPhoto)
+- cmd=10003: Burst      (ReqBurst)
+- cmd=10005: StartRecord (ReqStartRecord)
+- cmd=10006: StopRecord  (ReqStopRecord)
+- cmd=10035/10036: Set/GetAllParams
+- cmd=10033: StartTimelapsePhoto
+
+Wide-Kamera (module_id=2) verwendet dieselben Messages, aber CMD-Werte im
+12000er-Bereich.
+
+
+2.2 Fokusmodul (MODULE_FOCUS)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ReqNormalAutoFocus {
+    uint32 mode     = 1;  // 0=Global, 1=Bereich
+    uint32 center_x = 2;
+    uint32 center_y = 3;
+}
+
+ReqAstroAutoFocus {
+    uint32 mode = 1;      // 0=langsam, 1=schnell
+}
+
+ReqManualSingleStepFocus   { uint32 direction = 1; }  // 0=fern, 1=nah
+ReqStartManualContinuFocus { uint32 direction = 1; }
+ReqStopManualContinuFocus  {}
+ReqStopAstroAutoFocus      {}
+
+
+2.3 Astro-Modul (MODULE_ASTRO)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Kalibrierung
+------------
+ReqStartCalibration {}
+ReqStopCalibration  {}
+
+GOTO / Solar System
+--------------------
+ReqGotoDSO {
+    double ra          = 1;
+    double dec         = 2;
+    string target_name = 3;
+}
+
+ReqGotoSolarSystem {
+    int32  index       = 1;  // Ziel (1=Merkur,...,9=Sonne)
+    double lon         = 2;  // GPS-Längengrad
+    double lat         = 3;  // GPS-Breitengrad
+    string target_name = 4;
+}
+
+ReqStopGoto {}
+
+GO LIVE
+-------
+ReqGoLive {}
+
+EQ-Solving
+----------
+ReqStartEqSolving {
+    double lon = 1;
+    double lat = 2;
+}
+
+ResStartEqSolving {
+    double azi_err = 1;
+    double alt_err = 2;
+    int32  code    = 3;
+}
+
+ReqStopEqSolving {}
+
+Live-Stacking / Dark Frames
+---------------------------
+ReqCaptureRawLiveStacking           {}
+ReqStopCaptureRawLiveStacking       {}
+ReqCaptureWideRawLiveStacking       {}
+ReqStopCaptureWideRawLiveStacking   {}
+
+ReqCheckDarkFrame                   {}
+ResCheckDarkFrame { int32 progress = 1; int32 code = 2; }
+
+ReqCaptureDarkFrame { int32 reshoot = 1; }
+ReqStopCaptureDarkFrame {}
+
+ReqCaptureDarkFrameWithParam {
+    int32 exp_index  = 1;
+    int32 gain_index = 2;
+    int32 bin_index  = 3;
+    int32 cap_size   = 4;  // Anzahl Aufnahmen
+}
+
+ReqGetDarkFrameList {}
+
+ResGetDarkFrameInfo {
+    int32 exp_index  = 1;
+    int32 gain_index = 2;
+    int32 bin_index  = 3;
+}
+
+ResGetDarkFrameInfoList {
+    int32 code = 1;
+    repeated ResGetDarkFrameInfo results = 2;
+}
+
+ReqDelDarkFrame {
+    int32 exp_index  = 1;
+    int32 gain_index = 2;
+    int32 bin_index  = 3;
+}
+
+ReqDelDarkFrameList {
+    repeated ReqDelDarkFrame dark_list = 1;
+}
+
+ResDelDarkFrameList { int32 code = 1; }
+
+One-Click-GOTO
+---------------
+ReqOneClickGotoDSO {
+    double ra          = 1;
+    double dec         = 2;
+    string target_name = 3;
+}
+
+ReqOneClickGotoSolarSystem {
+    int32  index       = 1;
+    double lon         = 2;
+    double lat         = 3;
+    string target_name = 4;
+}
+
+ResOneClickGoto {
+    int32 step    = 1;
+    int32 code    = 2;
+    bool  all_end = 3;
+}
+
+ReqStopOneClickGoto {}
+
+
+2.4 Motor-Modul (MODULE_MOTOR)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ReqMotorRun {
+    int32  id               = 1;  // 0=RA, 1=DEC
+    double speed            = 2;  // Grad/s
+    bool   direction        = 3;  // 0=links/unten, 1=rechts/oben
+    int32  speed_ramping    = 4;  // 0-1000
+    int32  resolution_level = 5;  // Microstepping (0=feinste Unterteilung)
+}
+
+ResMotor {
+    int32 id   = 1;
+    int32 code = 2;
+}
+
+ReqMotorStop {
+    int32 id = 1;  // 0=RA, 1=DEC
+}
+
+ReqMotorServiceJoystick {
+    double vector_angle  = 1;  // Bewegungsrichtung in Grad, 0° entlang +x
+    double vector_length = 2;  // 0-1, skaliert die Geschwindigkeit
+    double speed         = 3;  // Basisgeschwindigkeit in Grad/s
+}
+
+ReqMotorServiceJoystickStop {}
+
+ReqDualCameraLinkage {
+    int32 x = 1;
+    int32 y = 2;
+}
+
+
+2.5 System/RGB/Power (MODULE_SYSTEM / MODULE_RGB_POWER)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ReqSetTime {
+    uint64 timestamp = 1;  // Unix-Zeit in Sekunden (UTC)
+}
+
+ReqSetTimezone {
+    string timezone = 1;   // z.B. "UTC" oder "Europe/Berlin"
+}
+
+ReqSetMtpMode {
+    int32 mode = 1;        // 0=aus, 1=ein
+}
+
+ReqSetCpuMode {
+    int32 mode = 1;        // 0=Normal, 1=Performance
+}
+
+ReqsetMasterLock {
+    bool lock = 1;         // true=Host sperren, false=entsperren
+}
+
+ReqOpenRgb      {}
+ReqCloseRgb     {}
+ReqOpenPowerInd {}
+ReqClosePowerInd{}
+
+
+2.6 Panorama (MODULE_PANORAMA)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wichtige Commands:
+------------------
+
+1) Panorama-Start (Grid)
+   - module_id=10, cmd=15500
+   - Hinweis aus Android-Captures: START_GRID wird oft ohne Body gesendet;
+     Rows/Cols werden vorab über Grid-Parameter gesetzt.
+
+2) Panorama-Stop
+   - module_id=10, cmd=15501
+   - Hinweis aus Android-Captures: STOP wird ohne Body gesendet.
+
+3) Panorama-UI Open Handshake
+   - module_id=14, cmd=16402
+   - Android sendet beim Öffnen des Panorama-Screens data=08 07.
+   - Antwort/ACK wurde in Logs als data=10 07 beobachtet.
+
+4) Panorama Grid Parameter Set
+   - module_id=15, cmd=16703
+   - Payload ist kein "normales" Proto-Message, sondern varint-Felder:
+     - field 1 (tag 0x08): selector (varint)
+     - field 2 (tag 0x10): value (varint)
+   - Beobachtete Selector-Varints (Row/Col):
+     - Rows: 9c 80 80 80 80 bc 81 07
+     - Cols: 9d 80 80 80 80 bc 81 07
+   - Das genaue Value-Mapping (wie viele Rows/Cols pro Value) ist firmwareabhängig
+     und muss über Captures/Tests als Tabelle abgeleitet werden.
+
+Progress / Notify:
+------------------
+   - module_id=10, cmd=15219 (NOTIFY_PROGRESS)
+   - total_count ist die tatsächliche vom Gerät geplante Aufnahmeanzahl
+     und kann von (rows*cols) abweichen, wenn das Gerät einen persistierten
+     Preset/Grid-State verwendet.
+
+
+3. Ablauf im Capture-Skript
+---------------------------
+
+Die Datei `dwarf_capture.py` ruft nicht alle API-Funktionen in beliebiger
+Reihenfolge auf, sondern folgt einem festen Schema:
+
+1. Verbindungsaufbau (WS)
+   - Öffnet eine WebSocket-Verbindung zu ws://HOST:9900/.
+
+2. Kameras / Fokus / Basis-Status
+   - Ruft Tele-/Wide-Kamera-Kommandos wie `tele_open_camera`,
+     `tele_get_system_working_state`, `tele_*`-Parameter, `wide_*` auf.
+   - Führt einfache Fokus-Kommandos aus (`focus_normal_auto`,
+     `focus_astro_slow`, Stop-Kommandos).
+
+3. Astro-Funktionen (grundlegend)
+   - Führt `astro_go_live`, `astro_check_dark_frame`,
+     `astro_get_dark_frame_list` aus.
+   - Optional, bei `--include-dangerous-ws`, zusätzliche Astro-Kommandos
+     (Kalibrierung, EQ-Solving, Darkframe-Capture, Darkframe-Delete,
+      GOTO-/One-Click-GOTO-Varianten usw.).
+
+4. Motor- und Panorama-Bewegungen (zeitlich begrenzt)
+   - Motor-Kommandos:
+     - `motor_goto_ra_1deg` (RA-Achse, 1°/s, ca. 5 s)
+     - `motor_stop_ra`
+     - `motor_goto_dec_1deg` (DEC-Achse, 1°/s, ca. 5 s)
+     - `motor_stop_dec`
+     - `motor_joystick_small` (kleiner Vektorschwenk, ca. 5 s)
+     - `motor_joystick_stop`
+   - Panorama-Kommandos (Stand: aktuelles Capture-Skript):
+     - `panorama_set_rows` (module 15, cmd 16703)
+     - `panorama_set_cols` (module 15, cmd 16703)
+     - `panorama_start_grid` (module 10, cmd 15500, leerer Payload)
+
+5. System / RGB / Power
+   - Setzt Uhrzeit und Zeitzone:
+     - `system_set_time` (UTC-Timestamp)
+     - `system_set_timezone_utc` ("UTC")
+   - Aktiviert MTP und setzt CPU-Mode:
+     - `system_set_mtp_mode_on`
+     - `system_set_cpu_mode_normal`
+   - Host-Lock deaktivieren:
+     - `system_master_lock_off`
+   - Ringlicht und Power-Indikator (während des Laufs):
+     - `rgb_open_ring`
+     - `rgb_close_ring`
+     - `power_indicator_on`
+     - `power_indicator_off`
+
+6. Abschluss: Lichter einschalten und Verbindung schließen
+   - Unabhängig von vorherigen Fehlern werden am Ende noch einmal explizit
+     zwei WS-Kommandos gesendet, um das Gerät in einen definierten
+     Sichtbarkeitszustand zu bringen:
+     - `rgb_open_ring_final`  (CMD 13500, Ringlicht an)
+     - `power_indicator_on_final` (CMD 13503, Power-Indikator an)
+   - Danach wird die WebSocket-Verbindung sauber geschlossen.
+
+7. HTTP-Aufrufe
+   - Parallel bzw. nach dem WS-Teil ruft das Skript folgende HTTP-Endpunkte:
+     - `album_media_counts`
+     - `album_media_infos`
+     - `firmware_version`
+     - `get_default_params_config`
+     - `log_info`
+     - `download_log`
+     - `device_info`
+     - `get_reset_state`
+     - JPG-Streams: `tele_jpg_stream`, `wide_jpg_stream`
+   - Bei gesetztem Flag `--include-dangerous-http` zusätzlich:
+     - `album_delete` (mit leerer Liste)
+     - `set_device_name_and_psd`
+     - `reset_device_info`
+
+Damit lässt sich aus der Doku ablesen, in welcher Reihenfolge und mit welchen
+Parametern das Capture-Skript die DWARF-II-API tatsächlich ansteuert.
+
+8. FTP-Galerie-Check
+---------------------
+
+- Nach den HTTP-Aufrufen (und vor dem finalen Log-Schreiben) führt das
+  Skript einen optionalen FTP-Galerie-Check aus (Standard: aktiv,
+  abschaltbar mit `--skip-ftp-gallery`).
+- Zugriff: anonymer FTP-Login auf den gleichen Host wie `--host`.
+- Verzeichnisse:
+  - `/DWARF_II/Astronomy`
+  - `/DWARF_II/Burst`
+  - `/DWARF_II/data`
+  - `/DWARF_II/Normal_Photos`
+  - `/DWARF_II/Panoramas`
+  - `/DWARF_II/Videos`
+- Für jedes Verzeichnis wird gezählt:
+  - `Normal_Photos` / `Videos` / `data`: Anzahl der Dateien im Verzeichnis
+    (keine Rekursion).
+  - `Astronomy` / `Burst` / `Panoramas`: Anzahl der Galerie-Einträge über
+    *thumbnail*-Dateien im Verzeichnis und in direkten Unterordnern.
+- Zusätzlich wird für `/DWARF_II/data` die Datenbank `device.db` (ggf. weitere
+  *.db/.sqlite/*.sqlite3-Dateien) heruntergeladen und grob ausgewertet
+  (Tabellen + Zeilenzahl); SQLite-Interna wie `device.db-shm`/`device.db-wal`
+  werden ignoriert.
+- Optional kann die SQLite vollständig gedumpt werden:
+  - Flag: `--dump-db-all`
+  - Dann werden pro Tabelle zusätzlich Spalteninfos (PRAGMA table_info)
+    und alle Zeilen (SELECT *) im JSON-Log gespeichert.
+- Das Gesamtergebnis wird im JSON-Log unter `meta.ftp_gallery` abgelegt.

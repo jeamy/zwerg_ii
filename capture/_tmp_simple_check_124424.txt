@@ -1,0 +1,5 @@
+File: ctrl_20251226_124424.pcapng
+Size: 3613718 bytes
+Magic: d4c3b2a1
+Format: pcap classic ✓
+Blocks: 1

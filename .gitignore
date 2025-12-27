@@ -1,5 +1,7 @@
 # Build
+dist/
 build/
+build*
 
 # CMake
 CMakeFiles/
@@ -27,6 +29,7 @@ __pycache__/
 venv/
 env/
 ENV/
+
 
 # Database
 database/*.db

@@ -1,0 +1,54 @@
+================================================================================
+UUID ANALYSIS
+================================================================================
+
+PCAP: ctrl_20251226_1.pcapng
+  UUID Hex: 32303939643762392d323537612d343166632d613161622d376535316165326630333030
+  UUID ASCII: 2099d7b9-257a-41fc-a1ab-7e51ae2f0300
+
+PCAP: ctrl_20251226_113958.pcapng
+  UUID Hex: 32303939643762392d323537612d343166632d613161622d376535316165326630333030
+  UUID ASCII: 2099d7b9-257a-41fc-a1ab-7e51ae2f0300
+
+================================================================================
+UUID COMPARISON
+================================================================================
+
+✓ UUIDs are IDENTICAL across PCAPs
+  → UUID is STATIC (hardcoded or device-specific)
+
+Static UUID: 2099d7b9-257a-41fc-a1ab-7e51ae2f0300
+
+================================================================================
+UUID STRUCTURE ANALYSIS
+================================================================================
+
+UUID String: 2099d7b9-257a-41fc-a1ab-7e51ae2f0300
+Length: 36 chars
+
+UUID Format:
+  Parts: 5
+  Part 1: 2099d7b9 (8 chars)
+  Part 2: 257a (4 chars)
+  Part 3: 41fc (4 chars)
+  Part 4: a1ab (4 chars)
+  Part 5: 7e51ae2f0300 (12 chars)
+
+Matches UUID format (8-4-4-4-12)
+UUID Version indicator: 4
+  → Appears to be UUID v4 (random)
+
+================================================================================
+RECOMMENDATIONS
+================================================================================
+
+UUID is STATIC - can be hardcoded in replay scripts
+
+Recommended action:
+  1. Use this UUID in all commands:
+     2099d7b9-257a-41fc-a1ab-7e51ae2f0300
+  2. Test if DWARF accepts commands with this UUID
+  3. If accepted: Problem is elsewhere (not UUID-related)
+  4. If rejected: Try extracting UUID from DWARF at connection time
+
+✓ Done.

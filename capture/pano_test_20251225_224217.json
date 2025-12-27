@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "host": "10.42.0.209",
+    "started_at": "2025-12-25T21:41:54.892907+00:00",
+    "requested_rows": 3,
+    "requested_cols": 4,
+    "requested_total": 12,
+    "success": false,
+    "finished_at": "2025-12-25T21:42:17.799856+00:00"
+  },
+  "commands": [
+    {
+      "name": "panorama_ui_open",
+      "result": {
+        "error": "timeout",
+        "packets_received": 0
+      }
+    },
+    {
+      "name": "panorama_set_rows",
+      "result": {
+        "error": "timeout",
+        "packets_received": 0
+      }
+    },
+    {
+      "name": "panorama_set_cols",
+      "result": {
+        "error": "timeout",
+        "packets_received": 0
+      }
+    },
+    {
+      "name": "panorama_start_grid",
+      "result": {
+        "sent": true
+      }
+    }
+  ],
+  "notifications": []
+}

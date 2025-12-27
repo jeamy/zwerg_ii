@@ -1,0 +1,28 @@
+pcap=ctrl_20251226_124424.pcapng
+tcp_payloads_on_9900=45
+ws_frames_found_by_scan=48
+protobuf_parse_errors=0
+
+counts_by_(dir,mod,cmd,type):
+  C2S mod=1 cmd=10000 type=0 count=1
+  C2S mod=1 cmd=10036 type=0 count=2
+  C2S mod=2 cmd=12000 type=0 count=2
+  C2S mod=2 cmd=12029 type=0 count=5
+  C2S mod=4 cmd=13000 type=0 count=1
+  C2S mod=10 cmd=15500 type=0 count=1
+  C2S mod=10 cmd=15501 type=0 count=6
+  C2S mod=20 cmd=16402 type=0 count=1
+  C2S mod=20 cmd=16703 type=0 count=2
+  S2C mod=1 cmd=10000 type=3 count=1
+  S2C mod=2 cmd=12000 type=3 count=3
+  S2C mod=4 cmd=13000 type=3 count=1
+  S2C mod=9 cmd=15201 type=2 count=1
+  S2C mod=9 cmd=15203 type=2 count=1
+  S2C mod=9 cmd=15219 type=2 count=3
+  S2C mod=9 cmd=15277 type=2 count=2
+  S2C mod=10 cmd=15500 type=3 count=1
+  S2C mod=10 cmd=15501 type=3 count=2
+  S2C mod=15 cmd=15264 type=2 count=10
+  S2C mod=15 cmd=15270 type=2 count=2
+
+c2s_module15_cmd16703_count=0

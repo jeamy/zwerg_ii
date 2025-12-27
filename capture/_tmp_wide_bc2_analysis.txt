@@ -1,0 +1,30 @@
+file=/media/data/programming/zwergII/capture/wide_brightness_contrast_20251227_185920.pcapng
+size=39794
+packets=140
+tcp_payloads_9900=70
+  c2s=32 s2c=38
+ws_frames_total=70
+  ws_c2s=32 ws_s2c=38
+
+ws_packet_parse_errors=0
+
+C2S counts by (module,cmd,type):
+  module=1 cmd=10050 type=0 count=1
+  module=2 cmd=12036 type=0 count=1
+  module=3 cmd=11039 type=0 count=12
+  module=3 cmd=11040 type=0 count=2
+  module=14 cmd=16404 type=0 count=1
+  module=15 cmd=16703 type=0 count=7
+
+C2S module15 cmd16703 events=7
+  pkt=  59 t=1766858368.456097 selector=0x101100000000004 value=100 data=08848080808080c480011064
+  pkt=  60 t=1766858368.701548 selector=0x101100000000004 value=100 data=08848080808080c480011064
+  pkt=  75 t=1766858372.864597 selector=0x101100000000004 value=-100 data=08848080808080c48001109cffffffffffffffff01
+  pkt=  89 t=1766858378.258730 selector=0x101100000000004 value=None data=08848080808080c48001
+  pkt= 106 t=1766858383.462345 selector=0x101100000000005 value=100 data=08858080808080c480011064
+  pkt= 119 t=1766858388.811222 selector=0x101100000000005 value=-100 data=08858080808080c48001109cffffffffffffffff01
+  pkt= 132 t=1766858394.212549 selector=0x101100000000005 value=None data=08858080808080c48001
+
+module15 cmd16703 grouped by selector:
+  selector=0x101100000000004 events=4 unique_values=[100, -100, None]
+  selector=0x101100000000005 events=3 unique_values=[100, -100, None]

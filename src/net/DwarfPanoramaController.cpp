@@ -6,11 +6,17 @@
 #include "../proto/panorama.pb.h"
 
 #include <QDebug>
+#include <QThread>
+#include <cmath>
 
 namespace PanoramaCmd {
     constexpr quint32 START_GRID = 15500;
     constexpr quint32 STOP = 15501;
     constexpr quint32 NOTIFY_PROGRESS = 15219;  // Progress notification
+    
+    // Module 20 commands (from Android PCAP reverse engineering)
+    constexpr quint32 UI_OPEN = 16402;  // Panorama UI Open
+    constexpr quint32 GRID_PARAM = 16703;  // Set grid parameters (row/col)
 }
 
 void DwarfPanoramaController::handlePanoramaUiMessage(quint32 cmd, const QByteArray &data) {
@@ -123,52 +129,86 @@ void DwarfPanoramaController::sendCommand(quint32 cmd, const QByteArray &data) {
     m_client->sendCommand(10, cmd, data);
 }
 
-void DwarfPanoramaController::sendFeatureParam(int id, int value) {
+void DwarfPanoramaController::sendCommandModule(quint32 moduleId, quint32 cmd, const QByteArray &data) {
     if (!m_client) {
-        qWarning() << "[DwarfPanoramaController] No client for sendFeatureParam";
+        qWarning() << "PanoramaController: No client set";
         return;
     }
 
-    // Captures show rows/cols are set via a compact 2-field protobuf payload sent as:
-    // WsPacket{major=1,minor=20,device_id=1,module_id=15,cmd=16703,data=<payload>,client_id=<uuid>}
-    // The inner payload is:
-    //   field1(varint) = selector (row/col)
-    //   field2(varint) = value/index
-    // Where selector differs only in the lowest byte:
-    //   row: ...9c...
-    //   col: ...9d...
-    static const QByteArray kSelectorRow = QByteArray::fromHex("9c80808080bc8107");
-    static const QByteArray kSelectorCol = QByteArray::fromHex("9d80808080bc8107");
+    qWarning() << "[DwarfPanoramaController] sendCommand module=" << moduleId << "cmd=" << cmd
+               << "payloadSize=" << data.size() << "hex=" << data.toHex();
+    m_client->sendCommand(moduleId, cmd, data);
+}
 
-    const QByteArray selector = (id == 6) ? kSelectorRow : (id == 7 ? kSelectorCol : QByteArray());
-    if (selector.isEmpty()) {
-        qWarning() << "[DwarfPanoramaController] Unsupported feature id for pano grid:" << id;
-        return;
-    }
-
-    auto encodeVarint = [](quint64 v) {
-        QByteArray out;
-        while (v >= 0x80) {
-            out.append(static_cast<char>((v & 0x7F) | 0x80));
-            v >>= 7;
-        }
-        out.append(static_cast<char>(v & 0x7F));
-        return out;
-    };
-
+QByteArray DwarfPanoramaController::buildGridCommand(quint8 selector, int value) {
+    // Build the inner `data` payload for module 15 / cmd 16703.
+    // IMPORTANT: DwarfWebSocketClient wraps this data into WsPacket.
+    // Android PCAP shows this data payload is exactly 12 bytes:
+    // 08 <selector-varint(9 bytes)> 10 <value>
     QByteArray payload;
-    payload.append(static_cast<char>(0x08));
-    payload.append(selector);
-    payload.append(static_cast<char>(0x10));
-    payload.append(encodeVarint(static_cast<quint64>(value)));
+    payload.reserve(12);
+    payload.append(static_cast<char>(0x08));  // field 1 tag
+    payload.append(static_cast<char>(selector));
+    payload.append(static_cast<char>(0x80));
+    payload.append(static_cast<char>(0x80));
+    payload.append(static_cast<char>(0x80));
+    payload.append(static_cast<char>(0x80));
+    payload.append(static_cast<char>(0x80));
+    payload.append(static_cast<char>(0xbc));
+    payload.append(static_cast<char>(0x81));
+    payload.append(static_cast<char>(0x07));
+    payload.append(static_cast<char>(0x10));  // field 2 tag
+    payload.append(static_cast<char>(value));
 
-    qWarning() << "[DwarfPanoramaController] sendFeatureParam(grid) id=" << id
-               << "value=" << value << "payloadHex=" << payload.toHex();
+    qWarning() << "[DwarfPanoramaController] buildGridCommand selector=0x" << QString::number(selector, 16)
+               << "value=" << value << "payloadSize=" << payload.size()
+               << "hex=" << payload.toHex();
+    
+    return payload;
+}
 
-    m_client->sendCommand(PanoramaFeatureCmd::MODULE_ID, PanoramaFeatureCmd::SET_GRID_PARAM, payload);
+void DwarfPanoramaController::setPanoramaGrid(int rows, int cols) {
+    // Set panorama grid parameters using reverse-engineered Android protocol
+    // Based on PCAP analysis from ctrl_20251226_113958.pcapng
+    
+    qWarning() << "[DwarfPanoramaController] setPanoramaGrid rows=" << rows << "cols=" << cols;
+    
+    // Step 1: Send Panorama UI Open (Module 14, CMD 16402)
+    // Android sends this before setting grid parameters and waits for 4 responses
+    qWarning() << "[DwarfPanoramaController] Sending Panorama UI Open...";
+    QByteArray uiOpenPayload = QByteArray::fromHex("0807");
+    sendCommandModule(14, PanoramaCmd::UI_OPEN, uiOpenPayload);
+    
+    // Android waits for 4 responses here - we use longer delay
+    QThread::msleep(200);
+    
+    // Step 2: Set ROW parameter (Module 15, CMD 16703)
+    // Selector: 0x9c (row selector from PCAP)
+    // Android waits for 2 responses after this
+    qWarning() << "[DwarfPanoramaController] Setting ROW=" << rows;
+    QByteArray rowPayload = buildGridCommand(0x9c, rows);
+    sendCommandModule(15, PanoramaCmd::GRID_PARAM, rowPayload);
+    
+    // Android waits for 2 responses here
+    QThread::msleep(200);
+    
+    // Step 3: Set COL parameter (Module 15, CMD 16703)
+    // Selector: 0x9d (col selector from PCAP)
+    // Android waits for 2 responses after this
+    qWarning() << "[DwarfPanoramaController] Setting COL=" << cols;
+    QByteArray colPayload = buildGridCommand(0x9d, cols);
+    sendCommandModule(15, PanoramaCmd::GRID_PARAM, colPayload);
+    
+    // Final delay to let DWARF process the COL setting
+    QThread::msleep(200);
+    
+    qWarning() << "[DwarfPanoramaController] Grid parameters set successfully";
 }
 
 void DwarfPanoramaController::startPanoramaGrid(int rows, int cols) {
+    // Grid parameters should already be set by spinner valueChanged signals
+    // Just send START command (Android app behavior)
+    
     requested_rows = rows;
     requested_cols = cols;
     expected_tiles = rows * cols;
@@ -177,30 +217,21 @@ void DwarfPanoramaController::startPanoramaGrid(int rows, int cols) {
 
     m_lastRows = rows;
     m_lastCols = cols;
-    m_justCompleted = false;  // Reset for new panorama
-    // Don't set m_isRunning here - let START_GRID response set it
-    // Otherwise the response is treated as completion and panoramaStarted is never emitted
+    m_justCompleted = false;
     m_lastProgressCompleted = 0;
     m_loggedProgressHexThisRun = false;
 
-    qWarning() << "[DwarfPanoramaController] Starting panorama grid via feature params + START_GRID: rows="
-               << rows << "cols=" << cols;
-
-    // dwarfium apiV2 sends the three packets as a batch without waiting for ACKs.
-    // Mirror that here: set row/col feature params and immediately start grid.
-    // Captures indicate the transmitted value is an index (offset 25), not the raw count.
-    // Observed pattern fits: index = count*2 - 1 (e.g. 3->5, 4->7, 5->9, 6->0b).
-    sendFeatureParam(6, toGridIndexValue(rows));
-    sendFeatureParam(7, toGridIndexValue(cols));
-    sendStartGrid();
-}
-
-void DwarfPanoramaController::sendStartGrid() {
-    // Captures show START_GRID is sent as a WsPacket without additional data payload.
-    // Rows/cols are applied via the feature-param commands above.
-    qWarning() << "[DwarfPanoramaController] Sending START_GRID (no body) rows=" << m_lastRows
-               << "cols=" << m_lastCols;
-    sendCommand(PanoramaCmd::START_GRID, QByteArray());
+    // Based on PCAP: Android sends empty START command
+    // Grid params were already sent when user changed spinners
+    // Module 10, CMD 15500, no payload
+    const QByteArray emptyPayload;
+    
+    qWarning() << "[DwarfPanoramaController] Starting panorama";
+    qWarning() << "[DwarfPanoramaController] Expected grid: rows=" << rows << "cols=" << cols;
+    qWarning() << "[DwarfPanoramaController] State before START: m_isRunning=" << m_isRunning
+               << "pano_running=" << pano_running << "m_justCompleted=" << m_justCompleted;
+    
+    sendCommand(PanoramaCmd::START_GRID, emptyPayload);
 }
 
 void DwarfPanoramaController::stopPanorama() {
@@ -209,11 +240,16 @@ void DwarfPanoramaController::stopPanorama() {
                << "pano_running=" << pano_running << "m_justCompleted=" << m_justCompleted
                << "m_lastRows=" << m_lastRows << "m_lastCols=" << m_lastCols
                << "m_lastProgressCompleted=" << m_lastProgressCompleted;
-
-    // Captures show STOP is sent as a WsPacket without additional data payload.
-    qWarning() << "[DwarfPanoramaController] Sending STOP (no body)";
-    sendCommand(PanoramaCmd::STOP, QByteArray());
-
+    
+    // Based on Android PCAP: STOP command has EMPTY payload (same as START)
+    // Android sends: Module 10, CMD 15501, no data payload
+    const QByteArray emptyPayload;
+    qWarning() << "[DwarfPanoramaController] Sending STOP command (empty payload like Android)";
+    
+    // Don't reset pano_running here - let it be cleared when STOP response arrives
+    // Otherwise we ignore progress updates after sending stop
+    sendCommand(PanoramaCmd::STOP, emptyPayload);
+    
     qWarning() << "[DwarfPanoramaController] STOP command sent";
 }
 
