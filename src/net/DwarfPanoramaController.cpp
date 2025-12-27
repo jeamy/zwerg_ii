@@ -1,8 +1,9 @@
 #include "DwarfPanoramaController.h"
 
 #include "DwarfWebSocketClient.h"
-#include "base.pb.h"
-#include "panorama.pb.h"
+#include "../proto/base.pb.h"
+#include "../proto/camera.pb.h"
+#include "../proto/panorama.pb.h"
 
 #include <QDebug>
 #include <QThread>
@@ -18,12 +19,103 @@ namespace PanoramaCmd {
     constexpr quint32 GRID_PARAM = 16703;  // Set grid parameters (row/col)
 }
 
+void DwarfPanoramaController::handlePanoramaUiMessage(quint32 cmd, const QByteArray &data) {
+    qWarning() << "[PanoramaController::handlePanoramaUiMessage] Cmd:" << cmd
+               << "Size:" << data.size() << "hex:" << data.toHex();
+}
+
+namespace CameraCmd {
+    constexpr quint32 SET_FEATURE_PARAM = 10037;  // CMD_CAMERA_TELE_SET_FEATURE_PARAM
+    constexpr quint32 GET_ALL_FEATURE_PARAMS = 10038;
+    constexpr quint32 WIDE_SET_FEATURE_PARAM = 12037;
+    constexpr quint32 WIDE_GET_ALL_FEATURE_PARAMS = 12038;
+}
+
+namespace PanoramaFeatureCmd {
+    constexpr quint32 SET_GRID_PARAM = 16703; // observed: module 15, cmd 16703
+    constexpr quint32 MODULE_ID = 15;
+}
+
+namespace PanoramaUiCmd {
+    constexpr quint32 MODULE_ID = 14;
+    constexpr quint32 OPEN = 16402; // observed Android app pano-open request
+}
+
 DwarfPanoramaController::DwarfPanoramaController(QObject *parent)
     : QObject(parent) {
 }
 
+static int toGridIndexValue(int count) {
+    if (count <= 0)
+        return 0;
+    // TODO: Verify the exact DWARF firmware mapping for panorama grid row/col.
+    // Current implementation mirrors the previously captured pattern used by our sendFeatureParam.
+    return count * 2 - 1;
+}
+
+static void fillLegacyPanoFeatureParam(dwarf::ReqSetFeatureParams &req, int id, int count) {
+    dwarf::CommonParam *param = req.mutable_param();
+    param->set_has_auto(false);
+    param->set_auto_mode(1);
+    param->set_id(id);
+    param->set_mode_index(1);
+    param->set_index(0);
+    param->set_continue_value(static_cast<double>(count));
+}
+
 void DwarfPanoramaController::setClient(DwarfWebSocketClient *client) {
     m_client = client;
+}
+
+void DwarfPanoramaController::sendPanoramaUiOpen() {
+    if (!m_client) {
+        qWarning() << "[DwarfPanoramaController] Cannot send pano UI open: no client";
+        return;
+    }
+    // Android app sends module=14 cmd=16402 with payload 08 07 when opening pano UI.
+    const QByteArray payload = QByteArray::fromHex("0807");
+    qWarning() << "[DwarfPanoramaController] Sending pano UI open handshake (module=14 cmd=16402)";
+    m_client->sendCommand(PanoramaUiCmd::MODULE_ID, PanoramaUiCmd::OPEN, payload);
+}
+
+void DwarfPanoramaController::setPanoramaRows(int rows) {
+    requested_rows = rows;
+    qWarning() << "[DwarfPanoramaController] setPanoramaRows rows=" << rows;
+    sendFeatureParam(6, toGridIndexValue(rows));
+
+    if (m_client) {
+        dwarf::ReqSetFeatureParams req;
+        fillLegacyPanoFeatureParam(req, 6, rows);
+        const QByteArray payload = QByteArray::fromStdString(req.SerializeAsString());
+        // Panorama uses the WIDE camera. Send to both modules for compatibility.
+        m_client->sendCommand(2, CameraCmd::WIDE_SET_FEATURE_PARAM, payload);
+        m_client->sendCommand(2, CameraCmd::SET_FEATURE_PARAM, payload);
+        m_client->sendCommand(1, CameraCmd::SET_FEATURE_PARAM, payload);
+
+        // Ask the device to echo current feature params so we can see whether it applied.
+        m_client->sendCommand(2, CameraCmd::WIDE_GET_ALL_FEATURE_PARAMS, QByteArray());
+        m_client->sendCommand(2, CameraCmd::GET_ALL_FEATURE_PARAMS, QByteArray());
+    }
+}
+
+void DwarfPanoramaController::setPanoramaCols(int cols) {
+    requested_cols = cols;
+    qWarning() << "[DwarfPanoramaController] setPanoramaCols cols=" << cols;
+    sendFeatureParam(7, toGridIndexValue(cols));
+
+    if (m_client) {
+        dwarf::ReqSetFeatureParams req;
+        fillLegacyPanoFeatureParam(req, 7, cols);
+        const QByteArray payload = QByteArray::fromStdString(req.SerializeAsString());
+        // Panorama uses the WIDE camera. Send to both modules for compatibility.
+        m_client->sendCommand(2, CameraCmd::WIDE_SET_FEATURE_PARAM, payload);
+        m_client->sendCommand(2, CameraCmd::SET_FEATURE_PARAM, payload);
+        m_client->sendCommand(1, CameraCmd::SET_FEATURE_PARAM, payload);
+
+        // Ask the device to echo current feature params so we can see whether it applied.
+        m_client->sendCommand(2, CameraCmd::WIDE_GET_ALL_FEATURE_PARAMS, QByteArray());
+        m_client->sendCommand(2, CameraCmd::GET_ALL_FEATURE_PARAMS, QByteArray());
+    }
 }
 
 void DwarfPanoramaController::sendCommand(quint32 cmd, const QByteArray &data) {
@@ -32,7 +124,6 @@ void DwarfPanoramaController::sendCommand(quint32 cmd, const QByteArray &data) {
         return;
     }
 
-    // Module 10 = Panorama
     qWarning() << "[DwarfPanoramaController] sendCommand module=10 cmd=" << cmd
                << "payloadSize=" << data.size();
     m_client->sendCommand(10, cmd, data);
@@ -163,33 +254,23 @@ void DwarfPanoramaController::stopPanorama() {
 }
 
 void DwarfPanoramaController::handleNotificationProgress(int total_count, int completed_count) {
-    if (!pano_running || expected_tiles <= 0)
+    if (!pano_running)
         return;
 
-    const float firmware_progress_max = (total_count > 0) ? static_cast<float>(total_count) : 30.0f;
-    if (firmware_progress_max <= 0.0f)
-        return;
+    // Report RAW firmware counters. On some firmwares total_count reflects the real
+    // number of photos (e.g. 30 when the preset is 6x5). Do not remap.
+    qWarning() << "[PanoramaController] Progress (raw):" << completed_count << "/" << total_count
+               << "requested rows/cols=" << m_lastRows << "x" << m_lastCols
+               << "(requested tiles=" << (m_lastRows * m_lastCols) << ")";
 
-    float firmware_ratio = static_cast<float>(completed_count) / firmware_progress_max;
+    emit panoramaProgress(completed_count, total_count);
 
-    if (firmware_ratio < 0.0f)
-        firmware_ratio = 0.0f;
-    if (firmware_ratio > 1.0f)
-        firmware_ratio = 1.0f;
-
-    int mapped_tiles = static_cast<int>(std::lround(firmware_ratio * static_cast<float>(expected_tiles)));
-
-    if (mapped_tiles < estimated_completed_tiles)
-        mapped_tiles = estimated_completed_tiles;
-    if (mapped_tiles > expected_tiles)
-        mapped_tiles = expected_tiles;
-
-    estimated_completed_tiles = mapped_tiles;
-    emit panoramaProgress(estimated_completed_tiles, expected_tiles);
-
-    if (estimated_completed_tiles >= expected_tiles) {
+    if (total_count > 0 && completed_count >= total_count) {
+        qWarning() << "[PanoramaController] Panorama completed (raw progress reached total_count)";
         pano_running = false;
-        emit panoramaFinished();
+        m_isRunning = false;
+        m_justCompleted = true;
+        emit panoramaStopped();
     }
 }
 
@@ -237,14 +318,13 @@ void DwarfPanoramaController::handlePanoramaMessage(quint32 cmd, const QByteArra
 
 void DwarfPanoramaController::handleNotification(quint32 cmd, const QByteArray &data) {
     qWarning() << "[PanoramaController::handleNotification] Cmd:" << cmd << "Size:" << data.size();
-    
+
     if (cmd == PanoramaCmd::NOTIFY_PROGRESS) {
         qWarning() << "[PanoramaController] Got NOTIFY_PROGRESS (15219)";
         dwarf::ResNotifyPanoramaProgress progress;
         if (data.size() > 0 && progress.ParseFromArray(data.data(), data.size())) {
             int completed = progress.completed_count();
             int total = progress.total_count();
-            int expected = m_lastRows * m_lastCols;
 
             if (!m_loggedProgressHexThisRun) {
                 m_loggedProgressHexThisRun = true;
@@ -254,33 +334,81 @@ void DwarfPanoramaController::handleNotification(quint32 cmd, const QByteArray &
                            << "requested rows/cols=" << m_lastRows << "x" << m_lastCols;
             }
 
-            // DWARF always reports total_count=30 (constant), ignore it and use expected
-            if (total != expected && expected > 0) {
-                qWarning() << "[PanoramaController] DWARF reported total=" << total
-                           << "but expected" << expected << "(" << m_lastRows << "x" << m_lastCols << ")";
-                qWarning() << "[PanoramaController] Using expected count (DWARF total is always 30)";
-                total = expected;  // Override with correct value
-            }
-            
-            qWarning() << "[PanoramaController] Progress:" << completed << "/" << total;
-            emit panoramaProgress(completed, total);
-
             m_lastProgressCompleted = completed;
             handleNotificationProgress(total, completed);
-            
-            // Auto-stop when completed reaches expected tile count
-            if (completed >= total && total > 0) {
-                qWarning() << "[PanoramaController] Panorama completed!";
-                m_isRunning = false;
-                m_justCompleted = true;
-                emit panoramaStopped();
-            }
-            
-            // Note: Don't auto-stop here - DWARF will send completion via cmd 15500
-            // We just track progress and let the device signal completion
         } else {
             qWarning() << "[PanoramaController] Failed to parse progress notification, size:" << data.size();
             qWarning() << "[PanoramaController] Data hex:" << data.toHex();
+        }
+    } else {
+        if (!data.isEmpty()) {
+            auto readVarint = [](const QByteArray &buf, int &i, quint64 &out, QByteArray *raw) {
+                out = 0;
+                int shift = 0;
+                if (raw)
+                    raw->clear();
+                while (i < buf.size() && shift < 64) {
+                    const quint8 byte = static_cast<quint8>(buf.at(i++));
+                    if (raw)
+                        raw->append(static_cast<char>(byte));
+                    out |= static_cast<quint64>(byte & 0x7F) << shift;
+                    if ((byte & 0x80) == 0)
+                        return true;
+                    shift += 7;
+                }
+                return false;
+            };
+
+            int i = 0;
+            quint64 selector = 0;
+            quint64 value = 0;
+            quint64 value2 = 0;
+            bool haveSelector = false;
+            bool haveValue = false;
+            bool haveValue2 = false;
+
+            QByteArray rawSelector;
+            QByteArray rawValue;
+            QByteArray rawValue2;
+
+            while (i < data.size()) {
+                quint64 tag = 0;
+                if (!readVarint(data, i, tag, nullptr))
+                    break;
+                const quint32 field = static_cast<quint32>(tag >> 3);
+                const quint32 wire = static_cast<quint32>(tag & 0x7);
+                if (wire != 0) {
+                    break;
+                }
+                quint64 v = 0;
+                QByteArray rawV;
+                if (!readVarint(data, i, v, &rawV))
+                    break;
+                if (field == 1) {
+                    selector = v;
+                    haveSelector = true;
+                    rawSelector = rawV;
+                } else if (field == 2) {
+                    value = v;
+                    haveValue = true;
+                    rawValue = rawV;
+                } else if (field == 3) {
+                    value2 = v;
+                    haveValue2 = true;
+                    rawValue2 = rawV;
+                }
+            }
+
+            if (haveSelector || haveValue || haveValue2) {
+                qWarning() << "[PanoramaController] Notification decoded selector=" << selector
+                           << "value=" << value << "value2=" << value2
+                           << "raw1=" << rawSelector.toHex()
+                           << "raw2=" << rawValue.toHex()
+                           << "raw3=" << rawValue2.toHex()
+                           << "hex=" << data.toHex();
+            } else {
+                qWarning() << "[PanoramaController] Notification hex:" << data.toHex();
+            }
         }
     }
 }

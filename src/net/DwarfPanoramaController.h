@@ -23,8 +23,10 @@ public:
     void startPanoramaGrid(int rows, int cols);
     void stopPanorama();
 
+public slots:
     void handlePanoramaMessage(quint32 cmd, const QByteArray &data);
     void handleNotification(quint32 cmd, const QByteArray &data);
+    void handlePanoramaUiMessage(quint32 cmd, const QByteArray &data);
 
 signals:
     void panoramaStarted(int rows, int cols);

@@ -64,6 +64,16 @@ void DwarfWebSocketClient::sendCommand(uint32_t moduleId, uint32_t cmd,
              << "PayloadHex:" << data.toHex();
 }
 
+void DwarfWebSocketClient::sendTextCommand(const QString &text) {
+  if (!isConnected()) {
+    qWarning() << "[DwarfWebSocketClient] Cannot send text command: not connected. Text:" << text;
+    return;
+  }
+  qint64 bytesSent = m_webSocket.sendTextMessage(text);
+  qWarning() << "[DwarfWebSocketClient] Sent text command BytesSent:" << bytesSent
+             << "Text:" << text;
+}
+
 void DwarfWebSocketClient::onConnected() {
   qDebug() << "WebSocket connected to" << m_ip;
   m_pingTimer.start();
@@ -123,7 +133,6 @@ QByteArray DwarfWebSocketClient::createPacket(uint32_t moduleId, uint32_t cmd,
   packet.set_device_id(DEVICE_ID);
   packet.set_module_id(moduleId);
   packet.set_cmd(cmd);
-  packet.set_type(0);
   packet.set_data(data.data(), data.size());
   packet.set_client_id(m_clientId.toStdString());
 

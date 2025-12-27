@@ -729,6 +729,58 @@ void DwarfCameraController::handleCameraMessage(quint32 moduleId, quint32 cmd,
   // Determine camera kind from module ID
   CameraKind kind = (moduleId == 1) ? CameraKind::Tele : CameraKind::Wide;
 
+  if ((moduleId == 1 || moduleId == 2) && (cmd == 10038 || cmd == 12038)) {
+    dwarf::ResGetAllFeatureParams response;
+    if (response.ParseFromArray(data.data(), data.size())) {
+      qWarning() << "[DwarfCameraController] Received all FEATURE params for"
+                 << (kind == CameraKind::Tele ? "Tele" : "Wide")
+                 << "code=" << response.code()
+                 << "param_count=" << response.all_feature_params_size();
+
+      const int limit = std::min(response.all_feature_params_size(), 80);
+      for (int i = 0; i < limit; ++i) {
+        const auto &param = response.all_feature_params(i);
+        if (param.id() == 6 || param.id() == 7) {
+          qWarning() << "[DwarfCameraController] FEATURE Param id=" << param.id()
+                     << "auto_mode=" << param.auto_mode()
+                     << "mode_index=" << param.mode_index()
+                     << "index=" << param.index()
+                     << "continue_value=" << param.continue_value();
+        }
+      }
+
+      qWarning() << "[DwarfCameraController] FEATURE params dump (first" << limit << ")"
+                 << (kind == CameraKind::Tele ? "Tele" : "Wide");
+      for (int i = 0; i < limit; ++i) {
+        const auto &param = response.all_feature_params(i);
+        qWarning() << "[DwarfCameraController] FEATURE Param id=" << param.id()
+                   << "auto_mode=" << param.auto_mode()
+                   << "mode_index=" << param.mode_index()
+                   << "index=" << param.index()
+                   << "continue_value=" << param.continue_value();
+      }
+    } else {
+      qWarning() << "[DwarfCameraController] Failed to parse FEATURE params response for"
+                 << (kind == CameraKind::Tele ? "Tele" : "Wide")
+                 << ", data size:"
+                 << data.size();
+    }
+    return;
+  }
+
+  // Handle SET_FEATURE_PARAM response (CMD 10037 on both Tele/Wide modules)
+  if ((moduleId == 1 || moduleId == 2) && (cmd == 10037 || cmd == 12037)) {
+    dwarf::ComResponse res;
+    const bool ok = res.ParseFromArray(data.data(), data.size());
+    const int code = ok ? res.code() : -1;
+    qWarning() << "[DwarfCameraController] SetFeatureParam response for"
+               << (kind == CameraKind::Tele ? "Tele" : "Wide")
+               << "cmd=" << cmd
+               << "ok=" << ok << "code=" << code
+               << "data_size=" << data.size();
+    return;
+  }
+
   // Handle SET_EXP response (Tele: 10009, Wide: 12004)
   if ((moduleId == 1 && cmd == 10009) || (moduleId == 2 && cmd == 12004)) {
     dwarf::ComResponse res;

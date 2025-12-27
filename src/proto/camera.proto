@@ -119,3 +119,18 @@ message ResSystemWorkingState {
   int32 code = 1;
   int32 state = 2;  // Aktueller Status
 }
+
+// Set feature parameters (CMD 10037)
+// Used to set panorama rows (id=6) and cols (id=7) before starting panorama
+message ReqSetFeatureParams {
+  CommonParam param = 1;
+}
+
+// Get all feature parameters (CMD 10038)
+message ReqGetAllFeatureParams {
+}
+
+message ResGetAllFeatureParams {
+  repeated CommonParam all_feature_params = 1;
+  int32 code = 2;
+}

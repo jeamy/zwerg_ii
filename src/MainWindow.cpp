@@ -202,23 +202,87 @@ private:
 
   std::function<void(int, int)> m_onGridSelected;
 };
-} // namespace
 
-void MainWindow::updatePanoramaGridOverlayTarget() {
-  if (!m_panoGridOverlay || !m_mainVideoWidget || !m_pipVideoWidget)
-    return;
-
-  QWidget *wideWidget = (m_mainStream == CameraStream::Wide)
-                            ? static_cast<QWidget *>(m_mainVideoWidget)
-                            : static_cast<QWidget *>(m_pipVideoWidget);
-
-  if (m_panoGridOverlay->parentWidget() != wideWidget)
-    m_panoGridOverlay->setParent(wideWidget);
-
-  m_panoGridOverlay->setGeometry(wideWidget->rect());
-  if (m_panoGridOverlay->isVisible())
-    m_panoGridOverlay->raise();
+static bool stringLooksRelevant(const QString &s) {
+  const QString v = s.toLower();
+  return v.contains(QStringLiteral("panorama")) || v.contains(QStringLiteral("pano")) ||
+         v.contains(QStringLiteral("grid")) || v.contains(QStringLiteral("rows")) ||
+         v.contains(QStringLiteral("cols")) || v.contains(QStringLiteral("column")) ||
+         v.contains(QStringLiteral("row"));
 }
+
+static void collectRelevantJsonHints(const QJsonValue &v, const QString &path,
+                                    QVector<QString> &out) {
+  if (v.isObject()) {
+    const QJsonObject obj = v.toObject();
+
+    bool objectRelevant = false;
+    for (auto it = obj.begin(); it != obj.end(); ++it) {
+      if (stringLooksRelevant(it.key())) {
+        objectRelevant = true;
+        break;
+      }
+      if (it.value().isString() && stringLooksRelevant(it.value().toString())) {
+        objectRelevant = true;
+        break;
+      }
+    }
+
+    if (objectRelevant && obj.contains(QStringLiteral("id"))) {
+      const QJsonValue idVal = obj.value(QStringLiteral("id"));
+      if (idVal.isDouble()) {
+        out.push_back(QStringLiteral("%1.id=%2").arg(path).arg(idVal.toInt()));
+      } else if (idVal.isString()) {
+        out.push_back(QStringLiteral("%1.id=%2").arg(path).arg(idVal.toString()));
+      }
+    }
+
+    for (auto it = obj.begin(); it != obj.end(); ++it) {
+      collectRelevantJsonHints(it.value(), path + QStringLiteral("/") + it.key(), out);
+    }
+    return;
+  }
+
+  if (v.isArray()) {
+    const QJsonArray arr = v.toArray();
+    for (int i = 0; i < arr.size(); ++i) {
+      collectRelevantJsonHints(arr.at(i), path + QStringLiteral("[") + QString::number(i) +
+                                       QStringLiteral("]"),
+                               out);
+    }
+    return;
+  }
+
+  if (v.isString()) {
+    const QString s = v.toString();
+    if (stringLooksRelevant(s)) {
+      out.push_back(QStringLiteral("%1=%2").arg(path).arg(s.left(120)));
+    }
+    return;
+  }
+}
+
+static void logParamsConfigPanoramaHints(const QJsonDocument &doc,
+                                        const QString &sourceTag) {
+  QVector<QString> hints;
+  collectRelevantJsonHints(doc.isArray() ? QJsonValue(doc.array())
+                                        : QJsonValue(doc.object()),
+                           QStringLiteral("$"), hints);
+  if (hints.isEmpty()) {
+    qWarning() << "[MainWindow] params_config" << sourceTag
+               << "no panorama/grid hints found";
+    return;
+  }
+
+  qWarning() << "[MainWindow] params_config" << sourceTag
+             << "panorama/grid hints (first" << qMin(50, hints.size()) << ")";
+  const int limit = qMin(50, hints.size());
+  for (int i = 0; i < limit; ++i) {
+    qWarning() << "[MainWindow] params_config" << sourceTag << hints[i];
+  }
+}
+
+} // namespace
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), m_wsClient(nullptr), m_dispatcher(nullptr),
@@ -293,6 +357,8 @@ MainWindow::MainWindow(QWidget *parent)
             &DwarfPanoramaController::handlePanoramaMessage);
     connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage, m_panoramaController,
             &DwarfPanoramaController::handleNotification);
+    connect(m_dispatcher, &DwarfMessageDispatcher::panoramaUiMessage, m_panoramaController,
+            &DwarfPanoramaController::handlePanoramaUiMessage);
   }
 
   setupUi();
@@ -303,11 +369,18 @@ void MainWindow::ensureHttpClientForCurrentIp() {
   if (ip.isEmpty())
     return;
 
-  if (m_httpClient) {
-    return;
+  if (m_httpClient && m_httpClientIp != ip) {
+    qWarning() << "[MainWindow] HTTP client IP changed from" << m_httpClientIp << "to" << ip << "recreating HTTP client";
+    m_httpClient->deleteLater();
+    m_httpClient = nullptr;
+    m_httpClientIp.clear();
   }
 
+  if (m_httpClient)
+    return;
+
   m_httpClient = new DwarfHttpClient(ip, this);
+  m_httpClientIp = ip;
   connect(m_httpClient, &DwarfHttpClient::mediaListReceived, this,
           &MainWindow::onMediaListReceived);
   connect(m_httpClient, &DwarfHttpClient::defaultParamsConfigReceived, this,
@@ -460,6 +533,22 @@ void MainWindow::updateStreamRouting() {
   }
 
   updatePanoramaGridOverlayTarget();
+}
+
+void MainWindow::updatePanoramaGridOverlayTarget() {
+  if (!m_panoGridOverlay || !m_mainVideoWidget || !m_pipVideoWidget)
+    return;
+
+  QWidget *wideWidget = (m_mainStream == CameraStream::Wide)
+                            ? static_cast<QWidget *>(m_mainVideoWidget)
+                            : static_cast<QWidget *>(m_pipVideoWidget);
+
+  if (m_panoGridOverlay->parentWidget() != wideWidget)
+    m_panoGridOverlay->setParent(wideWidget);
+
+  m_panoGridOverlay->setGeometry(wideWidget->rect());
+  if (m_panoGridOverlay->isVisible())
+    m_panoGridOverlay->raise();
 }
 
 void MainWindow::onGalleryOverlayRequested(bool enabled) {
@@ -1103,6 +1192,8 @@ void MainWindow::setupUi() {
                 if (m_cameraController) {
                   qWarning() << "[MainWindow] Ensuring Wide camera is open for panorama...";
                   m_cameraController->openCamera(DwarfCameraController::CameraKind::Wide, false, 0);
+                  qWarning() << "[MainWindow] Ensuring Tele camera is open for panorama feature params...";
+                  m_cameraController->openCamera(DwarfCameraController::CameraKind::Tele, false, 0);
                 }
 
                 QTimer::singleShot(600, this, [this, rows, cols, panoStatus, panoStop, panoStart]() {
@@ -1157,6 +1248,14 @@ void MainWindow::setupUi() {
 
   pl->addStretch();
   m_contentStack->addWidget(m_panoTab);
+
+  connect(m_contentStack, &QStackedWidget::currentChanged, this, [this](int) {
+    if (!m_panoramaController || !m_contentStack)
+      return;
+    if (m_contentStack->currentWidget() == m_panoTab) {
+      m_panoramaController->sendPanoramaUiOpen();
+    }
+  });
 
   // Panorama grid overlay over the main (wide) stream
   if (m_mainVideoWidget) {
@@ -1623,18 +1722,23 @@ void MainWindow::persistParamsConfig(const QJsonDocument &document) {
   if (dir.isEmpty())
     return;
   QDir().mkpath(dir);
-  QFile f(dir + QStringLiteral("/params_config.json"));
+  const QString path = dir + QStringLiteral("/params_config.json");
+  QFile f(path);
   if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate))
     return;
-  f.write(document.toJson(QJsonDocument::Indented));
+  const QByteArray out = document.toJson(QJsonDocument::Indented);
+  f.write(out);
   f.close();
+
+  qWarning() << "[MainWindow] persisted params_config.json" << path << "bytes=" << out.size();
 }
 
 void MainWindow::applyCachedParamsConfig() {
   const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
   if (dir.isEmpty())
     return;
-  QFile f(dir + QStringLiteral("/params_config.json"));
+  const QString path = dir + QStringLiteral("/params_config.json");
+  QFile f(path);
   if (!f.open(QIODevice::ReadOnly))
     return;
   const QByteArray raw = f.readAll();
@@ -1642,6 +1746,8 @@ void MainWindow::applyCachedParamsConfig() {
   const QJsonDocument document = QJsonDocument::fromJson(raw);
   if (document.isNull())
     return;
+  qWarning() << "[MainWindow] loaded cached params_config.json" << path << "bytes=" << raw.size();
+  logParamsConfigPanoramaHints(document, QStringLiteral("cached"));
   if (m_cameraSettingsPanel)
     m_cameraSettingsPanel->applyDefaultParamsConfig(document);
   if (m_paramsOverlay)
@@ -1650,6 +1756,7 @@ void MainWindow::applyCachedParamsConfig() {
 
 void MainWindow::onDefaultParamsConfigReceived(const QJsonDocument &document) {
   persistParamsConfig(document);
+  logParamsConfigPanoramaHints(document, QStringLiteral("downloaded"));
   if (m_cameraSettingsPanel)
     m_cameraSettingsPanel->applyDefaultParamsConfig(document);
   if (m_paramsOverlay)

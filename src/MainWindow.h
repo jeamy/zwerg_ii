@@ -251,6 +251,7 @@ private:
   int m_panoStartPendingCols = 0;
 
   DwarfHttpClient *m_httpClient;
+  QString m_httpClientIp;
   QPushButton *m_openGalleryButton;
   QTabWidget *m_mediaTabs;
   QListWidget *m_mediaPhotoList;

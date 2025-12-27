@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base.pb.h"
+#include "../proto/base.pb.h"
 #include <QObject>
 #include <QTimer>
 #include <QWebSocket>
@@ -20,6 +20,8 @@ public:
   // Send command to DWARF II
   void sendCommand(uint32_t moduleId, uint32_t cmd,
                    const QByteArray &data = QByteArray());
+  // Send raw text (JSON) command — used for legacy panorama API (10103/10106)
+  void sendTextCommand(const QString &text);
 
 signals:
   void connected();

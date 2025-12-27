@@ -45,6 +45,9 @@ void DwarfMessageDispatcher::dispatch(std::uint32_t moduleId,
   case MODULE_PANORAMA:
     emit panoramaMessage(cmd, data);
     break;
+  case MODULE_PANORAMA_UI:
+    emit panoramaUiMessage(cmd, data);
+    break;
   default:
     emit unknownMessage(moduleId, cmd, data);
     break;
