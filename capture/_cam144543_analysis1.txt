@@ -1,0 +1,68 @@
+Total binary frames: 105
+By direction: {'c2s': 31, 's2c': 74}
+Top modules: [(15, 68), (9, 11), (3, 10), (14, 7), (4, 4), (1, 2), (2, 2), (13, 1)]
+
+C2S commands (time, module, cmd, dataLen, dataHex):
+t=   0.098s module=4 cmd=13000 dataLen=15 data=088aa3baca0611000000000000f03f
+t=   0.146s module=4 cmd=13001 dataLen=15 data=0a0d4575726f70652f5669656e6e61
+t=   0.146s module=14 cmd=16405 dataLen=0 data=
+t=   0.146s module=13 cmd=16102 dataLen=0 data=
+t=  11.235s module=14 cmd=16404 dataLen=4 data=1a020801
+t=  11.235s module=3 cmd=11040 dataLen=0 data=
+t=  11.235s module=3 cmd=11040 dataLen=2 data=0801
+t=  11.235s module=1 cmd=10050 dataLen=2 data=0801
+t=  11.235s module=2 cmd=12036 dataLen=0 data=
+t=  17.449s module=14 cmd=16402 dataLen=2 data=0801
+t=  24.468s module=3 cmd=11039 dataLen=26 data=08ffffffffffffffffff011064186420ffffffffffffffffff01
+t=  26.203s module=3 cmd=11039 dataLen=26 data=08ffffffffffffffffff011064186420ffffffffffffffffff01
+t=  29.369s module=15 cmd=16703 dataLen=12 data=088d8080808080c080011001
+t=  31.528s module=15 cmd=16703 dataLen=10 data=088d8080808080c08001
+t=  38.005s module=15 cmd=16700 dataLen=14 data=08818080808080c080011001184e
+t=  42.209s module=15 cmd=16701 dataLen=14 data=08828080808080c0800110011878
+t=  44.001s module=15 cmd=16702 dataLen=12 data=08838080808080c080011002
+t=  45.785s module=15 cmd=16702 dataLen=14 data=08838080808080c0800110021802
+t=  47.413s module=15 cmd=16702 dataLen=14 data=08838080808080c0800110021801
+t=  50.800s module=15 cmd=16702 dataLen=14 data=08838080808080c0800110021803
+t=  54.192s module=15 cmd=16703 dataLen=12 data=08848080808080c08001101b
+t=  56.941s module=15 cmd=16703 dataLen=12 data=08858080808080c08001101e
+t=  59.782s module=15 cmd=16703 dataLen=12 data=08878080808080c08001103d
+t=  62.426s module=15 cmd=16703 dataLen=12 data=08868080808080c08001101e
+t=  65.722s module=15 cmd=16703 dataLen=12 data=08888080808080c080011029
+t=  69.142s module=3 cmd=11039 dataLen=28 data=08ffffffffffffffffff011064186420ffffffffffffffffff012801
+t=  71.489s module=15 cmd=16703 dataLen=12 data=08848080808080c48001101d
+t=  73.463s module=15 cmd=16703 dataLen=12 data=08858080808080c480011026
+t=  75.433s module=15 cmd=16703 dataLen=12 data=08878080808080c480011041
+t=  78.257s module=15 cmd=16703 dataLen=12 data=08868080808080c480011027
+t=  80.769s module=15 cmd=16703 dataLen=12 data=08888080808080c480011033
+
+Counts by (dir,module,cmd) top 30:
+28 ('s2c', 15, 15264)
+12 ('c2s', 15, 16703)
+10 ('s2c', 15, 16703)
+6 ('s2c', 9, 15267)
+6 ('s2c', 15, 15270)
+4 ('c2s', 15, 16702)
+4 ('s2c', 15, 16702)
+3 ('c2s', 3, 11039)
+3 ('s2c', 3, 11039)
+2 ('c2s', 3, 11040)
+2 ('s2c', 3, 11040)
+2 ('s2c', 9, 15203)
+2 ('s2c', 9, 15201)
+1 ('c2s', 4, 13000)
+1 ('s2c', 4, 13000)
+1 ('c2s', 4, 13001)
+1 ('c2s', 14, 16405)
+1 ('c2s', 13, 16102)
+1 ('s2c', 4, 13001)
+1 ('s2c', 9, 15202)
+1 ('s2c', 14, 16405)
+1 ('s2c', 14, 15261)
+1 ('c2s', 14, 16404)
+1 ('c2s', 1, 10050)
+1 ('c2s', 2, 12036)
+1 ('s2c', 14, 16404)
+1 ('s2c', 2, 12036)
+1 ('s2c', 1, 10050)
+1 ('c2s', 14, 16402)
+1 ('s2c', 14, 16402)

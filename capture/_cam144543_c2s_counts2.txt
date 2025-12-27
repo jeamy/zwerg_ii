@@ -1,0 +1,53 @@
+total frames 158
+c2s binary decoded 31
+unique (module,cmd) 14
+
+Top by count:
+ 12  module=15 cmd=16703
+  4  module=15 cmd=16702
+  3  module= 3 cmd=11039
+  2  module= 3 cmd=11040
+  1  module= 4 cmd=13000
+  1  module= 4 cmd=13001
+  1  module=14 cmd=16405
+  1  module=13 cmd=16102
+  1  module=14 cmd=16404
+  1  module= 1 cmd=10050
+  1  module= 2 cmd=12036
+  1  module=14 cmd=16402
+  1  module=15 cmd=16700
+  1  module=15 cmd=16701
+
+By module:
+module= 1 count=1
+module= 2 count=1
+module= 3 count=5
+module= 4 count=2
+module=13 count=1
+module=14 count=3
+module=15 count=18
+
+module 1 cmds (1): [10050]
+
+module 2 cmds (1): [12036]
+
+module 15 cmds (4): [16700, 16701, 16702, 16703]
+
+module 1 c2s with data_len>0:
+t=  11.235s cmd=10050 len=2 data=0801
+
+module 2 c2s with data_len>0:
+
+module15 cmd16703 count 12
+t=  29.369s len=12 data=088d8080808080c080011001
+t=  31.528s len=10 data=088d8080808080c08001
+t=  54.192s len=12 data=08848080808080c08001101b
+t=  56.941s len=12 data=08858080808080c08001101e
+t=  59.782s len=12 data=08878080808080c08001103d
+t=  62.426s len=12 data=08868080808080c08001101e
+t=  65.722s len=12 data=08888080808080c080011029
+t=  71.489s len=12 data=08848080808080c48001101d
+t=  73.463s len=12 data=08858080808080c480011026
+t=  75.433s len=12 data=08878080808080c480011041
+t=  78.257s len=12 data=08868080808080c480011027
+t=  80.769s len=12 data=08888080808080c480011033

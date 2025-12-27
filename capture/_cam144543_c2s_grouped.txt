@@ -1,0 +1,67 @@
+Total c2s binary frames: 31
+
+================================================================================
+module 1 cmd 10050 count 1
+  t=  11.235s type=None dataLen=2 data=0801
+
+================================================================================
+module 2 cmd 12036 count 1
+  t=  11.235s type=None dataLen=0 data=
+
+================================================================================
+module 3 cmd 11039 count 3
+  t=  24.468s type=None dataLen=26 data=08ffffffffffffffffff011064186420ffffffffffffffffff01
+  t=  26.203s type=None dataLen=26 data=08ffffffffffffffffff011064186420ffffffffffffffffff01
+  t=  69.142s type=None dataLen=28 data=08ffffffffffffffffff011064186420ffffffffffffffffff012801
+
+================================================================================
+module 3 cmd 11040 count 2
+  t=  11.235s type=None dataLen=0 data=
+  t=  11.235s type=None dataLen=2 data=0801
+
+================================================================================
+module 4 cmd 13000 count 1
+  t=   0.098s type=None dataLen=15 data=088aa3baca0611000000000000f03f
+
+================================================================================
+module 4 cmd 13001 count 1
+  t=   0.146s type=None dataLen=15 data=0a0d4575726f70652f5669656e6e61
+
+================================================================================
+module 13 cmd 16102 count 1
+  t=   0.146s type=None dataLen=0 data=
+
+================================================================================
+module 14 cmd 16402 count 1
+  t=  17.449s type=None dataLen=2 data=0801
+
+================================================================================
+module 14 cmd 16404 count 1
+  t=  11.235s type=None dataLen=4 data=1a020801
+
+================================================================================
+module 14 cmd 16405 count 1
+  t=   0.146s type=None dataLen=0 data=
+
+================================================================================
+module 15 cmd 16700 count 1
+  t=  38.005s type=None dataLen=14 data=08818080808080c080011001184e
+
+================================================================================
+module 15 cmd 16701 count 1
+  t=  42.209s type=None dataLen=14 data=08828080808080c0800110011878
+
+================================================================================
+module 15 cmd 16702 count 4
+  t=  44.001s type=None dataLen=12 data=08838080808080c080011002
+  t=  45.785s type=None dataLen=14 data=08838080808080c0800110021802
+  t=  47.413s type=None dataLen=14 data=08838080808080c0800110021801
+  t=  50.800s type=None dataLen=14 data=08838080808080c0800110021803
+
+================================================================================
+module 15 cmd 16703 count 12
+  t=  29.369s type=None dataLen=12 data=088d8080808080c080011001
+  t=  31.528s type=None dataLen=10 data=088d8080808080c08001
+  t=  54.192s type=None dataLen=12 data=08848080808080c08001101b
+  t=  56.941s type=None dataLen=12 data=08858080808080c08001101e
+  t=  59.782s type=None dataLen=12 data=08878080808080c08001103d

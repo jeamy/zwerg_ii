@@ -1,0 +1,5 @@
+c2s ws_opcode=2 total 31
+missing module_id decode 0
+
+decoded sample:
+dict_keys(['time_rel', 'direction', 'ws_opcode', 'ws_payload_len', 'ws_payload_hex', 'major_version', 'minor_version', 'device_id', 'module_id', 'cmd', 'type', 'data_len', 'data_hex', 'client_id', 'data_fields'])

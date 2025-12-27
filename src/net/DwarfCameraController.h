@@ -85,6 +85,7 @@ private:
   int m_wideLastRtspEncodeType = 0;
 
   bool m_teleRecordModeOpenAttempted = false;
+  bool m_module15ImageParamsInitialized = false;
 
   std::unique_ptr<QSettings> m_config;
 
@@ -94,6 +95,9 @@ private:
 
   void sendSetAllParams(CameraKind kind);
   void sendSingleInt32(CameraKind kind, quint32 cmd, int value);
+  void ensureModule15ImageParamsInitialized();
+  void sendModule15Cmd16703(quint64 selector);
+  void sendModule15Cmd16703(quint64 selector, int value);
   quint32 moduleIdFor(CameraKind kind) const;
   quint32 cmdSetAllParamsFor(CameraKind kind) const;
   quint32 cmdOpenCameraFor(CameraKind kind) const;

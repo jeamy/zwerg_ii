@@ -1,0 +1,91 @@
+================================================================================
+idx 67 t 29.369136 ws_len 64
+ws_payload_hex 080110141801200f28bf82013a0c088d8080808080c080011001422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+data_len 12 data_hex 088d8080808080c080011001
+data_fields {'1': [72339069014638605], '2': [1]}
+  neighbor prev idx 66 t 26.580326 dir s2c module 9 cmd 15201 data_len 2
+  neighbor next idx 68 t 29.400802 dir s2c module 15 cmd 15264 data_len 12
+================================================================================
+idx 71 t 31.528384 ws_len 62
+ws_payload_hex 080110141801200f28bf82013a0a088d8080808080c08001422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+data_len 10 data_hex 088d8080808080c08001
+data_fields {'1': [72339069014638605]}
+  neighbor next idx 72 t 31.654789 dir s2c module 15 cmd 15264 data_len 10
+================================================================================
+idx 102 t 54.192174 ws_len 64
+ws_payload_hex 080110141801200f28bf82013a0c08848080808080c08001101b422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+data_len 12 data_hex 08848080808080c08001101b
+data_fields {'1': [72339069014638596], '2': [27]}
+  neighbor prev idx 100 t 50.845205 dir s2c module 15 cmd 15270 data_len 7
+  neighbor prev idx 101 t 51.104601 dir s2c module 15 cmd 16702 data_len 0
+  neighbor next idx 103 t 54.250482 dir s2c module 15 cmd 15264 data_len 12
+  neighbor next idx 104 t 54.335052 dir s2c module 15 cmd 16703 data_len 0
+================================================================================
+idx 108 t 56.940883 ws_len 64
+ws_payload_hex 080110141801200f28bf82013a0c08858080808080c08001101e422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+data_len 12 data_hex 08858080808080c08001101e
+data_fields {'1': [72339069014638597], '2': [30]}
+  neighbor next idx 109 t 57.222719 dir s2c module 15 cmd 15264 data_len 12
+  neighbor next idx 110 t 57.29409 dir s2c module 15 cmd 16703 data_len 0
+================================================================================
+idx 111 t 59.781807 ws_len 64
+ws_payload_hex 080110141801200f28bf82013a0c08878080808080c08001103d422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+data_len 12 data_hex 08878080808080c08001103d
+data_fields {'1': [72339069014638599], '2': [61]}
+  neighbor prev idx 109 t 57.222719 dir s2c module 15 cmd 15264 data_len 12
+  neighbor prev idx 110 t 57.29409 dir s2c module 15 cmd 16703 data_len 0
+  neighbor next idx 112 t 59.808611 dir s2c module 15 cmd 15264 data_len 12
+  neighbor next idx 113 t 59.919397 dir s2c module 15 cmd 16703 data_len 0
+================================================================================
+idx 116 t 62.425594 ws_len 64
+ws_payload_hex 080110141801200f28bf82013a0c08868080808080c08001101e422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+data_len 12 data_hex 08868080808080c08001101e
+data_fields {'1': [72339069014638598], '2': [30]}
+  neighbor next idx 117 t 62.494087 dir s2c module 15 cmd 15264 data_len 12
+  neighbor next idx 118 t 62.85014 dir s2c module 15 cmd 16703 data_len 0
+================================================================================
+idx 121 t 65.721579 ws_len 64
+ws_payload_hex 080110141801200f28bf82013a0c08888080808080c080011029422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+data_len 12 data_hex 08888080808080c080011029
+data_fields {'1': [72339069014638600], '2': [41]}
+  neighbor next idx 122 t 65.844984 dir s2c module 15 cmd 15264 data_len 12
+  neighbor next idx 123 t 65.89301 dir s2c module 15 cmd 16703 data_len 0
+================================================================================
+idx 128 t 71.489276 ws_len 64
+ws_payload_hex 080110141801200f28bf82013a0c08848080808080c48001101d422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+data_len 12 data_hex 08848080808080c48001101d
+data_fields {'1': [72356661200683012], '2': [29]}
+  neighbor next idx 129 t 71.526779 dir s2c module 15 cmd 15264 data_len 12
+  neighbor next idx 130 t 71.926754 dir s2c module 15 cmd 16703 data_len 0
+================================================================================
+idx 131 t 73.463486 ws_len 64
+ws_payload_hex 080110141801200f28bf82013a0c08858080808080c480011026422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+data_len 12 data_hex 08858080808080c480011026
+data_fields {'1': [72356661200683013], '2': [38]}
+  neighbor prev idx 129 t 71.526779 dir s2c module 15 cmd 15264 data_len 12
+  neighbor prev idx 130 t 71.926754 dir s2c module 15 cmd 16703 data_len 0
+  neighbor next idx 132 t 73.66779 dir s2c module 15 cmd 15264 data_len 12
+  neighbor next idx 133 t 73.723675 dir s2c module 15 cmd 16703 data_len 0
+================================================================================
+idx 136 t 75.432691 ws_len 64
+ws_payload_hex 080110141801200f28bf82013a0c08878080808080c480011041422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+data_len 12 data_hex 08878080808080c480011041
+data_fields {'1': [72356661200683015], '2': [65]}
+  neighbor next idx 137 t 75.477393 dir s2c module 15 cmd 15264 data_len 12
+  neighbor next idx 138 t 75.563131 dir s2c module 15 cmd 16703 data_len 0
+================================================================================
+idx 140 t 78.256921 ws_len 64
+ws_payload_hex 080110141801200f28bf82013a0c08868080808080c480011027422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+data_len 12 data_hex 08868080808080c480011027
+data_fields {'1': [72356661200683014], '2': [39]}
+  neighbor prev idx 138 t 75.563131 dir s2c module 15 cmd 16703 data_len 0
+  neighbor prev idx 139 t 77.529042 dir s2c module 9 cmd 15203 data_len 6
+  neighbor next idx 141 t 78.304213 dir s2c module 15 cmd 15264 data_len 12
+  neighbor next idx 142 t 78.351583 dir s2c module 15 cmd 16703 data_len 0
+================================================================================
+idx 148 t 80.769475 ws_len 64
+ws_payload_hex 080110141801200f28bf82013a0c08888080808080c480011033422432303939643762392d323537612d343166632d613161622d376535316165326630333030
+data_len 12 data_hex 08888080808080c480011033
+data_fields {'1': [72356661200683016], '2': [51]}
+  neighbor next idx 149 t 80.790443 dir s2c module 15 cmd 15264 data_len 12
+  neighbor next idx 150 t 80.874714 dir s2c module 15 cmd 16703 data_len 0

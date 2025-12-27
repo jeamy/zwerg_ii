@@ -1,0 +1,3 @@
+C2S module 1/2 command counts:
+module=1 cmd=10050 count=1
+module=2 cmd=12036 count=1

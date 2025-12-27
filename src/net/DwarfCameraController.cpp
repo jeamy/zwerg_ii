@@ -30,6 +30,34 @@ inline int clampInt(int value, int minV, int maxV) {
   return std::max(minV, std::min(maxV, value));
 }
 
+inline void appendVarint(QByteArray &data, quint64 value) {
+  while (value >= 0x80) {
+    data.append(static_cast<char>((value & 0x7F) | 0x80));
+    value >>= 7;
+  }
+  data.append(static_cast<char>(value));
+}
+
+static constexpr quint64 kModule15WideSelectorOffset = 0x1000000000000ULL;
+
+static constexpr quint64 kModule15SelectorImageParamsInit =
+    0x10100000000000dULL;
+static constexpr quint64 kModule15SelectorBrightnessTele =
+    0x101000000000004ULL;
+static constexpr quint64 kModule15SelectorContrastTele = 0x101000000000005ULL;
+static constexpr quint64 kModule15SelectorSharpnessTele =
+    0x101000000000006ULL;
+static constexpr quint64 kModule15SelectorSaturationTele =
+    0x101000000000007ULL;
+static constexpr quint64 kModule15SelectorHueTele = 0x101000000000008ULL;
+
+inline quint64 module15SelectorFor(DwarfCameraController::CameraKind kind,
+                                   quint64 teleSelector) {
+  return (kind == DwarfCameraController::CameraKind::Tele)
+             ? teleSelector
+             : (teleSelector + kModule15WideSelectorOffset);
+}
+
 // Scale UI value (0-100) to API value (0-255) for
 // brightness/contrast/saturation Formula: B = (A + 100) * 255.0 / 200, where A
 // is -100 to 100 For our 0-100 slider: map 0->0, 50->127.5, 100->255
@@ -188,6 +216,7 @@ void DwarfCameraController::saveConfig(CameraKind kind) {
 
 void DwarfCameraController::setClient(DwarfWebSocketClient *client) {
   m_client = client;
+  m_module15ImageParamsInitialized = false;
   if (!m_client) {
     m_teleCameraOpenRequested = false;
     m_wideCameraOpenRequested = false;
@@ -402,8 +431,8 @@ void DwarfCameraController::setWhiteBalanceMode(CameraKind kind, int mode) {
     // Use specific command for Tele (10025)
     sendSingleInt32(kind, 10025u, mode);
   } else {
-    // Fallback for Wide (ID unknown/unverified)
-    sendSetAllParams(kind);
+    // Use specific command for Wide (12018)
+    sendSingleInt32(kind, 12018u, mode);
   }
 
   // Fetch params to sync UI
@@ -420,8 +449,8 @@ void DwarfCameraController::setWhiteBalanceByTemperature(CameraKind kind,
     // Use specific command for Tele (10029)
     sendSingleInt32(kind, 10029u, ctIndex);
   } else {
-    // Fallback for Wide
-    sendSetAllParams(kind);
+    // Use specific command for Wide (12020)
+    sendSingleInt32(kind, 12020u, ctIndex);
   }
 
   saveConfig(kind);
@@ -433,7 +462,9 @@ void DwarfCameraController::setBrightness(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   int scaledValue = scaleToApi255(value);
   p.set_brightness(scaledValue);
-  sendSingleInt32(kind, cmdSetBrightnessFor(kind), scaledValue);
+  ensureModule15ImageParamsInitialized();
+  sendModule15Cmd16703(
+      module15SelectorFor(kind, kModule15SelectorBrightnessTele), scaledValue);
 
   saveConfig(kind);
 
@@ -444,7 +475,9 @@ void DwarfCameraController::setContrast(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   int scaledValue = scaleToApi255(value);
   p.set_contrast(scaledValue);
-  sendSingleInt32(kind, cmdSetContrastFor(kind), scaledValue);
+  ensureModule15ImageParamsInitialized();
+  sendModule15Cmd16703(
+      module15SelectorFor(kind, kModule15SelectorContrastTele), scaledValue);
 
   saveConfig(kind);
 
@@ -455,7 +488,9 @@ void DwarfCameraController::setHue(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   int scaledValue = scaleHueToApi(value);
   p.set_hue(scaledValue);
-  sendSingleInt32(kind, cmdSetHueFor(kind), scaledValue);
+  ensureModule15ImageParamsInitialized();
+  sendModule15Cmd16703(module15SelectorFor(kind, kModule15SelectorHueTele),
+                       scaledValue);
 
   saveConfig(kind);
 
@@ -466,7 +501,9 @@ void DwarfCameraController::setSaturation(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   int scaledValue = scaleToApi255(value);
   p.set_saturation(scaledValue);
-  sendSingleInt32(kind, cmdSetSaturationFor(kind), scaledValue);
+  ensureModule15ImageParamsInitialized();
+  sendModule15Cmd16703(
+      module15SelectorFor(kind, kModule15SelectorSaturationTele), scaledValue);
 
   saveConfig(kind);
 
@@ -477,7 +514,9 @@ void DwarfCameraController::setSharpness(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   value = clampInt(value, 0, 100);
   p.set_sharpness(value);
-  sendSingleInt32(kind, cmdSetSharpnessFor(kind), value);
+  ensureModule15ImageParamsInitialized();
+  sendModule15Cmd16703(
+      module15SelectorFor(kind, kModule15SelectorSharpnessTele), value);
 
   saveConfig(kind);
 
@@ -563,8 +602,8 @@ void DwarfCameraController::fetchAllParams(CameraKind kind) {
     return;
   }
 
-  // CMD_CAMERA_TELE_GET_ALL_PARAMS = 10036, WIDE = 12029
-  quint32 cmd = (kind == CameraKind::Tele) ? 10036u : 12029u;
+  // CMD_CAMERA_TELE_GET_ALL_PARAMS = 10036, WIDE = 12027
+  quint32 cmd = (kind == CameraKind::Tele) ? 10036u : 12027u;
   qWarning() << "[DwarfCameraController] Fetching all params for"
              << (kind == CameraKind::Tele ? "Tele" : "Wide");
 
@@ -651,8 +690,8 @@ void DwarfCameraController::handleCameraMessage(quint32 moduleId, quint32 cmd,
     return;
   }
 
-  // Handle GET_ALL_PARAMS response (10036 for Tele, 12029 for Wide)
-  if ((moduleId == 1 && cmd == 10036) || (moduleId == 2 && cmd == 12029)) {
+  // Handle GET_ALL_PARAMS response (10036 for Tele, 12027 for Wide)
+  if ((moduleId == 1 && cmd == 10036) || (moduleId == 2 && cmd == 12027)) {
     dwarf::ResGetAllParams response;
     if (response.ParseFromArray(data.data(), data.size())) {
       qWarning() << "[DwarfCameraController] Received all params for"
@@ -817,6 +856,57 @@ quint32 DwarfCameraController::cmdSetSharpnessFor(CameraKind kind) const {
 
 quint32 DwarfCameraController::cmdSetIrCutFor(CameraKind kind) const {
   return (kind == CameraKind::Tele) ? 10031u : 12018u; // SET_IRCUT
+}
+
+void DwarfCameraController::sendModule15Cmd16703(quint64 selector) {
+  if (!m_client || !m_client->isConnected()) {
+    qWarning() << "[DwarfCameraController] ERROR: Camera client not connected!";
+    emit errorOccurred("Camera client not connected");
+    return;
+  }
+
+  QByteArray data;
+  data.append(static_cast<char>(0x08));
+  appendVarint(data, selector);
+
+  qWarning() << "[DwarfCameraController] Sending module=15 cmd=16703 selector=0x"
+             << QString::number(static_cast<qulonglong>(selector), 16)
+             << "dataSize=" << data.size() << "hex=" << data.toHex();
+  m_client->sendCommand(15u, 16703u, data);
+}
+
+void DwarfCameraController::sendModule15Cmd16703(quint64 selector, int value) {
+  if (!m_client || !m_client->isConnected()) {
+    qWarning() << "[DwarfCameraController] ERROR: Camera client not connected!";
+    emit errorOccurred("Camera client not connected");
+    return;
+  }
+
+  QByteArray data;
+  data.append(static_cast<char>(0x08));
+  appendVarint(data, selector);
+  data.append(static_cast<char>(0x10));
+  appendVarint(data, static_cast<quint64>(value));
+
+  qWarning() << "[DwarfCameraController] Sending module=15 cmd=16703 selector=0x"
+             << QString::number(static_cast<qulonglong>(selector), 16)
+             << "value=" << value << "dataSize=" << data.size()
+             << "hex=" << data.toHex();
+  m_client->sendCommand(15u, 16703u, data);
+}
+
+void DwarfCameraController::ensureModule15ImageParamsInitialized() {
+  if (m_module15ImageParamsInitialized)
+    return;
+  if (!m_client || !m_client->isConnected()) {
+    qWarning() << "[DwarfCameraController] ERROR: Camera client not connected!";
+    emit errorOccurred("Camera client not connected");
+    return;
+  }
+
+  sendModule15Cmd16703(kModule15SelectorImageParamsInit, 1);
+  sendModule15Cmd16703(kModule15SelectorImageParamsInit);
+  m_module15ImageParamsInitialized = true;
 }
 
 void DwarfCameraController::sendSingleInt32(CameraKind kind, quint32 cmd,
