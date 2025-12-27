@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QSettings>
 #include <QStandardPaths>
+#include <cmath>
 
 using dwarf::ReqOpenCamera;
 using dwarf::ReqPhoto;
@@ -38,6 +39,11 @@ inline void appendVarint(QByteArray &data, quint64 value) {
   data.append(static_cast<char>(value));
 }
 
+inline void appendInt32Varint(QByteArray &data, int value) {
+  const int64_t v = static_cast<int64_t>(static_cast<int32_t>(value));
+  appendVarint(data, static_cast<quint64>(v));
+}
+
 static constexpr quint64 kModule15WideSelectorOffset = 0x1000000000000ULL;
 
 static constexpr quint64 kModule15SelectorImageParamsInit =
@@ -62,19 +68,17 @@ inline quint64 module15SelectorFor(DwarfCameraController::CameraKind kind,
 // brightness/contrast/saturation Formula: B = (A + 100) * 255.0 / 200, where A
 // is -100 to 100 For our 0-100 slider: map 0->0, 50->127.5, 100->255
 inline int scaleToApi255(int value0to100) {
-  int v = clampInt(value0to100, 0, 100);
-  // Map 0-100 to -100 to 100, then apply formula
-  int a = (v * 2) - 100; // 0->-100, 50->0, 100->100
-  return static_cast<int>((a + 100) * 255.0 / 200.0);
+  int a = clampInt(value0to100, -100, 100);
+  return clampInt(static_cast<int>(std::lround((a + 100) * 255.0 / 200.0)), 0,
+                  255);
 }
 
 // Scale UI value (0-100) to API value for hue
 // Formula: B = (A + 180) * 255.0 / 360, where A is -180 to 180
 inline int scaleHueToApi(int value0to100) {
-  int v = clampInt(value0to100, 0, 100);
-  // Map 0-100 to -180 to 180
-  int a = static_cast<int>((v * 3.6) - 180);
-  return static_cast<int>((a + 180) * 255.0 / 360.0);
+  int a = clampInt(value0to100, -180, 180);
+  return clampInt(static_cast<int>(std::lround((a + 180) * 255.0 / 360.0)), 0,
+                  255);
 }
 
 inline int scaleFromApi255(int value0to255) {
@@ -82,9 +86,7 @@ inline int scaleFromApi255(int value0to255) {
   // Reverse of: B = (A + 100) * 255 / 200, with A in [-100, 100]
   // A = B * 200 / 255 - 100
   double a = (static_cast<double>(b) * 200.0 / 255.0) - 100.0;
-  // Our UI uses 0-100 mapped to A=-100..100 via A=(v*2-100)
-  double v = (a + 100.0) / 2.0;
-  return clampInt(static_cast<int>(std::lround(v)), 0, 100);
+  return clampInt(static_cast<int>(std::lround(a)), -100, 100);
 }
 
 inline int scaleHueFromApi(int value0to255) {
@@ -92,15 +94,49 @@ inline int scaleHueFromApi(int value0to255) {
   // Reverse of: B = (A + 180) * 255 / 360, with A in [-180, 180]
   // A = B * 360 / 255 - 180
   double a = (static_cast<double>(b) * 360.0 / 255.0) - 180.0;
-  // UI maps 0-100 to A=-180..180 via A=(v*3.6-180)
-  double v = (a + 180.0) / 3.6;
-  return clampInt(static_cast<int>(std::lround(v)), 0, 100);
+  return clampInt(static_cast<int>(std::lround(a)), -180, 180);
+}
+
+inline int scaleWideSaturationToApi100(int value) {
+  int a = clampInt(value, -100, 100);
+  return clampInt(static_cast<int>(std::lround((a + 100) * 100.0 / 200.0)), 0,
+                  100);
+}
+
+inline int scaleWideSaturationFromApi100(int value) {
+  int b = clampInt(value, 0, 100);
+  double a = (static_cast<double>(b) * 200.0 / 100.0) - 100.0;
+  return clampInt(static_cast<int>(std::lround(a)), -100, 100);
+}
+
+inline int scaleWideHueToApi2000(int value) {
+  int a = clampInt(value, -180, 180);
+  return clampInt(static_cast<int>(std::lround(a * 2000.0 / 180.0)), -2000,
+                  2000);
+}
+
+inline int scaleWideHueFromApi2000(int value) {
+  int b = clampInt(value, -2000, 2000);
+  double a = static_cast<double>(b) * 180.0 / 2000.0;
+  return clampInt(static_cast<int>(std::lround(a)), -180, 180);
+}
+
+inline int scaleWideSharpnessToApi1to7(int value) {
+  int a = clampInt(value, 0, 100);
+  return clampInt(static_cast<int>(std::lround(a * 6.0 / 100.0 + 1.0)), 1, 7);
+}
+
+inline int scaleWideSharpnessFromApi1to7(int value) {
+  int b = clampInt(value, 1, 7);
+  double a = (static_cast<double>(b) - 1.0) * 100.0 / 6.0;
+  return clampInt(static_cast<int>(std::lround(a)), 0, 100);
 }
 
 inline QString kindKey(DwarfCameraController::CameraKind kind) {
   return (kind == DwarfCameraController::CameraKind::Tele) ? QStringLiteral("tele")
                                                           : QStringLiteral("wide");
 }
+
 } // namespace
 
 DwarfCameraController::DwarfCameraController(QObject *parent)
@@ -132,11 +168,11 @@ DwarfCameraController::DwarfCameraController(QObject *parent)
   m_wideParams.set_wb_mode(0);
   m_wideParams.set_wb_index_type(0);
   m_wideParams.set_wb_index(5);
-  m_wideParams.set_brightness(128);
-  m_wideParams.set_contrast(128);
-  m_wideParams.set_hue(128);
-  m_wideParams.set_saturation(128);
-  m_wideParams.set_sharpness(50);
+  m_wideParams.set_brightness(0);
+  m_wideParams.set_contrast(0);
+  m_wideParams.set_hue(0);
+  m_wideParams.set_saturation(80);
+  m_wideParams.set_sharpness(2);
   m_wideParams.set_jpg_quality(90);
 
   ensureConfigLoaded();
@@ -178,6 +214,32 @@ void DwarfCameraController::loadConfig() {
     p.set_hue(m_config->value(QStringLiteral("hue"), p.hue()).toInt());
     p.set_sharpness(m_config->value(QStringLiteral("sharpness"), p.sharpness()).toInt());
     p.set_jpg_quality(m_config->value(QStringLiteral("jpg_quality"), p.jpg_quality()).toInt());
+
+    if (kind == CameraKind::Wide) {
+      const int b = p.brightness();
+      if (b < -100 || b > 100)
+        p.set_brightness(scaleFromApi255(b));
+
+      const int c = p.contrast();
+      if (c < -100 || c > 100)
+        p.set_contrast(scaleFromApi255(c));
+
+      const int s = p.saturation();
+      if (s < 0 || s > 100) {
+        const int ui = scaleFromApi255(s);
+        p.set_saturation(scaleWideSaturationToApi100(ui));
+      }
+
+      const int h = p.hue();
+      if (h < -2000 || h > 2000) {
+        const int ui = scaleHueFromApi(h);
+        p.set_hue(scaleWideHueToApi2000(ui));
+      }
+
+      const int sh = p.sharpness();
+      if (sh < 1 || sh > 7)
+        p.set_sharpness(scaleWideSharpnessToApi1to7(sh));
+    }
 
     m_config->endGroup();
   };
@@ -460,11 +522,24 @@ void DwarfCameraController::setBrightness(CameraKind kind, int value) {
   qWarning() << "[DwarfCameraController] setBrightness" << value << "for"
              << (kind == CameraKind::Tele ? "Tele" : "Wide");
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  int scaledValue = scaleToApi255(value);
-  p.set_brightness(scaledValue);
-  ensureModule15ImageParamsInitialized();
-  sendModule15Cmd16703(
-      module15SelectorFor(kind, kModule15SelectorBrightnessTele), scaledValue);
+  if (kind == CameraKind::Tele) {
+    int scaledValue = scaleToApi255(value);
+    p.set_brightness(scaledValue);
+    ensureModule15ImageParamsInitialized();
+    sendModule15Cmd16703(
+        module15SelectorFor(kind, kModule15SelectorBrightnessTele), scaledValue);
+  } else {
+    const int v = clampInt(value, -100, 100);
+    p.set_brightness(v);
+    ensureModule15ImageParamsInitialized();
+    const quint64 selector =
+        module15SelectorFor(kind, kModule15SelectorBrightnessTele);
+    if (v == 0) {
+      sendModule15Cmd16703(selector);
+    } else {
+      sendModule15Cmd16703(selector, v);
+    }
+  }
 
   saveConfig(kind);
 
@@ -473,11 +548,24 @@ void DwarfCameraController::setBrightness(CameraKind kind, int value) {
 
 void DwarfCameraController::setContrast(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  int scaledValue = scaleToApi255(value);
-  p.set_contrast(scaledValue);
-  ensureModule15ImageParamsInitialized();
-  sendModule15Cmd16703(
-      module15SelectorFor(kind, kModule15SelectorContrastTele), scaledValue);
+  if (kind == CameraKind::Tele) {
+    int scaledValue = scaleToApi255(value);
+    p.set_contrast(scaledValue);
+    ensureModule15ImageParamsInitialized();
+    sendModule15Cmd16703(
+        module15SelectorFor(kind, kModule15SelectorContrastTele), scaledValue);
+  } else {
+    const int v = clampInt(value, -100, 100);
+    p.set_contrast(v);
+    ensureModule15ImageParamsInitialized();
+    const quint64 selector =
+        module15SelectorFor(kind, kModule15SelectorContrastTele);
+    if (v == 0) {
+      sendModule15Cmd16703(selector);
+    } else {
+      sendModule15Cmd16703(selector, v);
+    }
+  }
 
   saveConfig(kind);
 
@@ -486,7 +574,12 @@ void DwarfCameraController::setContrast(CameraKind kind, int value) {
 
 void DwarfCameraController::setHue(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  int scaledValue = scaleHueToApi(value);
+  int scaledValue = 0;
+  if (kind == CameraKind::Tele) {
+    scaledValue = scaleHueToApi(value);
+  } else {
+    scaledValue = scaleWideHueToApi2000(value);
+  }
   p.set_hue(scaledValue);
   ensureModule15ImageParamsInitialized();
   sendModule15Cmd16703(module15SelectorFor(kind, kModule15SelectorHueTele),
@@ -499,7 +592,12 @@ void DwarfCameraController::setHue(CameraKind kind, int value) {
 
 void DwarfCameraController::setSaturation(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  int scaledValue = scaleToApi255(value);
+  int scaledValue = 0;
+  if (kind == CameraKind::Tele) {
+    scaledValue = scaleToApi255(value);
+  } else {
+    scaledValue = scaleWideSaturationToApi100(value);
+  }
   p.set_saturation(scaledValue);
   ensureModule15ImageParamsInitialized();
   sendModule15Cmd16703(
@@ -512,11 +610,16 @@ void DwarfCameraController::setSaturation(CameraKind kind, int value) {
 
 void DwarfCameraController::setSharpness(CameraKind kind, int value) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  value = clampInt(value, 0, 100);
-  p.set_sharpness(value);
+  int scaledValue = 0;
+  if (kind == CameraKind::Tele) {
+    scaledValue = clampInt(value, 0, 100);
+  } else {
+    scaledValue = scaleWideSharpnessToApi1to7(value);
+  }
+  p.set_sharpness(scaledValue);
   ensureModule15ImageParamsInitialized();
   sendModule15Cmd16703(
-      module15SelectorFor(kind, kModule15SelectorSharpnessTele), value);
+      module15SelectorFor(kind, kModule15SelectorSharpnessTele), scaledValue);
 
   saveConfig(kind);
 
@@ -532,31 +635,41 @@ bool DwarfCameraController::irCutEnabled(CameraKind kind) const {
 int DwarfCameraController::brightness(CameraKind kind) const {
   const ReqSetAllParams &p =
       (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  return scaleFromApi255(p.brightness());
+  if (kind == CameraKind::Tele)
+    return scaleFromApi255(p.brightness());
+  return clampInt(p.brightness(), -100, 100);
 }
 
 int DwarfCameraController::contrast(CameraKind kind) const {
   const ReqSetAllParams &p =
       (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  return scaleFromApi255(p.contrast());
+  if (kind == CameraKind::Tele)
+    return scaleFromApi255(p.contrast());
+  return clampInt(p.contrast(), -100, 100);
 }
 
 int DwarfCameraController::saturation(CameraKind kind) const {
   const ReqSetAllParams &p =
       (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  return scaleFromApi255(p.saturation());
+  if (kind == CameraKind::Tele)
+    return scaleFromApi255(p.saturation());
+  return scaleWideSaturationFromApi100(p.saturation());
 }
 
 int DwarfCameraController::hue(CameraKind kind) const {
   const ReqSetAllParams &p =
       (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  return scaleHueFromApi(p.hue());
+  if (kind == CameraKind::Tele)
+    return scaleHueFromApi(p.hue());
+  return scaleWideHueFromApi2000(p.hue());
 }
 
 int DwarfCameraController::sharpness(CameraKind kind) const {
   const ReqSetAllParams &p =
       (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-  return clampInt(p.sharpness(), 0, 100);
+  if (kind == CameraKind::Tele)
+    return clampInt(p.sharpness(), 0, 100);
+  return scaleWideSharpnessFromApi1to7(p.sharpness());
 }
 
 int DwarfCameraController::exposureMode(CameraKind kind) const {
@@ -886,7 +999,7 @@ void DwarfCameraController::sendModule15Cmd16703(quint64 selector, int value) {
   data.append(static_cast<char>(0x08));
   appendVarint(data, selector);
   data.append(static_cast<char>(0x10));
-  appendVarint(data, static_cast<quint64>(value));
+  appendInt32Varint(data, value);
 
   qWarning() << "[DwarfCameraController] Sending module=15 cmd=16703 selector=0x"
              << QString::number(static_cast<qulonglong>(selector), 16)
@@ -922,13 +1035,7 @@ void DwarfCameraController::sendSingleInt32(CameraKind kind, quint32 cmd,
   QByteArray data;
   // Protobuf encoding: field 1, wire type 0 (varint) = 0x08, then varint value
   data.append(static_cast<char>(0x08)); // field 1, varint
-  // Encode value as varint
-  uint32_t uval = static_cast<uint32_t>(value);
-  while (uval >= 0x80) {
-    data.append(static_cast<char>((uval & 0x7F) | 0x80));
-    uval >>= 7;
-  }
-  data.append(static_cast<char>(uval));
+  appendInt32Varint(data, value);
 
   qWarning() << "[DwarfCameraController] Sending single param module="
              << moduleIdFor(kind) << "cmd=" << cmd << "value=" << value

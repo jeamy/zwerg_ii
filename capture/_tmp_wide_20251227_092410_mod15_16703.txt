@@ -1,0 +1,5 @@
+file=wide_20251227_092410.pcapng
+packets=0 tcp_payloads=0 ws_frames=0
+c2s_mod15_cmd16703_events=0
+
+grouped by selector:

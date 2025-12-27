@@ -53,10 +53,10 @@ const QVector<QPair<int, int>> CameraSettingsPanel::s_teleGainValues = {
     {21, 70}, {24, 80}, {27, 90}, {30, 100}, {33, 110}, {36, 120}};
 
 // Gain index values for Wide camera (DWARF II API)
-// Wide camera gain starts at 60 and goes to 160
+// Wide camera gain starts at 0 and goes to 120
 const QVector<QPair<int, int>> CameraSettingsPanel::s_wideGainValues = {
-    {0, 60},  {18, 60},  {21, 70},  {24, 80},
-    {27, 90}, {30, 100}, {33, 110}, {36, 120}};
+    {0, 0},   {3, 10},  {6, 20},  {9, 30},   {12, 40},  {15, 50}, {18, 60},
+    {21, 70}, {24, 80}, {27, 90}, {30, 100}, {33, 110}, {36, 120}};
 
 // White balance color temperatures in Kelvin
 const QVector<int> CameraSettingsPanel::s_wbTemperatureValues = {
@@ -350,9 +350,9 @@ void CameraSettingsPanel::setupUi() {
   // Brightness
   QLabel *brightnessLabel = new QLabel(tr("Brightness:"), m_imageGroup);
   m_brightnessSlider = new QSlider(Qt::Horizontal, m_imageGroup);
-  m_brightnessSlider->setRange(0, 100);
-  m_brightnessSlider->setValue(50);
-  m_brightnessValueLabel = new QLabel("50", m_imageGroup);
+  m_brightnessSlider->setRange(-100, 100);
+  m_brightnessSlider->setValue(0);
+  m_brightnessValueLabel = new QLabel("0", m_imageGroup);
   m_brightnessValueLabel->setMinimumWidth(40);
   m_brightnessValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
   imageLayout->addWidget(brightnessLabel, 1, 0);
@@ -362,9 +362,9 @@ void CameraSettingsPanel::setupUi() {
   // Contrast
   QLabel *contrastLabel = new QLabel(tr("Contrast:"), m_imageGroup);
   m_contrastSlider = new QSlider(Qt::Horizontal, m_imageGroup);
-  m_contrastSlider->setRange(0, 100);
-  m_contrastSlider->setValue(50);
-  m_contrastValueLabel = new QLabel("50", m_imageGroup);
+  m_contrastSlider->setRange(-100, 100);
+  m_contrastSlider->setValue(0);
+  m_contrastValueLabel = new QLabel("0", m_imageGroup);
   m_contrastValueLabel->setMinimumWidth(40);
   m_contrastValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
   imageLayout->addWidget(contrastLabel, 2, 0);
@@ -374,9 +374,9 @@ void CameraSettingsPanel::setupUi() {
   // Saturation
   QLabel *saturationLabel = new QLabel(tr("Saturation:"), m_imageGroup);
   m_saturationSlider = new QSlider(Qt::Horizontal, m_imageGroup);
-  m_saturationSlider->setRange(0, 100);
-  m_saturationSlider->setValue(50);
-  m_saturationValueLabel = new QLabel("50", m_imageGroup);
+  m_saturationSlider->setRange(-100, 100);
+  m_saturationSlider->setValue(0);
+  m_saturationValueLabel = new QLabel("0", m_imageGroup);
   m_saturationValueLabel->setMinimumWidth(40);
   m_saturationValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
   imageLayout->addWidget(saturationLabel, 3, 0);
@@ -398,9 +398,9 @@ void CameraSettingsPanel::setupUi() {
   // Hue
   QLabel *hueLabel = new QLabel(tr("Hue:"), m_imageGroup);
   m_hueSlider = new QSlider(Qt::Horizontal, m_imageGroup);
-  m_hueSlider->setRange(0, 100);
-  m_hueSlider->setValue(50);
-  m_hueValueLabel = new QLabel("50", m_imageGroup);
+  m_hueSlider->setRange(-180, 180);
+  m_hueSlider->setValue(0);
+  m_hueValueLabel = new QLabel("0", m_imageGroup);
   m_hueValueLabel->setMinimumWidth(40);
   m_hueValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
   imageLayout->addWidget(hueLabel, 5, 0);
