@@ -7,34 +7,52 @@ import struct
 import json
 
 def read_pcapng(filename):
-    """Read pcapng file and extract TCP payloads"""
+    """Read pcapng OR classic pcap file and extract packets"""
     packets = []
-    
+
     with open(filename, 'rb') as f:
         data = f.read()
-    
-    offset = 0
-    while offset < len(data):
-        if offset + 8 > len(data):
-            break
-        
-        block_type = struct.unpack('<I', data[offset:offset+4])[0]
-        block_len = struct.unpack('<I', data[offset+4:offset+8])[0]
-        
-        if block_len == 0 or block_len > len(data) - offset:
-            break
-        
-        # Enhanced Packet Block
-        if block_type == 0x00000006:
-            packet_offset = offset + 8 + 4 + 8 + 4 + 4
-            captured_len = struct.unpack('<I', data[offset+8+4+8:offset+8+4+8+4])[0]
-            
-            if packet_offset + captured_len <= len(data):
-                packet_data = data[packet_offset:packet_offset+captured_len]
-                packets.append(packet_data)
-        
-        offset += block_len
-    
+
+    if data[:4] == b'\x0a\x0d\x0d\x0a':
+        offset = 0
+        while offset < len(data):
+            if offset + 8 > len(data):
+                break
+
+            block_type = struct.unpack('<I', data[offset:offset+4])[0]
+            block_len = struct.unpack('<I', data[offset+4:offset+8])[0]
+
+            if block_len == 0 or block_len > len(data) - offset:
+                break
+
+            # Enhanced Packet Block
+            if block_type == 0x00000006:
+                packet_offset = offset + 8 + 4 + 8 + 4 + 4
+                captured_len = struct.unpack('<I', data[offset+8+4+8:offset+8+4+8+4])[0]
+
+                if packet_offset + captured_len <= len(data):
+                    packet_data = data[packet_offset:packet_offset+captured_len]
+                    packets.append(packet_data)
+
+            offset += block_len
+
+        return packets
+
+    if data[:4] in (b'\xd4\xc3\xb2\xa1', b'\xa1\xb2\xc3\xd4'):
+        endian = '<' if data[:4] == b'\xd4\xc3\xb2\xa1' else '>'
+        offset = 24
+        while offset + 16 <= len(data):
+            ts_sec, ts_usec, incl_len, orig_len = struct.unpack(
+                endian + 'IIII', data[offset:offset+16]
+            )
+            offset += 16
+            if incl_len == 0 or offset + incl_len > len(data):
+                break
+            packet_data = data[offset:offset+incl_len]
+            packets.append(packet_data)
+            offset += incl_len
+        return packets
+
     return packets
 
 def parse_tcp_stream(packets):
