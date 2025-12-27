@@ -28,6 +28,8 @@ venv/
 env/
 ENV/
 
+dist/
+
 # Database
 database/*.db
 database/*.db-journal
