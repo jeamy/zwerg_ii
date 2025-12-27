@@ -198,6 +198,24 @@ elif (command -v qtpaths6 &>/dev/null || command -v qtpaths &>/dev/null) && comm
         esac
       fi
 
+      if [[ "$BUNDLE_NON_QT_LIBS" != "1" ]]; then
+        # Special case: always bundle libprotobuf (needed at runtime even with minimal bundling)
+        if [[ "$dep" == *"libprotobuf"* ]]; then
+          echo "  → Bundling required non-Qt lib: $dep"
+        else
+          echo "  → Skipping non-Qt lib: $dep"
+          continue
+        fi
+      fi
+
+      # Exclude host-incompatible X11/XCB/XKB libs to prevent ABI mix (causes segfault)
+      case "$dep" in
+        *libxkbcommon-x11*|*libxcb-xkb*|*libxcb-icccm*|*libxcb-image*|*libxcb-keysyms*|*libxcb-randr*|*libxcb-render*|*libxcb-render-util*|*libxcb-shape*|*libxcb-shm*|*libxcb-sync*|*libxcb-xfixes*|*libxcb-xinerama*|*libxcb-cursor*)
+          echo "  → Skipping host-incompatible X11/XCB lib: $dep"
+          continue
+          ;;
+      esac
+
       if [ ! -f "$DIST_DIR/lib/$base" ]; then
         copy_lib "$dep"
       fi
