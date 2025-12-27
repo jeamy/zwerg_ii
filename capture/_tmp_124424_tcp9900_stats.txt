@@ -1,0 +1,8 @@
+pcap=ctrl_20251226_124424.pcapng
+total_packets=4769
+tcp_port9900_packets=84
+tcp_port9900_packets_with_payload=45
+tcp_payload_len_min=6
+tcp_payload_len_max=359
+payload_len_buckets_0-99,...,900+=
+[35, 6, 3, 1, 0, 0, 0, 0, 0, 0]

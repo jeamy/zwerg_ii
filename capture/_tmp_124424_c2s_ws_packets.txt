@@ -1,0 +1,15 @@
+pcap=ctrl_20251226_124424.pcapng
+total_ws_binary_cmds=33
+c2s=12
+idx=2 payload_len=57 module=4 cmd=13000 type=0 data_len=6 data_hex=08a1eab9ca06
+idx=5 payload_len=49 module=1 cmd=10036 type=0 data_len=0 data_hex=
+idx=8 payload_len=49 module=10 cmd=15501 type=0 data_len=0 data_hex=
+idx=9 payload_len=49 module=10 cmd=15501 type=0 data_len=0 data_hex=
+idx=10 payload_len=49 module=10 cmd=15501 type=0 data_len=0 data_hex=
+idx=11 payload_len=49 module=10 cmd=15501 type=0 data_len=0 data_hex=
+idx=12 payload_len=49 module=10 cmd=15501 type=0 data_len=0 data_hex=
+idx=16 payload_len=49 module=2 cmd=12000 type=0 data_len=0 data_hex=
+idx=18 payload_len=49 module=2 cmd=12029 type=0 data_len=0 data_hex=
+idx=20 payload_len=49 module=2 cmd=12029 type=0 data_len=0 data_hex=
+idx=21 payload_len=54 module=20 cmd=16402 type=0 data_len=2 data_hex=0807
+idx=34 payload_len=49 module=10 cmd=15501 type=0 data_len=0 data_hex=

@@ -1,0 +1,34 @@
+pcap=ctrl_20251226_124424.pcapng
+tcp_payloads_on_9900=45 (note: generator consumed, counts below from separate scan)
+ws_binary_frames_found_by_scan=50 (c2s=22 s2c=28)
+
+counts_by_(dir,mod,cmd,type):
+  ('c2s', 1, 10000, 0) -> 1
+  ('c2s', 1, 10036, 0) -> 2
+  ('c2s', 2, 12000, 0) -> 2
+  ('c2s', 2, 12029, 0) -> 5
+  ('c2s', 4, 13000, 0) -> 1
+  ('c2s', 10, 15500, 0) -> 1
+  ('c2s', 10, 15501, 0) -> 6
+  ('c2s', 20, 16402, 0) -> 1
+  ('c2s', 20, 16703, 0) -> 2
+  ('c2s', 'parse_error') -> 1
+  ('s2c', 1, 10000, 3) -> 1
+  ('s2c', 2, 12000, 3) -> 3
+  ('s2c', 4, 13000, 3) -> 1
+  ('s2c', 9, 15201, 2) -> 1
+  ('s2c', 9, 15203, 2) -> 1
+  ('s2c', 9, 15219, 2) -> 3
+  ('s2c', 9, 15277, 2) -> 2
+  ('s2c', 10, 15500, 3) -> 1
+  ('s2c', 10, 15501, 3) -> 2
+  ('s2c', 15, 15264, 2) -> 10
+  ('s2c', 15, 15270, 2) -> 2
+  ('s2c', 'parse_error') -> 1
+
+c2s_module15_cmd16703_count=0
+
+top_module15_selectors_seen_in_any_direction:
+  selector=0x101000000000001 count=6
+  selector=0x101000000000002 count=4
+  selector=0x1 count=1

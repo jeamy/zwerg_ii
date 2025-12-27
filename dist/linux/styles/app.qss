@@ -1,0 +1,373 @@
+/* Global application styles (Qt Style Sheet) */
+
+QMainWindow {
+    background-color: #050505;
+}
+
+/* Sidebar Styling */
+QWidget#sidebar {
+    background-color: rgba(15, 15, 15, 204);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Content Stack */
+QStackedWidget {
+    background: rgba(10, 10, 10, 204);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Panel Headers */
+QLabel[heading="true"] {
+    font-size: 18px;
+    font-weight: bold;
+    color: #27ae60;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+/* Draggable PiP */
+DraggablePiP {
+    border: 1px solid rgba(39, 174, 96, 0.5);
+    background: black;
+    border-radius: 8px;
+}
+
+/* Overlays with Glassmorphism */
+QLabel#streamNameOverlay {
+    color: #2ecc71;
+    background: rgba(0, 0, 0, 180);
+    padding: 8px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    font-weight: bold;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Sidebar Buttons */
+QToolButton {
+    color: rgba(255, 255, 255, 0.4);
+    background: transparent;
+    border: none;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 12px;
+    border-radius: 0px;
+}
+
+QToolButton:hover {
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+QToolButton:checked {
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.05);
+    border-left: 4px solid #27ae60;
+}
+
+/* General Controls */
+QPushButton {
+    background-color: #1a1a1a;
+    color: #ddd;
+    border: 1px solid #333;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+QPushButton:hover {
+    background-color: #252525;
+    border-color: #27ae60;
+    color: white;
+}
+
+QPushButton:pressed {
+    background-color: #111;
+}
+
+QPushButton:disabled {
+    color: #444;
+    background-color: #111;
+    border-color: #222;
+}
+
+QLineEdit {
+    background-color: rgba(0, 0, 0, 100);
+    border: 1px solid #333;
+    padding: 10px;
+    border-radius: 8px;
+    color: #eee;
+    font-size: 12px;
+}
+
+QLineEdit:focus {
+    border-color: #27ae60;
+    background-color: rgba(0, 0, 0, 150);
+}
+
+QListWidget {
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    outline: none;
+}
+
+/* Gallery should not be transparent behind media */
+QWidget#galleryTab {
+    background-color: rgba(10, 10, 10, 230);
+}
+
+QWidget#galleryOverlayContainer {
+    background-color: rgba(0, 0, 0, 255);
+}
+
+QTabWidget#galleryMediaTabs::pane {
+    background-color: rgba(10, 10, 10, 230);
+}
+
+QListWidget#galleryMediaList {
+    background-color: rgba(10, 10, 10, 230);
+}
+
+/* Astro StarMap: right side panel should be opaque (no stream bleed-through) */
+QWidget#astroStarMapSidePanel {
+    background-color: rgba(10, 10, 10, 230);
+}
+
+QWidget#astroStarMapSidePanel QGroupBox {
+    background-color: rgba(10, 10, 10, 230);
+}
+
+QWidget#astroStarMapSidePanel QListWidget {
+    background-color: rgba(10, 10, 10, 230);
+}
+
+QWidget#starMapOverlayContainer {
+    background-color: rgba(0, 0, 0, 255);
+}
+
+QListWidget::item {
+    padding: 15px;
+    color: #bbb;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+QListWidget::item:selected {
+    background-color: rgba(39, 174, 96, 0.1);
+    color: #2ecc71;
+    border-left: 2px solid #27ae60;
+}
+
+/* Tabs */
+QTabWidget::pane {
+    border: none;
+}
+
+QTabBar::tab {
+    background: transparent;
+    color: #666;
+    padding: 10px 20px;
+    border-bottom: 2px solid transparent;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 10px;
+}
+
+QTabBar::tab:selected {
+    color: #27ae60;
+    border-bottom: 2px solid #27ae60;
+}
+
+/* GroupBoxes */
+QGroupBox {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    background: rgba(15, 15, 15, 204);
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 15px;
+    padding: 2px 10px;
+    color: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Sliders */
+QSlider::groove:horizontal {
+    border: none;
+    height: 4px;
+    background: #222;
+    border-radius: 2px;
+}
+
+QSlider::handle:horizontal {
+    background: #27ae60;
+    width: 16px;
+    height: 16px;
+    margin: -6px 0;
+    border-radius: 8px;
+}
+
+QSlider::sub-page:horizontal {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1a4a2e, stop:1 #27ae60);
+    border-radius: 2px;
+}
+
+/* Virtual Joystick */
+VirtualJoystick {
+    background: transparent;
+}
+
+#motorControlGroup {
+    background: rgba(15, 15, 15, 204);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0px;
+    margin-top: 0px;
+}
+
+#paramsExposureGroup, #paramsImageGroup, #paramsWhiteBalanceGroup {
+    background: rgba(15, 15, 15, 204);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0px;
+    margin-top: 0px;
+}
+
+#motorControlGroup::title {
+    color: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 8px;
+    padding: 2px 10px;
+    font-weight: bold;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+#paramsExposureGroup::title, #paramsImageGroup::title, #paramsWhiteBalanceGroup::title {
+    color: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 8px;
+    padding: 2px 10px;
+    font-weight: bold;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+#motorSpeedTextLabel {
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: bold;
+    font-size: 11px;
+}
+
+#motorSpeedValueLabel {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: bold;
+    font-size: 11px;
+}
+
+#motorSlewArea {
+    background: transparent;
+}
+
+#motorSlewButton {
+    background: rgba(30, 30, 30, 140);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 48px;
+    min-width: 86px;
+    min-height: 86px;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: bold;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+#motorSlewButton:hover {
+    border-color: rgba(39, 174, 96, 0.55);
+    background: rgba(35, 35, 35, 170);
+}
+
+#motorSlewButton:pressed {
+    background: rgba(39, 174, 96, 140);
+    border-color: rgba(39, 174, 96, 140);
+}
+
+#motorArrowUp, #motorArrowDown, #motorArrowLeft, #motorArrowRight {
+    background: transparent;
+}
+
+#motorArrowUpButton, #motorArrowDownButton, #motorArrowLeftButton, #motorArrowRightButton {
+    background: transparent;
+    border: none;
+    color: rgba(39, 174, 96, 0.9);
+    font-size: 28px;
+    font-weight: 900;
+    padding: 0px;
+    margin: 0px;
+}
+
+#motorArrowUpButton:hover, #motorArrowDownButton:hover, #motorArrowLeftButton:hover, #motorArrowRightButton:hover {
+    color: #2ecc71;
+}
+
+#motorArrowUpButton:pressed, #motorArrowDownButton:pressed, #motorArrowLeftButton:pressed, #motorArrowRightButton:pressed {
+    background: rgba(39, 174, 96, 0.2);
+    color: #2ecc71;
+    border-radius: 17px; /* Half of 34px fixed size */
+}
+
+#motorSlewText {
+    color: rgba(39, 174, 96, 0.9);
+    font-weight: bold;
+    font-size: 12px;
+}
+
+#motorFocusGroup {
+    background: rgba(15, 15, 15, 204);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0px;
+    margin-top: 0px;
+}
+
+#motorFocusGroup::title {
+    color: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 8px;
+    padding: 2px 10px;
+    font-weight: bold;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+#motorFocusGroup QPushButton {
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 10px;
+    min-height: 28px;
+}
+
+#motorAutoFocusButton {
+    background: rgba(39, 174, 96, 180);
+    border-color: rgba(39, 174, 96, 220);
+    color: white;
+}

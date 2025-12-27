@@ -1,0 +1,56 @@
+pcap=ctrl_20251226_124424.pcapng
+total_ws_binary_cmds=33
+parse_errors=0
+
+counts_by_(dir,module,cmd,type):
+  C2S mod=1 cmd=10036 type=0 count=1
+  C2S mod=2 cmd=12000 type=0 count=1
+  C2S mod=2 cmd=12029 type=0 count=2
+  C2S mod=4 cmd=13000 type=0 count=1
+  C2S mod=10 cmd=15501 type=0 count=6
+  C2S mod=20 cmd=16402 type=0 count=1
+  S2C mod=1 cmd=10000 type=3 count=1
+  S2C mod=2 cmd=12000 type=3 count=2
+  S2C mod=4 cmd=13000 type=3 count=1
+  S2C mod=9 cmd=15201 type=2 count=1
+  S2C mod=9 cmd=15203 type=2 count=1
+  S2C mod=9 cmd=15219 type=2 count=3
+  S2C mod=9 cmd=15277 type=2 count=1
+  S2C mod=10 cmd=15501 type=3 count=2
+  S2C mod=15 cmd=15264 type=2 count=8
+  S2C mod=15 cmd=15270 type=2 count=1
+
+all_parsed_packets:
+  C2S idx=2 plen=57 mod=4 cmd=13000 type=0 data_len=6
+  S2C idx=3 plen=51 mod=4 cmd=13000 type=3 data_len=0
+  S2C idx=4 plen=51 mod=1 cmd=10000 type=3 data_len=0
+  C2S idx=5 plen=49 mod=1 cmd=10036 type=0 data_len=0
+  C2S idx=8 plen=49 mod=10 cmd=15501 type=0 data_len=0
+  C2S idx=9 plen=49 mod=10 cmd=15501 type=0 data_len=0
+  C2S idx=10 plen=49 mod=10 cmd=15501 type=0 data_len=0
+  C2S idx=11 plen=49 mod=10 cmd=15501 type=0 data_len=0
+  C2S idx=12 plen=49 mod=10 cmd=15501 type=0 data_len=0
+  S2C idx=13 plen=51 mod=10 cmd=15501 type=3 data_len=0
+  C2S idx=16 plen=49 mod=2 cmd=12000 type=0 data_len=0
+  S2C idx=17 plen=51 mod=2 cmd=12000 type=3 data_len=0
+  C2S idx=18 plen=49 mod=2 cmd=12029 type=0 data_len=0
+  S2C idx=19 plen=51 mod=2 cmd=12000 type=3 data_len=0
+  C2S idx=20 plen=49 mod=2 cmd=12029 type=0 data_len=0
+  C2S idx=21 plen=54 mod=20 cmd=16402 type=0 data_len=2
+  S2C idx=22 plen=67 mod=15 cmd=15264 type=2 data_len=14
+  S2C idx=23 plen=67 mod=15 cmd=15264 type=2 data_len=14
+  S2C idx=24 plen=67 mod=15 cmd=15264 type=2 data_len=14
+  S2C idx=25 plen=67 mod=15 cmd=15264 type=2 data_len=14
+  S2C idx=26 plen=60 mod=15 cmd=15270 type=2 data_len=7
+  S2C idx=27 plen=55 mod=9 cmd=15277 type=2 data_len=2
+  S2C idx=30 plen=57 mod=9 cmd=15219 type=2 data_len=4
+  S2C idx=31 plen=57 mod=9 cmd=15219 type=2 data_len=4
+  C2S idx=34 plen=49 mod=10 cmd=15501 type=0 data_len=0
+  S2C idx=35 plen=51 mod=10 cmd=15501 type=3 data_len=0
+  S2C idx=36 plen=57 mod=9 cmd=15219 type=2 data_len=4
+  S2C idx=37 plen=67 mod=15 cmd=15264 type=2 data_len=14
+  S2C idx=38 plen=67 mod=15 cmd=15264 type=2 data_len=14
+  S2C idx=39 plen=67 mod=15 cmd=15264 type=2 data_len=14
+  S2C idx=40 plen=65 mod=15 cmd=15264 type=2 data_len=12
+  S2C idx=43 plen=59 mod=9 cmd=15203 type=2 data_len=6
+  S2C idx=44 plen=55 mod=9 cmd=15201 type=2 data_len=2
