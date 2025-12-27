@@ -1,5 +1,7 @@
 # Build
+dist/
 build/
+build*
 
 # CMake
 CMakeFiles/
@@ -28,7 +30,6 @@ venv/
 env/
 ENV/
 
-dist/
 
 # Database
 database/*.db
