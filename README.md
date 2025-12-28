@@ -65,7 +65,7 @@ Note: System-specific installation instructions can be found in `DEVELOPMENT.md`
 
 ## Build
 
-### Linux / macOS
+### Linux
 
 There is a simple build script:
 
@@ -79,6 +79,52 @@ Alternatively, use plain CMake:
 mkdir -p build
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build
+```
+
+### macOS
+
+**Prerequisites:**
+- Xcode Command Line Tools: `xcode-select --install`
+- CMake: `brew install cmake`
+- Qt 6 (including Multimedia, WebSockets components)
+- Protobuf: `brew install protobuf`
+
+**Qt6 Installation:**
+
+Install Qt via Qt Online Installer to `~/Qt/` or use Homebrew:
+
+```bash
+brew install qt@6
+```
+
+**Build:**
+
+```bash
+./build_macos_release.sh
+```
+
+The script will:
+- Auto-detect Qt6 in `~/Qt/6.*/` or `~/Qt/6.*/macos/`
+- Auto-detect Protobuf via Homebrew or system installation
+- Configure and build the project with CMake
+- Create an app bundle in `dist/macos/DwarfController.app`
+- Bundle Qt frameworks with `macdeployqt`
+- Optionally create a DMG in `dist/zwergII-macos.dmg`
+
+**Environment Variables (optional):**
+
+You can override default paths by setting these before running the build script:
+
+```bash
+export CMAKE_PREFIX_PATH=/path/to/Qt/6.x.x/macos
+export Qt6_DIR=/path/to/Qt/6.x.x/macos/lib/cmake/Qt6
+export PROTOC_PREFIX_PATH=/usr/local
+export Protobuf_DIR=/usr/local/lib/cmake/protobuf
+```
+
+**Note:** If Qt6 Multimedia component is missing, install it via Qt Maintenance Tool:
+```bash
+~/Qt/MaintenanceTool
 ```
 
 ### Windows
