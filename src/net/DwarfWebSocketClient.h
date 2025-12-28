@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../proto/base.pb.h"
+#include "base.pb.h"
 #include <QObject>
 #include <QTimer>
 #include <QWebSocket>

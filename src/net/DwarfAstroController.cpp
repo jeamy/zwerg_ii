@@ -1,10 +1,12 @@
 #include "DwarfAstroController.h"
+
 #include "DwarfWebSocketClient.h"
+#include "base.pb.h"
 #include "astro.pb.h"
 #include "notify.pb.h"
-#include "base.pb.h"
 
 #include <QDebug>
+#include <QTimer>
 
 // Astro module command IDs (module 8)
 namespace AstroCmd {

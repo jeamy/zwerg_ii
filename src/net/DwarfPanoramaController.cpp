@@ -1,9 +1,9 @@
 #include "DwarfPanoramaController.h"
 
 #include "DwarfWebSocketClient.h"
-#include "../proto/base.pb.h"
-#include "../proto/camera.pb.h"
-#include "../proto/panorama.pb.h"
+#include "base.pb.h"
+#include "camera.pb.h"
+#include "panorama.pb.h"
 
 #include <QDebug>
 #include <QThread>

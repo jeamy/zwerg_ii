@@ -23,7 +23,6 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 # Include directories
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(src)
-include_directories(src/proto)
 include_directories(${Protobuf_INCLUDE_DIRS})
 
 # Source files

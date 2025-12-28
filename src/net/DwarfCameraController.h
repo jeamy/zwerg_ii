@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DwarfWebSocketClient.h"
-#include "../proto/camera.pb.h"
+#include "camera.pb.h"
 #include <QObject>
 #include <QSettings>
  #include <QString>

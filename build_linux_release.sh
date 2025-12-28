@@ -7,8 +7,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$SCRIPT_DIR"
-BUILD_DIR="$PROJECT_DIR/build-linux-release"
-DIST_DIR="$PROJECT_DIR/dist/linux"
+BUILD_DIR="${BUILD_DIR:-$PROJECT_DIR/build-linux-release}"
+DIST_DIR="${DIST_DIR:-$PROJECT_DIR/dist/linux}"
 BUILD_TYPE="Release"
 ZIP_NAME="zwergII-linux-release.zip"
 

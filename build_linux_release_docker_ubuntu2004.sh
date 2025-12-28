@@ -42,7 +42,7 @@ docker run --rm \
   -v "$SCRIPT_DIR:/work" \
   -w /work \
   "$IMAGE_NAME" \
-  bash -lc "rm -rf build-linux-release dist/linux dist/zwergII-linux-release.zip && BUNDLE_NON_QT_LIBS=1 BUNDLE_TOOLCHAIN_LIBS=1 bash build_linux_release.sh"
+  bash -lc "rm -rf build-linux-release-docker dist/linux dist/zwergII-linux-release.zip && BUILD_DIR=/work/build-linux-release-docker BUNDLE_NON_QT_LIBS=1 BUNDLE_TOOLCHAIN_LIBS=1 bash build_linux_release.sh"
 
 echo ""
 echo "Done. Output under:"
