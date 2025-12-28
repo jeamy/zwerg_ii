@@ -298,6 +298,8 @@ if not errorlevel 1 (
 ) else (
   echo NOTE: windeployqt not found - falling back to minimal manual Qt copy.
   set "QT_PREFIX=%CMAKE_PREFIX_PATH%"
+  rem Normalize path (remove trailing backslash if present)
+  if "%QT_PREFIX:~-1%"=="\" set "QT_PREFIX=%QT_PREFIX:~0,-1%"
   set "QT_BIN=%QT_PREFIX%\bin"
 
   if exist "%QT_BIN%\Qt6Core.dll" (
@@ -337,11 +339,16 @@ if errorlevel 1 (
   echo NOTE: PowerShell not found - zip will not be created.
 ) else (
   echo Creating release zip: %ZIP_NAME%
-  pushd "%PROJECT_DIR%dist"
+  set "DIST_PARENT=%PROJECT_DIR%\dist"
+  pushd "!DIST_PARENT!"
   if exist "%ZIP_NAME%" del /F /Q "%ZIP_NAME%"
   powershell -NoLogo -NoProfile -Command "Compress-Archive -Path 'windows\*' -DestinationPath '%ZIP_NAME%' -Force"
   popd
-  echo Zip created: %PROJECT_DIR%dist\%ZIP_NAME%
+  if exist "!DIST_PARENT!\%ZIP_NAME%" (
+    echo Zip created: !DIST_PARENT!\%ZIP_NAME%
+  ) else (
+    echo WARNING: Zip creation failed
+  )
 )
 
 echo.
