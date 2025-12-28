@@ -86,12 +86,12 @@ echo [1/3] Configure (CMake)...
 set CMAKE_GENERATOR=
 where g++ >NUL 2>&1
 if not errorlevel 1 (
-  echo Detected: MinGW (g++) - using "MinGW Makefiles"
+  echo Detected MinGW, using MinGW Makefiles generator
   set CMAKE_GENERATOR=-G "MinGW Makefiles"
 ) else (
   where cl >NUL 2>&1
   if not errorlevel 1 (
-    echo Detected: MSVC (cl) - using default Visual Studio generator
+    echo Detected MSVC, using default Visual Studio generator
   )
 )
 
