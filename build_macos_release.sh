@@ -30,28 +30,12 @@ if ! command -v cmake &>/dev/null; then
   MISSING_DEPS="$MISSING_DEPS cmake"
 fi
 
-# Qt6 detection: check CMAKE_PREFIX_PATH or Qt6_DIR env vars first
+# Qt6 detection: check qmake6/qtpaths6 first, then env vars, then fallback paths
 QT6_OK=0
-if [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/lib/cmake/Qt6" ]; then
+if command -v qmake6 &>/dev/null; then
   QT6_OK=1
-  echo "Qt6 found via CMAKE_PREFIX_PATH: $CMAKE_PREFIX_PATH"
-elif [ -n "$Qt6_DIR" ] && [ -d "$Qt6_DIR" ]; then
-  QT6_OK=1
-  echo "Qt6 found via Qt6_DIR: $Qt6_DIR"
-elif command -v qmake6 &>/dev/null; then
-  QT6_OK=1
-  QT_PREFIX_DETECTED="$(qmake6 -query QT_INSTALL_PREFIX 2>/dev/null || echo "")"
-  if [ -n "$QT_PREFIX_DETECTED" ]; then
-    export CMAKE_PREFIX_PATH="$QT_PREFIX_DETECTED"
-    echo "Qt6 auto-detected: $QT_PREFIX_DETECTED"
-  fi
 elif command -v qtpaths6 &>/dev/null; then
   QT6_OK=1
-  QT_PREFIX_DETECTED="$(qtpaths6 --install-prefix 2>/dev/null || echo "")"
-  if [ -n "$QT_PREFIX_DETECTED" ]; then
-    export CMAKE_PREFIX_PATH="$QT_PREFIX_DETECTED"
-    echo "Qt6 auto-detected: $QT_PREFIX_DETECTED"
-  fi
 fi
 
 if [ "$QT6_OK" -eq 0 ]; then
@@ -80,26 +64,49 @@ if [ -n "$MISSING_DEPS" ]; then
   echo ""
   echo "ERROR: Missing dependencies:$MISSING_DEPS" >&2
   echo ""
-  echo "Please install them or set environment variables:" >&2
-  echo "  - Qt6: set CMAKE_PREFIX_PATH or Qt6_DIR" >&2
-  echo "    Example: export CMAKE_PREFIX_PATH=/usr/local/Qt-6.x.x" >&2
-  echo "  - Protobuf: set PROTOC_PREFIX_PATH or Protobuf_DIR" >&2
-  echo "    Example: export PROTOC_PREFIX_PATH=/usr/local" >&2
-  echo "    Or install via Homebrew: brew install protobuf" >&2
+  echo "Please install them:" >&2
+  echo "  - Xcode Command Line Tools: xcode-select --install" >&2
+  echo "  - CMake: brew install cmake" >&2
+  echo "  - Qt6: Install via Qt Online Installer to ~/Qt/" >&2
+  echo "  - Protobuf: brew install protobuf" >&2
+  echo ""
+  echo "Or set environment variables:" >&2
+  echo "  export CMAKE_PREFIX_PATH=/path/to/Qt/6.x.x/macos" >&2
+  echo "  export PROTOC_PREFIX_PATH=/usr/local" >&2
   echo ""
   exit 1
 fi
 
 echo "All dependencies found."
 
-# Set up Qt6_DIR if not already set
-if [ -z "$Qt6_DIR" ] && [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/lib/cmake/Qt6" ]; then
-  export Qt6_DIR="$CMAKE_PREFIX_PATH/lib/cmake/Qt6"
+# Qt6 path detection from qtpaths6
+if [ -z "$CMAKE_PREFIX_PATH" ] && command -v qtpaths6 &>/dev/null; then
+  QT_PREFIX_DETECTED="$(qtpaths6 --install-prefix 2>/dev/null || echo "")"
+  if [ -n "$QT_PREFIX_DETECTED" ]; then
+    export CMAKE_PREFIX_PATH="$QT_PREFIX_DETECTED"
+    echo "Qt6 auto-detected via qtpaths6: $CMAKE_PREFIX_PATH"
+  fi
 fi
 
-# Add Qt bin to PATH if available
+# Fallback: Standard Qt installation path under $HOME/Qt/6.*/macos
+if [ -z "$CMAKE_PREFIX_PATH" ]; then
+  for cand in "$HOME"/Qt/6.*/macos; do
+    if [ -d "$cand/lib/cmake/Qt6" ]; then
+      export CMAKE_PREFIX_PATH="$cand"
+      echo "Qt6 auto-detected in $HOME/Qt: $CMAKE_PREFIX_PATH"
+      break
+    fi
+  done
+fi
+
+# Add Qt bin to PATH so qtpaths6/macdeployqt can be found
 if [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/bin" ]; then
   export PATH="$CMAKE_PREFIX_PATH/bin:$PATH"
+fi
+
+# Set Qt6_DIR for CMake
+if [ -z "$Qt6_DIR" ] && [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/lib/cmake/Qt6" ]; then
+  export Qt6_DIR="$CMAKE_PREFIX_PATH/lib/cmake/Qt6"
 fi
 
 # ==============================================================================
