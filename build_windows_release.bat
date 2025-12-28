@@ -297,35 +297,45 @@ if not errorlevel 1 (
   popd
 ) else (
   echo NOTE: windeployqt not found - falling back to minimal manual Qt copy.
-  set "QT_BIN=%CMAKE_PREFIX_PATH%\bin"
+  
+  rem Normalize CMAKE_PREFIX_PATH (handle trailing backslash)
+  set "QT_PREFIX=%CMAKE_PREFIX_PATH%"
+  if "!QT_PREFIX:~-1!"=="\" set "QT_PREFIX=!QT_PREFIX:~0,-1!"
+  
+  set "QT_BIN=!QT_PREFIX!\bin"
+  echo Qt bin directory: !QT_BIN!
 
-  if exist "%QT_BIN%\Qt6Core.dll" (
+  if exist "!QT_BIN!\Qt6Core.dll" (
     echo Copying Qt runtime DLLs...
     for %%D in (Qt6Core.dll Qt6Gui.dll Qt6Widgets.dll Qt6Network.dll Qt6WebSockets.dll Qt6Multimedia.dll Qt6MultimediaWidgets.dll Qt6Sql.dll) do (
-      if exist "%QT_BIN%\%%D" copy /Y "%QT_BIN%\%%D" "%DIST_DIR%" >NUL
+      if exist "!QT_BIN!\%%D" (
+        copy /Y "!QT_BIN!\%%D" "%DIST_DIR%" >NUL
+        echo   Copied %%D
+      )
     )
 
     mkdir "%DIST_DIR%\platforms" 2>NUL
-    if exist "%CMAKE_PREFIX_PATH%\plugins\platforms\qwindows.dll" (
-      copy /Y "%CMAKE_PREFIX_PATH%\plugins\platforms\qwindows.dll" "%DIST_DIR%\platforms" >NUL
+    if exist "!QT_PREFIX!\plugins\platforms\qwindows.dll" (
+      copy /Y "!QT_PREFIX!\plugins\platforms\qwindows.dll" "%DIST_DIR%\platforms" >NUL
+      echo   Copied platforms\qwindows.dll
     )
 
-    if exist "%CMAKE_PREFIX_PATH%\plugins\imageformats" (
+    if exist "!QT_PREFIX!\plugins\imageformats" (
       mkdir "%DIST_DIR%\imageformats" 2>NUL
-      xcopy "%CMAKE_PREFIX_PATH%\plugins\imageformats\*.dll" "%DIST_DIR%\imageformats" /Y >NUL
+      xcopy "!QT_PREFIX!\plugins\imageformats\*.dll" "%DIST_DIR%\imageformats" /Y >NUL
     )
 
-    if exist "%CMAKE_PREFIX_PATH%\plugins\styles" (
+    if exist "!QT_PREFIX!\plugins\styles" (
       mkdir "%DIST_DIR%\styles-qt" 2>NUL
-      xcopy "%CMAKE_PREFIX_PATH%\plugins\styles\*.dll" "%DIST_DIR%\styles-qt" /Y >NUL
+      xcopy "!QT_PREFIX!\plugins\styles\*.dll" "%DIST_DIR%\styles-qt" /Y >NUL
     )
 
-    if exist "%CMAKE_PREFIX_PATH%\plugins\sqldrivers" (
+    if exist "!QT_PREFIX!\plugins\sqldrivers" (
       mkdir "%DIST_DIR%\sqldrivers" 2>NUL
-      xcopy "%CMAKE_PREFIX_PATH%\plugins\sqldrivers\*.dll" "%DIST_DIR%\sqldrivers" /Y >NUL
+      xcopy "!QT_PREFIX!\plugins\sqldrivers\*.dll" "%DIST_DIR%\sqldrivers" /Y >NUL
     )
   ) else (
-    echo WARNING: Qt6Core.dll not found under %QT_BIN% - check CMAKE_PREFIX_PATH.
+    echo WARNING: Qt6Core.dll not found under !QT_BIN! - check CMAKE_PREFIX_PATH.
   )
 )
 
