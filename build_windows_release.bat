@@ -26,6 +26,9 @@ if not defined Qt6_DIR (
 if not defined CMAKE_PREFIX_PATH (
   set "CMAKE_PREFIX_PATH=C:\Qt\6.10.1\mingw_64"
 )
+if not defined PROTOC_PREFIX_PATH (
+  set "PROTOC_PREFIX_PATH=G:\Download\protoc"
+)
 
 echo === zwergII - Windows Release Build ===
 echo.
@@ -49,9 +52,9 @@ rem Qt: qmake6 OR Qt6_DIR/CMAKE_PREFIX_PATH
 where qmake6 >NUL 2>&1
 if errorlevel 1 if not defined Qt6_DIR if not defined CMAKE_PREFIX_PATH set "MISSING_DEPS=!MISSING_DEPS! qt6"
 
-rem protoc
+rem protoc: in PATH OR PROTOC_PREFIX_PATH
 where protoc >NUL 2>&1
-if errorlevel 1 set "MISSING_DEPS=!MISSING_DEPS! protoc"
+if errorlevel 1 if not defined PROTOC_PREFIX_PATH set "MISSING_DEPS=!MISSING_DEPS! protoc"
 
 if not "%MISSING_DEPS%"=="" (
   echo ERROR: Missing dependencies: %MISSING_DEPS%
@@ -60,14 +63,20 @@ if not "%MISSING_DEPS%"=="" (
   echo.
   echo Suggested installs:
   echo   - CMake: https://cmake.org/download/  or: winget install Kitware.CMake
-  echo   - Qt6:   https://www.qt.io/download-qt-installer
-  echo   - Protobuf protoc: via vcpkg or official releases
+  echo   - Qt6:   https://www.qt.io/download-qt-installer  or set Qt6_DIR / CMAKE_PREFIX_PATH
+  echo   - Protobuf protoc: via vcpkg or official releases  or set PROTOC_PREFIX_PATH
   echo.
   exit /B 1
 )
 
 echo All dependencies found.
 echo.
+
+rem Add PROTOC_PREFIX_PATH to PATH if defined
+if defined PROTOC_PREFIX_PATH (
+  echo Adding PROTOC_PREFIX_PATH to PATH: %PROTOC_PREFIX_PATH%\bin
+  set "PATH=%PROTOC_PREFIX_PATH%\bin;%PATH%"
+)
 
 rem ===========================================================================
 rem [1] Configure
