@@ -83,11 +83,11 @@ rem [1] Configure
 rem ===========================================================================
 echo [1/3] Configure (CMake)...
 
-set CMAKE_GENERATOR=
+set "CMAKE_GENERATOR="
 where g++ >NUL 2>&1
 if not errorlevel 1 (
   echo Detected MinGW, using MinGW Makefiles generator
-  set CMAKE_GENERATOR=-G "MinGW Makefiles"
+  set "CMAKE_GENERATOR=-G MinGW Makefiles"
 ) else (
   where cl >NUL 2>&1
   if not errorlevel 1 (
@@ -95,7 +95,11 @@ if not errorlevel 1 (
   )
 )
 
-cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" %CMAKE_GENERATOR% -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+if defined CMAKE_GENERATOR (
+  cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" %CMAKE_GENERATOR% -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+) else (
+  cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+)
 if errorlevel 1 goto error
 
 rem ===========================================================================
