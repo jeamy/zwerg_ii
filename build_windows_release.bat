@@ -27,8 +27,16 @@ if not defined Qt6_DIR (
 if not defined CMAKE_PREFIX_PATH (
   set "CMAKE_PREFIX_PATH=C:\Qt\6.10.1\mingw_64"
 )
+if not defined Qt6WebSockets_DIR (
+  set "Qt6WebSockets_DIR=%CMAKE_PREFIX_PATH%\lib\cmake\Qt6WebSockets"
+)
 if not defined PROTOC_PREFIX_PATH (
   set "PROTOC_PREFIX_PATH=G:\Download\protoc"
+)
+if not defined Vulkan_INCLUDE_DIR (
+  if defined VULKAN_SDK (
+    set "Vulkan_INCLUDE_DIR=%VULKAN_SDK%\Include"
+  )
 )
 
 echo === zwergII - Windows Release Build ===
@@ -52,6 +60,13 @@ if errorlevel 1 (
 rem Qt: qmake6 OR Qt6_DIR/CMAKE_PREFIX_PATH
 where qmake6 >NUL 2>&1
 if errorlevel 1 if not defined Qt6_DIR if not defined CMAKE_PREFIX_PATH set "MISSING_DEPS=!MISSING_DEPS! qt6"
+
+rem Qt WebSockets: needed by find_package(Qt6 COMPONENTS WebSockets)
+if exist "%Qt6WebSockets_DIR%\Qt6WebSocketsConfig.cmake" (
+  rem ok
+) else (
+  set "MISSING_DEPS=!MISSING_DEPS! qt6websockets"
+)
 
 rem protoc: in PATH OR PROTOC_PREFIX_PATH
 where protoc >NUL 2>&1
@@ -97,9 +112,17 @@ if not errorlevel 1 (
 )
 
 if defined CMAKE_GEN (
-  cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+  if defined Vulkan_INCLUDE_DIR (
+    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+  ) else (
+    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+  )
 ) else (
-  cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+  if defined Vulkan_INCLUDE_DIR (
+    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+  ) else (
+    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+  )
 )
 if errorlevel 1 goto error
 
