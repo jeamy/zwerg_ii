@@ -30,12 +30,31 @@ if ! command -v cmake &>/dev/null; then
   MISSING_DEPS="$MISSING_DEPS cmake"
 fi
 
-# Qt6 detection: check qmake6/qtpaths6 first, then env vars, then fallback paths
+# Qt6 detection: check env vars, fallback paths, then qmake6/qtpaths6
 QT6_OK=0
-if command -v qmake6 &>/dev/null; then
+
+# Check if CMAKE_PREFIX_PATH or Qt6_DIR is already set
+if [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/lib/cmake/Qt6" ]; then
   QT6_OK=1
-elif command -v qtpaths6 &>/dev/null; then
+elif [ -n "$Qt6_DIR" ] && [ -d "$Qt6_DIR" ]; then
   QT6_OK=1
+else
+  # Check standard Qt installation paths under $HOME/Qt/6.*/macos
+  for cand in "$HOME"/Qt/6.*/macos; do
+    if [ -d "$cand/lib/cmake/Qt6" ]; then
+      QT6_OK=1
+      break
+    fi
+  done
+fi
+
+# Fallback: check if qmake6/qtpaths6 are in PATH
+if [ "$QT6_OK" -eq 0 ]; then
+  if command -v qmake6 &>/dev/null; then
+    QT6_OK=1
+  elif command -v qtpaths6 &>/dev/null; then
+    QT6_OK=1
+  fi
 fi
 
 if [ "$QT6_OK" -eq 0 ]; then
