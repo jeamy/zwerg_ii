@@ -33,6 +33,37 @@ if not defined Qt6WebSockets_DIR (
 if not defined PROTOC_PREFIX_PATH (
   set "PROTOC_PREFIX_PATH=G:\Download\protoc"
 )
+rem Protobuf_DIR: folder containing protobuf-config.cmake or ProtobufConfig.cmake
+rem Example: G:\Download\protobuf-install\lib\cmake\protobuf
+rem Or use CMAKE_TOOLCHAIN_FILE for vcpkg integration
+
+rem Auto-detect vcpkg if not already set
+if not defined CMAKE_TOOLCHAIN_FILE (
+  if exist "G:\programming\vcpkg\scripts\buildsystems\vcpkg.cmake" (
+    set "CMAKE_TOOLCHAIN_FILE=G:\programming\vcpkg\scripts\buildsystems\vcpkg.cmake"
+    echo Auto-detected vcpkg: !CMAKE_TOOLCHAIN_FILE!
+  ) else if exist "C:\vcpkg\scripts\buildsystems\vcpkg.cmake" (
+    set "CMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake"
+    echo Auto-detected vcpkg: !CMAKE_TOOLCHAIN_FILE!
+  ) else if exist "%USERPROFILE%\vcpkg\scripts\buildsystems\vcpkg.cmake" (
+    set "CMAKE_TOOLCHAIN_FILE=%USERPROFILE%\vcpkg\scripts\buildsystems\vcpkg.cmake"
+    echo Auto-detected vcpkg: !CMAKE_TOOLCHAIN_FILE!
+  )
+)
+
+rem Auto-detect Protobuf if not already set and vcpkg not found
+if not defined Protobuf_DIR (
+  if not defined CMAKE_TOOLCHAIN_FILE (
+    if exist "G:\Download\protobuf-install\lib\cmake\protobuf" (
+      set "Protobuf_DIR=G:\Download\protobuf-install\lib\cmake\protobuf"
+      echo Auto-detected Protobuf: !Protobuf_DIR!
+    ) else if exist "C:\Program Files\protobuf\lib\cmake\protobuf" (
+      set "Protobuf_DIR=C:\Program Files\protobuf\lib\cmake\protobuf"
+      echo Auto-detected Protobuf: !Protobuf_DIR!
+    )
+  )
+)
+
 if not defined Vulkan_INCLUDE_DIR (
   if defined VULKAN_SDK (
     set "Vulkan_INCLUDE_DIR=%VULKAN_SDK%\Include"
@@ -80,13 +111,33 @@ if not "%MISSING_DEPS%"=="" (
   echo Suggested installs:
   echo   - CMake: https://cmake.org/download/  or: winget install Kitware.CMake
   echo   - Qt6:   https://www.qt.io/download-qt-installer  or set Qt6_DIR / CMAKE_PREFIX_PATH
+  echo   - Qt6WebSockets: via Qt Maintenance Tool  or set Qt6WebSockets_DIR
   echo   - Protobuf protoc: via vcpkg or official releases  or set PROTOC_PREFIX_PATH
+  echo   - Protobuf libs: vcpkg install protobuf  or set Protobuf_DIR / CMAKE_TOOLCHAIN_FILE
   echo.
   exit /B 1
 )
 
 echo All dependencies found.
 echo.
+
+rem Auto-install Protobuf via vcpkg if vcpkg is available but protobuf is missing
+if defined CMAKE_TOOLCHAIN_FILE (
+  if not defined Protobuf_DIR (
+    echo Checking if Protobuf is installed in vcpkg...
+    for %%i in ("%CMAKE_TOOLCHAIN_FILE%") do set "VCPKG_ROOT=%%~dpi..\.."
+    if exist "!VCPKG_ROOT!\vcpkg.exe" (
+      echo Protobuf not found, attempting auto-install via vcpkg...
+      echo Running: !VCPKG_ROOT!\vcpkg.exe install protobuf:x64-mingw-static
+      "!VCPKG_ROOT!\vcpkg.exe" install protobuf:x64-mingw-static
+      if errorlevel 1 (
+        echo WARNING: vcpkg protobuf installation failed, CMake may fail
+      ) else (
+        echo Protobuf installed successfully via vcpkg
+      )
+    )
+  )
+)
 
 rem Add PROTOC_PREFIX_PATH to PATH if defined
 if defined PROTOC_PREFIX_PATH (
@@ -111,19 +162,15 @@ if not errorlevel 1 (
   )
 )
 
-if defined CMAKE_GEN (
-  if defined Vulkan_INCLUDE_DIR (
-    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
-  ) else (
-    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
-  )
-) else (
-  if defined Vulkan_INCLUDE_DIR (
-    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
-  ) else (
-    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
-  )
-)
+rem Build CMake arguments incrementally
+set "CMAKE_ARGS=-S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%"
+if defined CMAKE_GEN set "CMAKE_ARGS=%CMAKE_ARGS% -G "%CMAKE_GEN%""
+if defined Qt6WebSockets_DIR set "CMAKE_ARGS=%CMAKE_ARGS% -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%""
+if defined Vulkan_INCLUDE_DIR set "CMAKE_ARGS=%CMAKE_ARGS% -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%""
+if defined Protobuf_DIR set "CMAKE_ARGS=%CMAKE_ARGS% -DProtobuf_DIR="%Protobuf_DIR%""
+if defined CMAKE_TOOLCHAIN_FILE set "CMAKE_ARGS=%CMAKE_ARGS% -DCMAKE_TOOLCHAIN_FILE="%CMAKE_TOOLCHAIN_FILE%""
+
+cmake %CMAKE_ARGS%
 if errorlevel 1 goto error
 
 rem ===========================================================================
