@@ -121,19 +121,50 @@ if not "%MISSING_DEPS%"=="" (
 echo All dependencies found.
 echo.
 
-rem Auto-install Protobuf via vcpkg if vcpkg is available but protobuf is missing
-if defined CMAKE_TOOLCHAIN_FILE (
-  if not defined Protobuf_DIR (
-    echo Checking if Protobuf is installed in vcpkg...
-    for %%i in ("%CMAKE_TOOLCHAIN_FILE%") do set "VCPKG_ROOT=%%~dpi..\.."
-    if exist "!VCPKG_ROOT!\vcpkg.exe" (
-      echo Protobuf not found, attempting auto-install via vcpkg...
-      echo Running: !VCPKG_ROOT!\vcpkg.exe install protobuf:x64-mingw-static
-      "!VCPKG_ROOT!\vcpkg.exe" install protobuf:x64-mingw-static
-      if errorlevel 1 (
-        echo WARNING: vcpkg protobuf installation failed, CMake may fail
+rem Auto-build Protobuf if not found and source is available
+if not defined Protobuf_DIR (
+  if not defined CMAKE_TOOLCHAIN_FILE (
+    set "PROTOBUF_SRC_DIR=G:\Download\protobuf"
+    set "PROTOBUF_INSTALL_DIR=G:\Download\protobuf-install"
+    
+    if exist "!PROTOBUF_SRC_DIR!\CMakeLists.txt" (
+      if not exist "!PROTOBUF_INSTALL_DIR!\lib\cmake\protobuf" (
+        echo.
+        echo ========================================================================
+        echo Protobuf libraries not found, attempting auto-build from source...
+        echo Source: !PROTOBUF_SRC_DIR!
+        echo Install: !PROTOBUF_INSTALL_DIR!
+        echo ========================================================================
+        echo.
+        
+        mkdir "!PROTOBUF_SRC_DIR!\build-mingw" 2>NUL
+        pushd "!PROTOBUF_SRC_DIR!\build-mingw"
+        
+        cmake .. -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX="!PROTOBUF_INSTALL_DIR!" -DCMAKE_BUILD_TYPE=Release -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
+        if not errorlevel 1 (
+          cmake --build . --config Release -j4
+          if not errorlevel 1 (
+            cmake --install . --config Release
+            if not errorlevel 1 (
+              echo.
+              echo Protobuf built and installed successfully
+              set "Protobuf_DIR=!PROTOBUF_INSTALL_DIR!\lib\cmake\protobuf"
+            )
+          )
+        )
+        
+        popd
+        
+        if not defined Protobuf_DIR (
+          echo.
+          echo WARNING: Protobuf auto-build failed
+          echo Please install protobuf manually or via vcpkg
+          echo.
+          pause
+        )
       ) else (
-        echo Protobuf installed successfully via vcpkg
+        set "Protobuf_DIR=!PROTOBUF_INSTALL_DIR!\lib\cmake\protobuf"
+        echo Found existing Protobuf installation: !Protobuf_DIR!
       )
     )
   )
