@@ -608,11 +608,8 @@ void MainWindow::updateSidebarForConnectionState(bool connected) {
   if (!m_sidebarGroup)
     return;
 
-  // SCAN is always visible.
-  if (auto *scanBtn = m_sidebarGroup->button(0))
-    scanBtn->setVisible(true);
-
-  for (int idx = 1; idx <= 5; ++idx) {
+  // All sidebar buttons (CAM, ASTRO, PANO, GAL, SET) depend on connection
+  for (int idx = 0; idx <= 4; ++idx) {
     if (auto *btn = m_sidebarGroup->button(idx))
       btn->setVisible(connected);
   }
@@ -653,11 +650,8 @@ void MainWindow::updateSidebarForConnectionState(bool connected) {
     if (m_starMapOverlayEnabled)
       onStarMapOverlayRequested(false);
 
-    // Ensure we don't stay on a hidden tab.
-    if (auto *scanBtn = m_sidebarGroup->button(0))
-      scanBtn->setChecked(true);
-    if (m_contentStack)
-      m_contentStack->setCurrentIndex(0);
+    // After disconnect, sidebar buttons are hidden, so no need to switch tabs
+    // (they're all invisible anyway)
 
     m_motorOverlayUserVisible = true;
     m_paramsOverlayUserVisible = true;
@@ -790,12 +784,11 @@ void MainWindow::setupUi() {
     });
   };
 
-  addSidebarBtn(":/icons/icons/scan.svg", tr("SCAN"), 0);
-  addSidebarBtn(":/icons/icons/camera.svg", tr("CAM"), 1);
-  addSidebarBtn(":/icons/icons/astro.svg", tr("ASTRO"), 2);
-  addSidebarBtn(":/icons/icons/panorama.svg", tr("PANO"), 3);
-  addSidebarBtn(":/icons/icons/gallery.svg", tr("GAL"), 4);
-  addSidebarBtn(":/icons/icons/settings.svg", tr("SET"), 5);
+  addSidebarBtn(":/icons/icons/camera.svg", tr("CAM"), 0);
+  addSidebarBtn(":/icons/icons/astro.svg", tr("ASTRO"), 1);
+  addSidebarBtn(":/icons/icons/panorama.svg", tr("PANO"), 2);
+  addSidebarBtn(":/icons/icons/gallery.svg", tr("GAL"), 3);
+  addSidebarBtn(":/icons/icons/settings.svg", tr("SET"), 4);
 
   auto addOverlayToggleBtn = [&](const QString &iconPath, const QString &toolTip) {
     QToolButton *btn = new QToolButton(m_sidebar);
