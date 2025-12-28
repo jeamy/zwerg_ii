@@ -8,6 +8,9 @@ setlocal ENABLEDELAYEDEXPANSION
 set "SCRIPT_DIR=%~dp0"
 pushd "%SCRIPT_DIR%"
 
+if /I "%~1"=="--debug" set "ZWERG_BAT_DEBUG=1"
+if "%ZWERG_BAT_DEBUG%"=="1" echo on
+
 set "PROJECT_DIR=%SCRIPT_DIR%"
 set "BUILD_DIR=%PROJECT_DIR%build-windows-release"
 set "DIST_DIR=%PROJECT_DIR%dist\windows"
@@ -90,7 +93,7 @@ if not errorlevel 1 (
 )
 
 cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" %CMAKE_GENERATOR% -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
-if errorlevel 1 goto :error
+if errorlevel 1 goto error
 
 rem ===========================================================================
 rem [2] Build
@@ -98,7 +101,7 @@ rem ===========================================================================
 echo.
 echo [2/3] Build...
 cmake --build "%BUILD_DIR%" --config %BUILD_TYPE%
-if errorlevel 1 goto :error
+if errorlevel 1 goto error
 
 rem ===========================================================================
 rem [3] Dist
@@ -116,7 +119,7 @@ if exist "%BUILD_DIR%\%BIN_NAME%" (
     copy /Y "%BUILD_DIR%\%BUILD_TYPE%\%BIN_NAME%" "%DIST_DIR%" >NUL
   ) else (
     echo ERROR: Binary not found: %BIN_NAME%
-    goto :error
+    goto error
   )
 )
 
@@ -208,6 +211,7 @@ goto :eof
 :error
 echo.
 echo Build failed.
+popd
 exit /B 1
 
 endlocal
