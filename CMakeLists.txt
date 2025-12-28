@@ -16,16 +16,34 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWidget
 # Find Protobuf (try CONFIG mode first for modern installations, fallback to MODULE mode)
 find_package(Protobuf CONFIG QUIET)
 if(NOT Protobuf_FOUND)
-    find_package(Protobuf REQUIRED)
+    find_package(Protobuf REQUIRED MODULE)
 endif()
 
 # Protobuf generation
 file(GLOB PROTO_FILES "src/proto/*.proto")
 if(TARGET protobuf::protoc)
-    # Modern protobuf-config.cmake provides targets
-    protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
+    # Modern protobuf-config.cmake - generate sources manually
+    set(PROTO_SRCS)
+    set(PROTO_HDRS)
+    foreach(PROTO_FILE ${PROTO_FILES})
+        get_filename_component(PROTO_NAME ${PROTO_FILE} NAME_WE)
+        get_filename_component(PROTO_DIR ${PROTO_FILE} DIRECTORY)
+        list(APPEND PROTO_SRCS "${CMAKE_CURRENT_BINARY_DIR}/${PROTO_NAME}.pb.cc")
+        list(APPEND PROTO_HDRS "${CMAKE_CURRENT_BINARY_DIR}/${PROTO_NAME}.pb.h")
+        add_custom_command(
+            OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${PROTO_NAME}.pb.cc"
+                   "${CMAKE_CURRENT_BINARY_DIR}/${PROTO_NAME}.pb.h"
+            COMMAND protobuf::protoc
+            ARGS --cpp_out=${CMAKE_CURRENT_BINARY_DIR}
+                 -I${PROTO_DIR}
+                 ${PROTO_FILE}
+            DEPENDS ${PROTO_FILE} protobuf::protoc
+            COMMENT "Running protoc on ${PROTO_NAME}.proto"
+        )
+    endforeach()
 else()
-    # Legacy FindProtobuf.cmake
+    # Legacy FindProtobuf.cmake provides protobuf_generate_cpp()
+    include(FindProtobuf)
     protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 endif()
 
