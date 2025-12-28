@@ -167,12 +167,23 @@ if not defined Protobuf_DIR (
     )
   ) else (
     echo.
-    echo WARNING: Protobuf source not found at !PROTOBUF_SRC_DIR!
-    echo Please clone protobuf source or install via vcpkg
+    echo ========================================================================
+    echo ERROR: Protobuf libraries not found and source not available
+    echo ========================================================================
+    echo.
+    echo Protobuf is required to build this project.
+    echo.
+    echo Please clone the Protobuf source code:
     echo   git clone https://github.com/protocolbuffers/protobuf.git G:\Download\protobuf
     echo   cd G:\Download\protobuf
     echo   git checkout v21.12
     echo.
+    echo Then run this build script again. It will automatically build and install Protobuf.
+    echo.
+    echo Alternative: Install via vcpkg:
+    echo   G:\programming\vcpkg\vcpkg.exe install protobuf:x64-mingw-static
+    echo.
+    goto error
   )
 )
 
