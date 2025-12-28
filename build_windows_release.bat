@@ -210,15 +210,36 @@ if not errorlevel 1 (
   )
 )
 
-rem Build CMake arguments incrementally
-set "CMAKE_ARGS=-S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%"
-if defined CMAKE_GEN set "CMAKE_ARGS=%CMAKE_ARGS% -G "%CMAKE_GEN%""
-if defined Qt6WebSockets_DIR set "CMAKE_ARGS=%CMAKE_ARGS% -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%""
-if defined Vulkan_INCLUDE_DIR set "CMAKE_ARGS=%CMAKE_ARGS% -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%""
-if defined Protobuf_DIR set "CMAKE_ARGS=%CMAKE_ARGS% -DProtobuf_DIR="%Protobuf_DIR%""
-if defined CMAKE_TOOLCHAIN_FILE set "CMAKE_ARGS=%CMAKE_ARGS% -DCMAKE_TOOLCHAIN_FILE="%CMAKE_TOOLCHAIN_FILE%""
-
-cmake %CMAKE_ARGS%
+rem Build CMake command with proper argument handling
+if defined CMAKE_GEN (
+  if defined Protobuf_DIR (
+    if defined CMAKE_TOOLCHAIN_FILE (
+      cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DProtobuf_DIR="%Protobuf_DIR%" -DCMAKE_TOOLCHAIN_FILE="%CMAKE_TOOLCHAIN_FILE%"
+    ) else (
+      cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DProtobuf_DIR="%Protobuf_DIR%"
+    )
+  ) else (
+    if defined CMAKE_TOOLCHAIN_FILE (
+      cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DCMAKE_TOOLCHAIN_FILE="%CMAKE_TOOLCHAIN_FILE%"
+    ) else (
+      cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%"
+    )
+  )
+) else (
+  if defined Protobuf_DIR (
+    if defined CMAKE_TOOLCHAIN_FILE (
+      cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DProtobuf_DIR="%Protobuf_DIR%" -DCMAKE_TOOLCHAIN_FILE="%CMAKE_TOOLCHAIN_FILE%"
+    ) else (
+      cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DProtobuf_DIR="%Protobuf_DIR%"
+    )
+  ) else (
+    if defined CMAKE_TOOLCHAIN_FILE (
+      cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DCMAKE_TOOLCHAIN_FILE="%CMAKE_TOOLCHAIN_FILE%"
+    ) else (
+      cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%"
+    )
+  )
+)
 if errorlevel 1 goto error
 
 rem ===========================================================================

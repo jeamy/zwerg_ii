@@ -65,6 +65,8 @@ Note: System-specific installation instructions can be found in `DEVELOPMENT.md`
 
 ## Build
 
+### Linux / macOS
+
 There is a simple build script:
 
 ```bash
@@ -77,6 +79,49 @@ Alternatively, use plain CMake:
 mkdir -p build
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build
+```
+
+### Windows
+
+**Prerequisites:**
+- CMake >= 3.16
+- MinGW-w64 (g++) or MSVC compiler
+- Qt 6 (including WebSockets component)
+- Protobuf compiler (`protoc.exe`) and libraries
+
+**Protobuf Setup (required for Windows):**
+
+The build script can automatically build Protobuf from source. Clone the Protobuf repository:
+
+```bat
+cd G:\Download
+git clone https://github.com/protocolbuffers/protobuf.git
+cd protobuf
+git checkout v21.12
+```
+
+**Build:**
+
+```bat
+build_windows_release.bat
+```
+
+The script will:
+- Auto-detect vcpkg (if available)
+- Auto-detect or build Protobuf from source (if in `G:\Download\protobuf`)
+- Configure and build the project with CMake
+- Create a distributable package in `dist\windows\`
+
+**Environment Variables (optional):**
+
+You can override default paths by setting these before running the build script:
+
+```bat
+set Qt6_DIR=C:\Qt\6.10.1\mingw_64\lib\cmake\Qt6
+set CMAKE_PREFIX_PATH=C:\Qt\6.10.1\mingw_64
+set PROTOC_PREFIX_PATH=G:\Download\protoc
+set Protobuf_DIR=G:\Download\protobuf-install\lib\cmake\protobuf
+set CMAKE_TOOLCHAIN_FILE=G:\programming\vcpkg\scripts\buildsystems\vcpkg.cmake
 ```
 
 ## Run
