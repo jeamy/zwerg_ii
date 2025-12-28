@@ -103,8 +103,12 @@ if defined Protobuf_LIBRARY (
 
 rem Vulkan headers (optional for runtime, but required by some Qt/CMake configs)
 if defined Vulkan_INCLUDE_DIR (
-  if exist "%Vulkan_INCLUDE_DIR%\vulkan\vulkan.h" (
-    rem ok
+  if not "%Vulkan_INCLUDE_DIR%"=="" (
+    if exist "%Vulkan_INCLUDE_DIR%\vulkan\vulkan.h" (
+      rem ok
+    ) else (
+      set "MISSING_DEPS=!MISSING_DEPS! vulkan"
+    )
   ) else (
     set "MISSING_DEPS=!MISSING_DEPS! vulkan"
   )
@@ -121,7 +125,7 @@ if not "%MISSING_DEPS%"=="" (
   echo   - CMake: https://cmake.org/download/  or: winget install Kitware.CMake
   echo   - Qt6:   https://www.qt.io/download-qt-installer  or set Qt6_DIR / CMAKE_PREFIX_PATH
   echo   - Protobuf protoc: via vcpkg or official releases  or set PROTOC_PREFIX_PATH
-  echo   - Protobuf libs: install protobuf development package (vcpkg or MSYS2) and set PROTOBUF_PREFIX_PATH.
+  echo   - Protobuf libs: install protobuf development package via vcpkg or MSYS2 and set PROTOBUF_PREFIX_PATH.
   echo   - Vulkan headers: install Vulkan SDK and set VULKAN_SDK.
   echo.
   if "%ZWERG_BAT_INSTALL%"=="1" (
@@ -151,7 +155,7 @@ if not "%MISSING_DEPS%"=="" (
     echo cmake: install via winget install Kitware.CMake or https://cmake.org/download/
   )
   if not "x%MISSING_DEPS:compiler=%"=="x%MISSING_DEPS%" (
-    echo compiler: install MinGW (MSYS2) or MSVC Build Tools.
+    echo compiler: install MinGW via MSYS2 or MSVC Build Tools.
     echo compiler: MSYS2 https://www.msys2.org/ then pacman -S mingw-w64-x86_64-gcc
     echo compiler: MSVC https://visualstudio.microsoft.com/downloads/ then Build Tools.
   )
