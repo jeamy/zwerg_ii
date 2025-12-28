@@ -39,8 +39,8 @@ if [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/lib/cmake/Qt6" ]; the
 elif [ -n "$Qt6_DIR" ] && [ -d "$Qt6_DIR" ]; then
   QT6_OK=1
 else
-  # Check standard Qt installation paths under $HOME/Qt/6.*/macos
-  for cand in "$HOME"/Qt/6.*/macos; do
+  # Check standard Qt installation paths under $HOME/Qt/6.*/macos or $HOME/Qt/6.*/
+  for cand in "$HOME"/Qt/6.*/macos "$HOME"/Qt/6.*/; do
     if [ -d "$cand/lib/cmake/Qt6" ]; then
       QT6_OK=1
       break
@@ -107,9 +107,9 @@ if [ -z "$CMAKE_PREFIX_PATH" ] && command -v qtpaths6 &>/dev/null; then
   fi
 fi
 
-# Fallback: Standard Qt installation path under $HOME/Qt/6.*/macos
+# Fallback: Standard Qt installation path under $HOME/Qt/6.*/macos or $HOME/Qt/6.*/
 if [ -z "$CMAKE_PREFIX_PATH" ]; then
-  for cand in "$HOME"/Qt/6.*/macos; do
+  for cand in "$HOME"/Qt/6.*/macos "$HOME"/Qt/6.*/; do
     if [ -d "$cand/lib/cmake/Qt6" ]; then
       export CMAKE_PREFIX_PATH="$cand"
       echo "Qt6 auto-detected in $HOME/Qt: $CMAKE_PREFIX_PATH"
