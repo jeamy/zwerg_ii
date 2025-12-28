@@ -47,13 +47,7 @@ if errorlevel 1 (
 
 rem Qt: qmake6 OR Qt6_DIR/CMAKE_PREFIX_PATH
 where qmake6 >NUL 2>&1
-if errorlevel 1 (
-  if not defined Qt6_DIR (
-    if not defined CMAKE_PREFIX_PATH (
-      set MISSING_DEPS=!MISSING_DEPS! qt6
-    )
-  )
-)
+if errorlevel 1 if not defined Qt6_DIR if not defined CMAKE_PREFIX_PATH set "MISSING_DEPS=!MISSING_DEPS! qt6"
 
 rem protoc
 where protoc >NUL 2>&1
