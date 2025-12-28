@@ -12,8 +12,9 @@ if /I "%~1"=="--debug" set "ZWERG_BAT_DEBUG=1"
 if "%ZWERG_BAT_DEBUG%"=="1" echo on
 
 set "PROJECT_DIR=%SCRIPT_DIR%"
-set "BUILD_DIR=%PROJECT_DIR%build-windows-release"
-set "DIST_DIR=%PROJECT_DIR%dist\windows"
+if "%PROJECT_DIR:~-1%"=="\" set "PROJECT_DIR=%PROJECT_DIR:~0,-1%"
+set "BUILD_DIR=%PROJECT_DIR%\build-windows-release"
+set "DIST_DIR=%PROJECT_DIR%\dist\windows"
 set "BUILD_TYPE=Release"
 set "BIN_NAME=DwarfController.exe"
 
@@ -83,11 +84,11 @@ rem [1] Configure
 rem ===========================================================================
 echo [1/3] Configure (CMake)...
 
-set "CMAKE_GENERATOR="
+set "CMAKE_GEN="
 where g++ >NUL 2>&1
 if not errorlevel 1 (
   echo Detected MinGW, using MinGW Makefiles generator
-  set "CMAKE_GENERATOR=-G MinGW Makefiles"
+  set "CMAKE_GEN=MinGW Makefiles"
 ) else (
   where cl >NUL 2>&1
   if not errorlevel 1 (
@@ -95,8 +96,8 @@ if not errorlevel 1 (
   )
 )
 
-if defined CMAKE_GENERATOR (
-  cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" %CMAKE_GENERATOR% -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+if defined CMAKE_GEN (
+  cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
 ) else (
   cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
 )
