@@ -297,10 +297,7 @@ if not errorlevel 1 (
   popd
 ) else (
   echo NOTE: windeployqt not found - falling back to minimal manual Qt copy.
-  set "QT_PREFIX=%CMAKE_PREFIX_PATH%"
-  rem Normalize path (remove trailing backslash if present)
-  if "%QT_PREFIX:~-1%"=="\" set "QT_PREFIX=%QT_PREFIX:~0,-1%"
-  set "QT_BIN=%QT_PREFIX%\bin"
+  set "QT_BIN=%CMAKE_PREFIX_PATH%\bin"
 
   if exist "%QT_BIN%\Qt6Core.dll" (
     echo Copying Qt runtime DLLs...
@@ -309,23 +306,23 @@ if not errorlevel 1 (
     )
 
     mkdir "%DIST_DIR%\platforms" 2>NUL
-    if exist "%QT_PREFIX%\plugins\platforms\qwindows.dll" (
-      copy /Y "%QT_PREFIX%\plugins\platforms\qwindows.dll" "%DIST_DIR%\platforms" >NUL
+    if exist "%CMAKE_PREFIX_PATH%\plugins\platforms\qwindows.dll" (
+      copy /Y "%CMAKE_PREFIX_PATH%\plugins\platforms\qwindows.dll" "%DIST_DIR%\platforms" >NUL
     )
 
-    if exist "%QT_PREFIX%\plugins\imageformats" (
+    if exist "%CMAKE_PREFIX_PATH%\plugins\imageformats" (
       mkdir "%DIST_DIR%\imageformats" 2>NUL
-      xcopy "%QT_PREFIX%\plugins\imageformats\*.dll" "%DIST_DIR%\imageformats" /Y >NUL
+      xcopy "%CMAKE_PREFIX_PATH%\plugins\imageformats\*.dll" "%DIST_DIR%\imageformats" /Y >NUL
     )
 
-    if exist "%QT_PREFIX%\plugins\styles" (
+    if exist "%CMAKE_PREFIX_PATH%\plugins\styles" (
       mkdir "%DIST_DIR%\styles-qt" 2>NUL
-      xcopy "%QT_PREFIX%\plugins\styles\*.dll" "%DIST_DIR%\styles-qt" /Y >NUL
+      xcopy "%CMAKE_PREFIX_PATH%\plugins\styles\*.dll" "%DIST_DIR%\styles-qt" /Y >NUL
     )
 
-    if exist "%QT_PREFIX%\plugins\sqldrivers" (
+    if exist "%CMAKE_PREFIX_PATH%\plugins\sqldrivers" (
       mkdir "%DIST_DIR%\sqldrivers" 2>NUL
-      xcopy "%QT_PREFIX%\plugins\sqldrivers\*.dll" "%DIST_DIR%\sqldrivers" /Y >NUL
+      xcopy "%CMAKE_PREFIX_PATH%\plugins\sqldrivers\*.dll" "%DIST_DIR%\sqldrivers" /Y >NUL
     )
   ) else (
     echo WARNING: Qt6Core.dll not found under %QT_BIN% - check CMAKE_PREFIX_PATH.
