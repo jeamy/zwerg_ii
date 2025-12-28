@@ -33,7 +33,7 @@ echo.
 rem ===========================================================================
 rem [0] Dependency checks (no auto-install)
 rem ===========================================================================
-set MISSING_DEPS=
+set "MISSING_DEPS="
 
 where cmake >NUL 2>&1
 if errorlevel 1 set MISSING_DEPS=!MISSING_DEPS! cmake
@@ -59,13 +59,13 @@ rem protoc
 where protoc >NUL 2>&1
 if errorlevel 1 set MISSING_DEPS=!MISSING_DEPS! protoc
 
-if defined MISSING_DEPS (
-  echo ERROR: Missing dependencies:!MISSING_DEPS!
+if not "%MISSING_DEPS%"=="" (
+  echo ERROR: Missing dependencies: %MISSING_DEPS%
   echo.
   echo Please install the missing components and retry.
   echo.
   echo Suggested installs:
-  echo   - CMake: https://cmake.org/download/  ^(or: winget install Kitware.CMake^)
+  echo   - CMake: https://cmake.org/download/  or: winget install Kitware.CMake
   echo   - Qt6:   https://www.qt.io/download-qt-installer
   echo   - Protobuf (protoc): via vcpkg or official releases
   echo.
