@@ -51,7 +51,7 @@ if errorlevel 1 if not defined Qt6_DIR if not defined CMAKE_PREFIX_PATH set "MIS
 
 rem protoc
 where protoc >NUL 2>&1
-if errorlevel 1 set MISSING_DEPS=!MISSING_DEPS! protoc
+if errorlevel 1 set "MISSING_DEPS=!MISSING_DEPS! protoc"
 
 if not "%MISSING_DEPS%"=="" (
   echo ERROR: Missing dependencies: %MISSING_DEPS%
