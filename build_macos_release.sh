@@ -18,7 +18,7 @@ APP_BUNDLE_NAME="$APP_NAME.app"
 echo "=== zwergII - macOS Release Build ==="
 
 # ==============================================================================
-# Dependency checks (no auto-install)
+# Dependency checks with environment variable support
 # ==============================================================================
 MISSING_DEPS=""
 
@@ -30,42 +30,76 @@ if ! command -v cmake &>/dev/null; then
   MISSING_DEPS="$MISSING_DEPS cmake"
 fi
 
+# Qt6 detection: check CMAKE_PREFIX_PATH or Qt6_DIR env vars first
 QT6_OK=0
-if command -v qmake6 &>/dev/null; then
+if [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/lib/cmake/Qt6" ]; then
   QT6_OK=1
+  echo "Qt6 found via CMAKE_PREFIX_PATH: $CMAKE_PREFIX_PATH"
+elif [ -n "$Qt6_DIR" ] && [ -d "$Qt6_DIR" ]; then
+  QT6_OK=1
+  echo "Qt6 found via Qt6_DIR: $Qt6_DIR"
+elif command -v qmake6 &>/dev/null; then
+  QT6_OK=1
+  QT_PREFIX_DETECTED="$(qmake6 -query QT_INSTALL_PREFIX 2>/dev/null || echo "")"
+  if [ -n "$QT_PREFIX_DETECTED" ]; then
+    export CMAKE_PREFIX_PATH="$QT_PREFIX_DETECTED"
+    echo "Qt6 auto-detected: $QT_PREFIX_DETECTED"
+  fi
 elif command -v qtpaths6 &>/dev/null; then
   QT6_OK=1
+  QT_PREFIX_DETECTED="$(qtpaths6 --install-prefix 2>/dev/null || echo "")"
+  if [ -n "$QT_PREFIX_DETECTED" ]; then
+    export CMAKE_PREFIX_PATH="$QT_PREFIX_DETECTED"
+    echo "Qt6 auto-detected: $QT_PREFIX_DETECTED"
+  fi
 fi
+
 if [ "$QT6_OK" -eq 0 ]; then
   MISSING_DEPS="$MISSING_DEPS qt6"
 fi
 
-if ! command -v protoc &>/dev/null; then
+# Protobuf detection: check PROTOC_PREFIX_PATH or protoc in PATH
+PROTOC_OK=0
+if [ -n "$PROTOC_PREFIX_PATH" ] && [ -f "$PROTOC_PREFIX_PATH/bin/protoc" ]; then
+  PROTOC_OK=1
+  export PATH="$PROTOC_PREFIX_PATH/bin:$PATH"
+  echo "protoc found via PROTOC_PREFIX_PATH: $PROTOC_PREFIX_PATH"
+elif [ -n "$Protobuf_DIR" ] && [ -d "$Protobuf_DIR" ]; then
+  PROTOC_OK=1
+  echo "Protobuf found via Protobuf_DIR: $Protobuf_DIR"
+elif command -v protoc &>/dev/null; then
+  PROTOC_OK=1
+  echo "protoc found in PATH: $(which protoc)"
+fi
+
+if [ "$PROTOC_OK" -eq 0 ]; then
   MISSING_DEPS="$MISSING_DEPS protoc"
 fi
 
 if [ -n "$MISSING_DEPS" ]; then
+  echo ""
   echo "ERROR: Missing dependencies:$MISSING_DEPS" >&2
-  echo "Please install them and retry." >&2
+  echo ""
+  echo "Please install them or set environment variables:" >&2
+  echo "  - Qt6: set CMAKE_PREFIX_PATH or Qt6_DIR" >&2
+  echo "    Example: export CMAKE_PREFIX_PATH=/usr/local/Qt-6.x.x" >&2
+  echo "  - Protobuf: set PROTOC_PREFIX_PATH or Protobuf_DIR" >&2
+  echo "    Example: export PROTOC_PREFIX_PATH=/usr/local" >&2
+  echo "    Or install via Homebrew: brew install protobuf" >&2
+  echo ""
   exit 1
 fi
 
 echo "All dependencies found."
 
-# Help CMake find Qt if possible
-if [ -z "$CMAKE_PREFIX_PATH" ] && command -v qtpaths6 &>/dev/null; then
-  QT_PREFIX_DETECTED="$(qtpaths6 --install-prefix 2>/dev/null || echo "")"
-  if [ -n "$QT_PREFIX_DETECTED" ]; then
-    export CMAKE_PREFIX_PATH="$QT_PREFIX_DETECTED"
-  fi
-fi
-
-if [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/bin" ]; then
-  export PATH="$CMAKE_PREFIX_PATH/bin:$PATH"
-fi
-
+# Set up Qt6_DIR if not already set
 if [ -z "$Qt6_DIR" ] && [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/lib/cmake/Qt6" ]; then
   export Qt6_DIR="$CMAKE_PREFIX_PATH/lib/cmake/Qt6"
+fi
+
+# Add Qt bin to PATH if available
+if [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/bin" ]; then
+  export PATH="$CMAKE_PREFIX_PATH/bin:$PATH"
 fi
 
 # ==============================================================================
