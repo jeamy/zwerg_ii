@@ -59,6 +59,17 @@ public:
 
   void applyDefaultParamsConfig(const QJsonDocument &document);
 
+  // Exposure values: {api_index, display_name} for Tele camera
+  static const QVector<QPair<int, QString>> s_teleExposureValues;
+  // Exposure values: {api_index, display_name} for Wide camera
+  static const QVector<QPair<int, QString>> s_wideExposureValues;
+  // Gain values: {api_index, gain_value} for Tele camera
+  static const QVector<QPair<int, int>> s_teleGainValues;
+  // Gain values: {api_index, gain_value} for Wide camera
+  static const QVector<QPair<int, int>> s_wideGainValues;
+  // White balance color temperature values (Kelvin)
+  static const QVector<int> s_wbTemperatureValues;
+
 signals:
   void photoRequested();
   void recordRequested(bool recording);
@@ -149,17 +160,6 @@ private:
   QComboBox *m_wbModeCombo;
   QSlider *m_wbTemperatureSlider;
   QLabel *m_wbTemperatureValueLabel;
-
-  // Exposure values: {api_index, display_name} for Tele camera
-  static const QVector<QPair<int, QString>> s_teleExposureValues;
-  // Exposure values: {api_index, display_name} for Wide camera
-  static const QVector<QPair<int, QString>> s_wideExposureValues;
-  // Gain values: {api_index, gain_value} for Tele camera
-  static const QVector<QPair<int, int>> s_teleGainValues;
-  // Gain values: {api_index, gain_value} for Wide camera
-  static const QVector<QPair<int, int>> s_wideGainValues;
-  // White balance color temperature values (Kelvin)
-  static const QVector<int> s_wbTemperatureValues;
 
   QVector<QPair<int, QString>> m_teleExposureValuesDyn;
   QVector<QPair<int, QString>> m_wideExposureValuesDyn;

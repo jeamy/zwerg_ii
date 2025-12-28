@@ -6,7 +6,14 @@
 #include "notify.pb.h"
 
 #include <QDebug>
+#include <QHash>
 #include <QTimer>
+#include <QVector>
+
+namespace {
+void appendVarintU64(QByteArray &buf, quint64 value);
+void appendInt64Varint(QByteArray &buf, qint64 value);
+}
 
 // Astro module command IDs (module 8)
 namespace AstroCmd {
@@ -180,8 +187,9 @@ void DwarfAstroController::stopTrackSpecialTarget() {
 void DwarfAstroController::startLiveStacking() {
     qWarning() << "=== DwarfAstroController::startLiveStacking() called";
     qWarning() << "    Module: 3, Cmd: 11005 (CAPTURE_RAW_LIVE_STACKING)";
-    dwarf::ReqCaptureRawLiveStacking req;
-    QByteArray data = QByteArray::fromStdString(req.SerializeAsString());
+    QByteArray data;
+    data.append(static_cast<char>(0x08));
+    appendInt64Varint(data, static_cast<qint64>(-1));
     qWarning() << "    Payload size:" << data.size() << "bytes";
     sendCommand(AstroCmd::CAPTURE_RAW_LIVE_STACKING, data);
     qWarning() << "    Command sent, emitting stackingStarted signal";
@@ -199,9 +207,10 @@ void DwarfAstroController::stopLiveStacking() {
 }
 
 void DwarfAstroController::startWideLiveStacking() {
-    dwarf::ReqCaptureWideRawLiveStacking req;
-    sendCommand(AstroCmd::CAPTURE_WIDE_RAW_LIVE_STACKING,
-                QByteArray::fromStdString(req.SerializeAsString()));
+    QByteArray data;
+    data.append(static_cast<char>(0x08));
+    appendInt64Varint(data, static_cast<qint64>(-1));
+    sendCommand(AstroCmd::CAPTURE_WIDE_RAW_LIVE_STACKING, data);
     emit stackingStarted();
 }
 
@@ -439,8 +448,84 @@ namespace NotifyCmd {
     constexpr quint32 WIDE_STACKING_STATE = 15236;
     constexpr quint32 WIDE_STACKING_PROGRESS = 15237;
     constexpr quint32 EQ_SOLVING_STATE = 15239;
+    constexpr quint32 STOP_CAPTURE_WIDE_RAW_LIVE_STACKING = 11017;
     constexpr quint32 TEMPERATURE = 15243;
 }
+
+namespace {
+bool readVarintU64(const QByteArray &buf, int *offset, quint64 *out) {
+    if (!offset || !out)
+        return false;
+    quint64 value = 0;
+    int shift = 0;
+    int i = *offset;
+    while (i < buf.size()) {
+        const quint8 b = static_cast<quint8>(buf.at(i));
+        i += 1;
+        value |= (static_cast<quint64>(b & 0x7F) << shift);
+        if ((b & 0x80) == 0) {
+            *offset = i;
+            *out = value;
+            return true;
+        }
+        shift += 7;
+        if (shift > 63)
+            break;
+    }
+    return false;
+}
+
+void appendVarintU64(QByteArray &buf, quint64 value) {
+    while (value >= 0x80) {
+        buf.append(static_cast<char>((value & 0x7F) | 0x80));
+        value >>= 7;
+    }
+    buf.append(static_cast<char>(value));
+}
+
+void appendInt64Varint(QByteArray &buf, qint64 value) {
+    const quint64 v = static_cast<quint64>(value);
+    appendVarintU64(buf, v);
+}
+
+QHash<quint32, QVector<quint64>> parseVarintFields(const QByteArray &buf) {
+    QHash<quint32, QVector<quint64>> fields;
+    int offset = 0;
+    while (offset < buf.size()) {
+        quint64 key = 0;
+        if (!readVarintU64(buf, &offset, &key))
+            break;
+
+        const quint32 fieldNum = static_cast<quint32>(key >> 3);
+        const quint32 wireType = static_cast<quint32>(key & 0x07);
+
+        if (wireType == 0) {
+            quint64 v = 0;
+            if (!readVarintU64(buf, &offset, &v))
+                break;
+            fields[fieldNum].append(v);
+        } else if (wireType == 2) {
+            quint64 len = 0;
+            if (!readVarintU64(buf, &offset, &len))
+                break;
+            if (len > static_cast<quint64>(buf.size() - offset))
+                break;
+            offset += static_cast<int>(len);
+        } else {
+            break;
+        }
+    }
+    return fields;
+}
+
+int firstFieldOr(const QHash<quint32, QVector<quint64>> &fields, quint32 fieldNum,
+                 int defaultValue) {
+    const auto it = fields.find(fieldNum);
+    if (it == fields.end() || it->isEmpty())
+        return defaultValue;
+    return static_cast<int>(it->at(0));
+}
+} // namespace
 
 void DwarfAstroController::handleNotification(quint32 cmd, const QByteArray &data) {
     qWarning() << "[AstroController::handleNotification] Cmd:" << cmd << "Size:" << data.size();
@@ -476,19 +561,39 @@ void DwarfAstroController::handleNotification(quint32 cmd, const QByteArray &dat
                 qWarning() << "Empty stacking progress notification";
                 break;
             }
-            
-            dwarf::ResNotifyProgressCaptureRawLiveStacking res;
-            if (res.ParseFromArray(data.data(), data.size())) {
-                qDebug() << "✓ Stacking progress: frame" << res.current_count() 
-                         << "/" << res.total_count()
-                         << "stacked:" << res.stacked_count()
-                         << "rejected:" << res.rejected_count();
-                emit stackingProgress(res.current_count(), res.total_count(), 
-                                      res.stacked_count(), res.rejected_count());
-            } else {
-                qWarning() << "✗ Failed to parse stacking progress notification";
-                qWarning() << "   Raw data (hex):" << data.toHex();
-            }
+
+            const auto fields = parseVarintFields(data);
+            const int totalCount = firstFieldOr(fields, 1, 0);
+            const int updateCountType = firstFieldOr(fields, 2, -1);
+            const int currentCount = firstFieldOr(fields, 3, 0);
+            const int stackedCountRaw = firstFieldOr(fields, 4, 0);
+            const int expIndex = firstFieldOr(fields, 5, -1);
+            const int gainIndex = firstFieldOr(fields, 6, -1);
+
+            int stackedCount = stackedCountRaw;
+            if (stackedCount <= 0)
+                stackedCount = currentCount;
+
+            qDebug() << "✓ Stacking progress: current=" << currentCount
+                     << "total=" << totalCount << "stacked=" << stackedCount
+                     << "updateType=" << updateCountType << "expIndex=" << expIndex
+                     << "gainIndex=" << gainIndex;
+
+            emit stackingProgress(currentCount, totalCount, stackedCount, 0);
+            break;
+        }
+
+        case NotifyCmd::WIDE_STACKING_PROGRESS: {
+            if (data.size() == 0)
+                break;
+            const auto fields = parseVarintFields(data);
+            const int totalCount = firstFieldOr(fields, 1, 0);
+            const int currentCount = firstFieldOr(fields, 3, 0);
+            const int stackedCountRaw = firstFieldOr(fields, 4, 0);
+            int stackedCount = stackedCountRaw;
+            if (stackedCount <= 0)
+                stackedCount = currentCount;
+            emit stackingProgress(currentCount, totalCount, stackedCount, 0);
             break;
         }
         

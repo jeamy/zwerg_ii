@@ -1,6 +1,7 @@
 #include "AstroNavigationPanel.h"
 #include "StarMapWidget.h"
 #include "ImageSettingsWidget.h"
+#include "CameraSettingsPanel.h"
 #include "../net/DwarfWebSocketClient.h"
 #include "../net/DwarfCameraController.h"
 #include "../net/DwarfAstroController.h"
@@ -279,36 +280,28 @@ void AstroNavigationPanel::setupSearchTab() {
 }
 
 // Astro exposure values in microseconds (same as Tele camera for astro mode)
-static const std::vector<int> s_astroExposureValues = {
-    1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000,
-    1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 7000000, 8000000,
-    9000000, 10000000, 11000000, 12000000, 13000000, 14000000, 15000000
-};
+static const QVector<QPair<int, QString>> &astroExposureValues() {
+    return CameraSettingsPanel::s_teleExposureValues;
+}
 
 // Astro gain values (0-120)
-static const std::vector<int> s_astroGainValues = {
-    0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120
-};
+static const QVector<QPair<int, int>> &astroGainValues() {
+    return CameraSettingsPanel::s_teleGainValues;
+}
 
 QString AstroNavigationPanel::formatExposureValue(int sliderIndex) const {
-    if (sliderIndex < 0 || sliderIndex >= static_cast<int>(s_astroExposureValues.size()))
+    const auto &exp = astroExposureValues();
+    if (sliderIndex < 0 || sliderIndex >= exp.size())
         return "?";
-    
-    int us = s_astroExposureValues[sliderIndex];
-    if (us < 1000) {
-        return QString("%1µs").arg(us);
-    } else if (us < 1000000) {
-        return QString("%1ms").arg(us / 1000);
-    } else {
-        double secs = us / 1000000.0;
-        return QString("%1s").arg(secs, 0, 'f', 1);
-    }
+
+    return exp.at(sliderIndex).second;
 }
 
 QString AstroNavigationPanel::formatGainValue(int sliderIndex) const {
-    if (sliderIndex < 0 || sliderIndex >= static_cast<int>(s_astroGainValues.size()))
+    const auto &gain = astroGainValues();
+    if (sliderIndex < 0 || sliderIndex >= gain.size())
         return "?";
-    return QString::number(s_astroGainValues[sliderIndex]);
+    return QString::number(gain.at(sliderIndex).second);
 }
 
 void AstroNavigationPanel::setupStackingTab() {
@@ -329,9 +322,16 @@ void AstroNavigationPanel::setupStackingTab() {
     // Exposure slider (like camera panel)
     settingsLayout->addWidget(new QLabel(tr("Exposure:")), 1, 0);
     m_astroExposureSlider = new QSlider(Qt::Horizontal, settingsGroup);
-    m_astroExposureSlider->setRange(0, s_astroExposureValues.size() - 1);
-    m_astroExposureSlider->setValue(14); // Default: 5s
-    m_astroExposureValueLabel = new QLabel(formatExposureValue(14), settingsGroup);
+    m_astroExposureSlider->setRange(0, astroExposureValues().size() - 1);
+    int defaultExposureUiIndex = 0;
+    for (int i = 0; i < astroExposureValues().size(); ++i) {
+        if (astroExposureValues().at(i).first == 141) {
+            defaultExposureUiIndex = i;
+            break;
+        }
+    }
+    m_astroExposureSlider->setValue(defaultExposureUiIndex); // Default: 5s
+    m_astroExposureValueLabel = new QLabel(formatExposureValue(defaultExposureUiIndex), settingsGroup);
     m_astroExposureValueLabel->setMinimumWidth(60);
     m_astroExposureValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     settingsLayout->addWidget(m_astroExposureSlider, 1, 1);
@@ -340,9 +340,16 @@ void AstroNavigationPanel::setupStackingTab() {
     // Gain slider (like camera panel)
     settingsLayout->addWidget(new QLabel(tr("Gain:")), 2, 0);
     m_astroGainSlider = new QSlider(Qt::Horizontal, settingsGroup);
-    m_astroGainSlider->setRange(0, s_astroGainValues.size() - 1);
-    m_astroGainSlider->setValue(6); // Default: 60
-    m_astroGainValueLabel = new QLabel(formatGainValue(6), settingsGroup);
+    m_astroGainSlider->setRange(0, astroGainValues().size() - 1);
+    int defaultGainUiIndex = 0;
+    for (int i = 0; i < astroGainValues().size(); ++i) {
+        if (astroGainValues().at(i).second == 60) {
+            defaultGainUiIndex = i;
+            break;
+        }
+    }
+    m_astroGainSlider->setValue(defaultGainUiIndex); // Default: 60
+    m_astroGainValueLabel = new QLabel(formatGainValue(defaultGainUiIndex), settingsGroup);
     m_astroGainValueLabel->setMinimumWidth(40);
     m_astroGainValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     settingsLayout->addWidget(m_astroGainSlider, 2, 1);
@@ -1165,8 +1172,18 @@ void AstroNavigationPanel::onStartStackingClicked() {
     m_stackingElapsed.start();
     m_stackingTimer->start(100); // Update UI every 100ms
     
-    int exposureIndex = m_astroExposureSlider->value();
-    int gainIndex = m_astroGainSlider->value();
+    const int exposureUiIndex = m_astroExposureSlider->value();
+    const int gainUiIndex = m_astroGainSlider->value();
+
+    const auto &exp = astroExposureValues();
+    const auto &gain = astroGainValues();
+
+    const int exposureIndex = (exposureUiIndex >= 0 && exposureUiIndex < exp.size())
+        ? exp.at(exposureUiIndex).first
+        : 0;
+    const int gainIndex = (gainUiIndex >= 0 && gainUiIndex < gain.size())
+        ? gain.at(gainUiIndex).first
+        : 0;
     
     // STEP 1: Set camera parameters BEFORE starting stacking
     // The DWARF II requires exposure/gain to be set via camera API first

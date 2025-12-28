@@ -38,12 +38,12 @@ private:
   // Notifications 15000+ = Notify (Module 9)
   static constexpr std::uint32_t MODULE_CAMERA_TELE = 1;
   static constexpr std::uint32_t MODULE_CAMERA_WIDE = 2;
-  static constexpr std::uint32_t MODULE_FOCUS = 3;        // Focus module
+  static constexpr std::uint32_t MODULE_ASTRO = 3;        // Astro module (GOTO, Stacking, etc.)
   static constexpr std::uint32_t MODULE_SYSTEM = 4;
   static constexpr std::uint32_t MODULE_RGB_POWER = 5;
   static constexpr std::uint32_t MODULE_MOTOR = 6;
   static constexpr std::uint32_t MODULE_TRACK = 7;
-  static constexpr std::uint32_t MODULE_ASTRO = 8;        // Astro module (GOTO, Stacking, etc.)
+  static constexpr std::uint32_t MODULE_FOCUS = 8;        // Focus module
   static constexpr std::uint32_t MODULE_NOTIFY = 9;
   static constexpr std::uint32_t MODULE_PANORAMA = 10;
   static constexpr std::uint32_t MODULE_PANORAMA_UI = 14;
