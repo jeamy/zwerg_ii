@@ -9,9 +9,6 @@ set "SCRIPT_DIR=%~dp0"
 pushd "%SCRIPT_DIR%"
 
 if /I "%~1"=="--debug" set "ZWERG_BAT_DEBUG=1"
-if /I "%~1"=="--install" set "ZWERG_BAT_INSTALL=1"
-if /I "%~2"=="--install" set "ZWERG_BAT_INSTALL=1"
-if not defined ZWERG_BAT_INSTALL set "ZWERG_BAT_INSTALL=0"
 if "%ZWERG_BAT_DEBUG%"=="1" echo on
 
 set "PROJECT_DIR=%SCRIPT_DIR%"
@@ -35,20 +32,6 @@ if not defined Qt6WebSockets_DIR (
 )
 if not defined PROTOC_PREFIX_PATH (
   set "PROTOC_PREFIX_PATH=G:\Download\protoc"
-)
-if not defined PROTOBUF_PREFIX_PATH (
-  set "PROTOBUF_PREFIX_PATH=%PROTOC_PREFIX_PATH%"
-)
-if not defined Protobuf_INCLUDE_DIR (
-  set "Protobuf_INCLUDE_DIR=%PROTOBUF_PREFIX_PATH%\include"
-)
-if not defined Protobuf_PROTOC_EXECUTABLE (
-  set "Protobuf_PROTOC_EXECUTABLE=%PROTOC_PREFIX_PATH%\bin\protoc.exe"
-)
-if not defined Protobuf_LIBRARY (
-  if exist "%PROTOBUF_PREFIX_PATH%\lib\libprotobuf.dll.a" set "Protobuf_LIBRARY=%PROTOBUF_PREFIX_PATH%\lib\libprotobuf.dll.a"
-  if not defined Protobuf_LIBRARY if exist "%PROTOBUF_PREFIX_PATH%\lib\libprotobuf.a" set "Protobuf_LIBRARY=%PROTOBUF_PREFIX_PATH%\lib\libprotobuf.a"
-  if not defined Protobuf_LIBRARY if exist "%PROTOBUF_PREFIX_PATH%\lib\protobuf.lib" set "Protobuf_LIBRARY=%PROTOBUF_PREFIX_PATH%\lib\protobuf.lib"
 )
 if not defined Vulkan_INCLUDE_DIR (
   if defined VULKAN_SDK (
@@ -89,33 +72,6 @@ rem protoc: in PATH OR PROTOC_PREFIX_PATH
 where protoc >NUL 2>&1
 if errorlevel 1 if not defined PROTOC_PREFIX_PATH set "MISSING_DEPS=!MISSING_DEPS! protoc"
 
-rem Protobuf SDK (headers + libs) needed by find_package(Protobuf)
-if exist "%Protobuf_INCLUDE_DIR%\google\protobuf\message.h" (
-  rem ok
-) else (
-  set "MISSING_DEPS=!MISSING_DEPS! protobuf-headers"
-)
-if defined Protobuf_LIBRARY (
-  rem ok
-) else (
-  set "MISSING_DEPS=!MISSING_DEPS! protobuf-lib"
-)
-
-rem Vulkan headers (optional for runtime, but required by some Qt/CMake configs)
-if defined Vulkan_INCLUDE_DIR (
-  if not "%Vulkan_INCLUDE_DIR%"=="" (
-    if exist "%Vulkan_INCLUDE_DIR%\vulkan\vulkan.h" (
-      rem ok
-    ) else (
-      set "MISSING_DEPS=!MISSING_DEPS! vulkan"
-    )
-  ) else (
-    set "MISSING_DEPS=!MISSING_DEPS! vulkan"
-  )
-) else (
-  set "MISSING_DEPS=!MISSING_DEPS! vulkan"
-)
-
 if not "%MISSING_DEPS%"=="" (
   echo ERROR: Missing dependencies: %MISSING_DEPS%
   echo.
@@ -125,60 +81,6 @@ if not "%MISSING_DEPS%"=="" (
   echo   - CMake: https://cmake.org/download/  or: winget install Kitware.CMake
   echo   - Qt6:   https://www.qt.io/download-qt-installer  or set Qt6_DIR / CMAKE_PREFIX_PATH
   echo   - Protobuf protoc: via vcpkg or official releases  or set PROTOC_PREFIX_PATH
-  echo   - Protobuf libs: install protobuf development package via vcpkg or MSYS2 and set PROTOBUF_PREFIX_PATH.
-  echo   - Vulkan headers: install Vulkan SDK and set VULKAN_SDK.
-  echo.
-  if "%ZWERG_BAT_INSTALL%"=="1" (
-    where winget >NUL 2>&1
-    if errorlevel 1 (
-      echo Install mode requested but winget was not found.
-      echo.
-    ) else (
-      echo Interactive install mode enabled.
-      echo.
-      echo Selected packages will be installed using winget.
-      echo.
-      echo Note: Qt and Protobuf libs are not auto-installed here.
-      echo.
-      echo.
-      echo Installing optional packages.
-      echo.
-      echo.
-      if not "x%MISSING_DEPS:cmake=%"=="x%MISSING_DEPS%" call :maybe_install "CMake" "Kitware.CMake"
-      if not "x%MISSING_DEPS:vulkan=%"=="x%MISSING_DEPS%" call :maybe_install "Vulkan SDK" "KhronosGroup.VulkanSDK"
-      echo.
-    )
-  )
-  echo Details for missing items:
-  echo.
-  if not "x%MISSING_DEPS:cmake=%"=="x%MISSING_DEPS%" (
-    echo cmake: install via winget install Kitware.CMake or https://cmake.org/download/
-  )
-  if not "x%MISSING_DEPS:compiler=%"=="x%MISSING_DEPS%" (
-    echo compiler: install MinGW via MSYS2 or MSVC Build Tools.
-    echo compiler: MSYS2 https://www.msys2.org/ then pacman -S mingw-w64-x86_64-gcc
-    echo compiler: MSVC https://visualstudio.microsoft.com/downloads/ then Build Tools.
-  )
-  if not "x%MISSING_DEPS:qt6=%"=="x%MISSING_DEPS%" (
-    echo qt6: install Qt 6 and set CMAKE_PREFIX_PATH or Qt6_DIR.
-  )
-  if not "x%MISSING_DEPS:qt6websockets=%"=="x%MISSING_DEPS%" (
-    echo qt6websockets: install Qt WebSockets component in Qt Maintenance Tool.
-    echo qt6websockets: expected %Qt6WebSockets_DIR%\Qt6WebSocketsConfig.cmake
-  )
-  if not "x%MISSING_DEPS:protoc=%"=="x%MISSING_DEPS%" (
-    echo protoc: download protoc and set PROTOC_PREFIX_PATH to the folder containing bin\protoc.exe
-  )
-  if not "x%MISSING_DEPS:protobuf-headers=%"=="x%MISSING_DEPS%" (
-    echo protobuf headers: need include\google\protobuf\message.h under PROTOBUF_PREFIX_PATH
-  )
-  if not "x%MISSING_DEPS:protobuf-lib=%"=="x%MISSING_DEPS%" (
-    echo protobuf libs: need libprotobuf library under PROTOBUF_PREFIX_PATH\lib
-    echo protobuf libs: easiest via vcpkg install protobuf or MSYS2 mingw-w64-x86_64-protobuf
-  )
-  if not "x%MISSING_DEPS:vulkan=%"=="x%MISSING_DEPS%" (
-    echo vulkan: install Vulkan SDK and set VULKAN_SDK. Header should be at %%VULKAN_SDK%%\Include\vulkan\vulkan.h
-  )
   echo.
   exit /B 1
 )
@@ -211,15 +113,15 @@ if not errorlevel 1 (
 
 if defined CMAKE_GEN (
   if defined Vulkan_INCLUDE_DIR (
-    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%" -DProtobuf_PROTOC_EXECUTABLE="%Protobuf_PROTOC_EXECUTABLE%" -DProtobuf_INCLUDE_DIR="%Protobuf_INCLUDE_DIR%" -DProtobuf_LIBRARY="%Protobuf_LIBRARY%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
   ) else (
-    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DProtobuf_PROTOC_EXECUTABLE="%Protobuf_PROTOC_EXECUTABLE%" -DProtobuf_INCLUDE_DIR="%Protobuf_INCLUDE_DIR%" -DProtobuf_LIBRARY="%Protobuf_LIBRARY%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
   )
 ) else (
   if defined Vulkan_INCLUDE_DIR (
-    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%" -DProtobuf_PROTOC_EXECUTABLE="%Protobuf_PROTOC_EXECUTABLE%" -DProtobuf_INCLUDE_DIR="%Protobuf_INCLUDE_DIR%" -DProtobuf_LIBRARY="%Protobuf_LIBRARY%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
   ) else (
-    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DProtobuf_PROTOC_EXECUTABLE="%Protobuf_PROTOC_EXECUTABLE%" -DProtobuf_INCLUDE_DIR="%Protobuf_INCLUDE_DIR%" -DProtobuf_LIBRARY="%Protobuf_LIBRARY%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
   )
 )
 if errorlevel 1 goto error
@@ -335,17 +237,6 @@ echo Run:
 echo   %DIST_DIR%\%BIN_NAME%
 echo.
 
-goto :eof
-
-:maybe_install
-set "PKG_NAME=%~1"
-set "WINGET_ID=%~2"
-echo.
-echo Install %PKG_NAME% now?
-choice /C YN /N /M "[Y]es / [N]o: "
-if errorlevel 2 goto :eof
-echo Running: winget install --id %WINGET_ID% -e
-winget install --id %WINGET_ID% -e
 goto :eof
 
 :error
