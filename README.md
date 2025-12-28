@@ -1,8 +1,12 @@
 # zwergII (DWARF II Controller)
 
- Desktop application for controlling the **DWARF II smart telescope**.
+> **⚠️ BETA VERSION - USE AT YOUR OWN RISK**
+>
+> This software is currently in **beta stage** and under active development. While we strive for stability and reliability, the application may contain bugs or incomplete features. Use this software at your own risk. The developers are not responsible for any damage to your equipment or data loss that may occur from using this application.
 
- This project implements communication with the device via **WebSocket (Protobuf)** and **HTTP**, provides a modern Qt UI client, and includes extensive protocol/API documentation in this repository.
+Desktop application for controlling the **DWARF II smart telescope**.
+
+This project implements communication with the device via **WebSocket (Protobuf)** and **HTTP**, provides a modern Qt UI client, and includes extensive protocol/API documentation in this repository.
 
 ## Features
 
