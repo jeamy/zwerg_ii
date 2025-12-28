@@ -13,17 +13,31 @@ set(CMAKE_AUTORCC ON)
 # Find Qt6
 find_package(Qt6 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWidgets WebSockets Sql)
 
-# Find Protobuf
-find_package(Protobuf REQUIRED)
+# Find Protobuf (try CONFIG mode first for modern installations, fallback to MODULE mode)
+find_package(Protobuf CONFIG QUIET)
+if(NOT Protobuf_FOUND)
+    find_package(Protobuf REQUIRED)
+endif()
 
 # Protobuf generation
 file(GLOB PROTO_FILES "src/proto/*.proto")
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
+if(TARGET protobuf::protoc)
+    # Modern protobuf-config.cmake provides targets
+    protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
+else()
+    # Legacy FindProtobuf.cmake
+    protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
+endif()
 
 # Include directories
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(src)
-include_directories(${Protobuf_INCLUDE_DIRS})
+# Handle both old and new Protobuf variable names
+if(TARGET protobuf::libprotobuf)
+    # Modern config mode - include dirs are handled by target
+else()
+    include_directories(${Protobuf_INCLUDE_DIRS})
+endif()
 
 # Source files
 set(SOURCES
@@ -87,15 +101,29 @@ set(SOURCES
 add_executable(DwarfController ${SOURCES})
 
 # Link libraries
-target_link_libraries(DwarfController PRIVATE
-    Qt6::Widgets
-    Qt6::Network
-    Qt6::Multimedia
-    Qt6::MultimediaWidgets
-    Qt6::WebSockets
-    Qt6::Sql
-    ${Protobuf_LIBRARIES}
-)
+if(TARGET protobuf::libprotobuf)
+    # Modern protobuf-config.cmake provides targets
+    target_link_libraries(DwarfController PRIVATE
+        Qt6::Widgets
+        Qt6::Network
+        Qt6::Multimedia
+        Qt6::MultimediaWidgets
+        Qt6::WebSockets
+        Qt6::Sql
+        protobuf::libprotobuf
+    )
+else()
+    # Legacy FindProtobuf.cmake uses variables
+    target_link_libraries(DwarfController PRIVATE
+        Qt6::Widgets
+        Qt6::Network
+        Qt6::Multimedia
+        Qt6::MultimediaWidgets
+        Qt6::WebSockets
+        Qt6::Sql
+        ${Protobuf_LIBRARIES}
+    )
+endif()
 
 set(I18N_SOURCE_DIR ${CMAKE_SOURCE_DIR}/i18n)
 set(I18N_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/i18n)
