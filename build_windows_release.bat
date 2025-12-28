@@ -61,7 +61,7 @@ if not "%MISSING_DEPS%"=="" (
   echo Suggested installs:
   echo   - CMake: https://cmake.org/download/  or: winget install Kitware.CMake
   echo   - Qt6:   https://www.qt.io/download-qt-installer
-  echo   - Protobuf (protoc): via vcpkg or official releases
+  echo   - Protobuf protoc: via vcpkg or official releases
   echo.
   exit /B 1
 )
