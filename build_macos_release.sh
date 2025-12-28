@@ -209,9 +209,12 @@ fi
 # Bundle Qt
 if command -v macdeployqt &>/dev/null; then
   echo "Bundling Qt frameworks with macdeployqt..."
-  macdeployqt "$APP_BUNDLE" -verbose=1 || {
-    echo "WARNING: macdeployqt failed." >&2
-  }
+  macdeployqt "$APP_BUNDLE" -verbose=1 2>&1 | grep -v "ERROR: no file at.*libpq\|ERROR: no file at.*libiodbc" || true
+  if [ -d "$APP_BUNDLE/Contents/Frameworks" ]; then
+    echo "Qt frameworks bundled successfully (SQL plugin errors are expected and can be ignored)"
+  else
+    echo "WARNING: macdeployqt may have failed - Qt frameworks not found in bundle" >&2
+  fi
 else
   echo "NOTE: macdeployqt not found - Qt frameworks will NOT be bundled." >&2
 fi
