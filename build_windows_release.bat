@@ -33,6 +33,20 @@ if not defined Qt6WebSockets_DIR (
 if not defined PROTOC_PREFIX_PATH (
   set "PROTOC_PREFIX_PATH=G:\Download\protoc"
 )
+if not defined PROTOBUF_PREFIX_PATH (
+  set "PROTOBUF_PREFIX_PATH=%PROTOC_PREFIX_PATH%"
+)
+if not defined Protobuf_INCLUDE_DIR (
+  set "Protobuf_INCLUDE_DIR=%PROTOBUF_PREFIX_PATH%\include"
+)
+if not defined Protobuf_PROTOC_EXECUTABLE (
+  set "Protobuf_PROTOC_EXECUTABLE=%PROTOC_PREFIX_PATH%\bin\protoc.exe"
+)
+if not defined Protobuf_LIBRARY (
+  if exist "%PROTOBUF_PREFIX_PATH%\lib\libprotobuf.dll.a" set "Protobuf_LIBRARY=%PROTOBUF_PREFIX_PATH%\lib\libprotobuf.dll.a"
+  if not defined Protobuf_LIBRARY if exist "%PROTOBUF_PREFIX_PATH%\lib\libprotobuf.a" set "Protobuf_LIBRARY=%PROTOBUF_PREFIX_PATH%\lib\libprotobuf.a"
+  if not defined Protobuf_LIBRARY if exist "%PROTOBUF_PREFIX_PATH%\lib\protobuf.lib" set "Protobuf_LIBRARY=%PROTOBUF_PREFIX_PATH%\lib\protobuf.lib"
+)
 if not defined Vulkan_INCLUDE_DIR (
   if defined VULKAN_SDK (
     set "Vulkan_INCLUDE_DIR=%VULKAN_SDK%\Include"
@@ -71,6 +85,18 @@ if exist "%Qt6WebSockets_DIR%\Qt6WebSocketsConfig.cmake" (
 rem protoc: in PATH OR PROTOC_PREFIX_PATH
 where protoc >NUL 2>&1
 if errorlevel 1 if not defined PROTOC_PREFIX_PATH set "MISSING_DEPS=!MISSING_DEPS! protoc"
+
+rem Protobuf SDK (headers + libs) needed by find_package(Protobuf)
+if exist "%Protobuf_INCLUDE_DIR%\google\protobuf\message.h" (
+  rem ok
+) else (
+  set "MISSING_DEPS=!MISSING_DEPS! protobuf-headers"
+)
+if defined Protobuf_LIBRARY (
+  rem ok
+) else (
+  set "MISSING_DEPS=!MISSING_DEPS! protobuf-lib"
+)
 
 if not "%MISSING_DEPS%"=="" (
   echo ERROR: Missing dependencies: %MISSING_DEPS%
@@ -113,15 +139,15 @@ if not errorlevel 1 (
 
 if defined CMAKE_GEN (
   if defined Vulkan_INCLUDE_DIR (
-    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%" -DProtobuf_PROTOC_EXECUTABLE="%Protobuf_PROTOC_EXECUTABLE%" -DProtobuf_INCLUDE_DIR="%Protobuf_INCLUDE_DIR%" -DProtobuf_LIBRARY="%Protobuf_LIBRARY%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
   ) else (
-    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -G "%CMAKE_GEN%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DProtobuf_PROTOC_EXECUTABLE="%Protobuf_PROTOC_EXECUTABLE%" -DProtobuf_INCLUDE_DIR="%Protobuf_INCLUDE_DIR%" -DProtobuf_LIBRARY="%Protobuf_LIBRARY%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
   )
 ) else (
   if defined Vulkan_INCLUDE_DIR (
-    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DVulkan_INCLUDE_DIR="%Vulkan_INCLUDE_DIR%" -DProtobuf_PROTOC_EXECUTABLE="%Protobuf_PROTOC_EXECUTABLE%" -DProtobuf_INCLUDE_DIR="%Protobuf_INCLUDE_DIR%" -DProtobuf_LIBRARY="%Protobuf_LIBRARY%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
   ) else (
-    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+    cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DQt6WebSockets_DIR="%Qt6WebSockets_DIR%" -DProtobuf_PROTOC_EXECUTABLE="%Protobuf_PROTOC_EXECUTABLE%" -DProtobuf_INCLUDE_DIR="%Protobuf_INCLUDE_DIR%" -DProtobuf_LIBRARY="%Protobuf_LIBRARY%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
   )
 )
 if errorlevel 1 goto error
