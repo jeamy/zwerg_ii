@@ -5,12 +5,14 @@ rem Uses windeployqt if available; otherwise falls back to a minimal manual copy
 
 setlocal ENABLEDELAYEDEXPANSION
 
-set SCRIPT_DIR=%~dp0
-set PROJECT_DIR=%SCRIPT_DIR%
-set BUILD_DIR=%PROJECT_DIR%build-windows-release
-set DIST_DIR=%PROJECT_DIR%dist\windows
-set BUILD_TYPE=Release
-set BIN_NAME=DwarfController.exe
+set "SCRIPT_DIR=%~dp0"
+pushd "%SCRIPT_DIR%"
+
+set "PROJECT_DIR=%SCRIPT_DIR%"
+set "BUILD_DIR=%PROJECT_DIR%build-windows-release"
+set "DIST_DIR=%PROJECT_DIR%dist\windows"
+set "BUILD_TYPE=Release"
+set "BIN_NAME=DwarfController.exe"
 
 rem Optional defaults for Qt (adjust to your setup or override in the calling shell)
 rem Qt6_DIR: folder containing Qt6Config.cmake
