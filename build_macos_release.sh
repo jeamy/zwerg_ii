@@ -128,6 +128,30 @@ if [ -z "$Qt6_DIR" ] && [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/
   export Qt6_DIR="$CMAKE_PREFIX_PATH/lib/cmake/Qt6"
 fi
 
+# Check if required Qt6 components are available
+if [ -n "$CMAKE_PREFIX_PATH" ]; then
+  MISSING_QT_COMPONENTS=""
+  for component in Widgets Network Multimedia MultimediaWidgets WebSockets Sql; do
+    if [ ! -d "$CMAKE_PREFIX_PATH/lib/cmake/Qt6$component" ]; then
+      MISSING_QT_COMPONENTS="$MISSING_QT_COMPONENTS $component"
+    fi
+  done
+  
+  if [ -n "$MISSING_QT_COMPONENTS" ]; then
+    echo ""
+    echo "WARNING: Qt6 found but missing components:$MISSING_QT_COMPONENTS" >&2
+    echo ""
+    echo "Please install missing Qt6 components via Qt Maintenance Tool:" >&2
+    echo "  ~/Qt/MaintenanceTool" >&2
+    echo ""
+    echo "Or install via Homebrew (if using Homebrew Qt):" >&2
+    echo "  brew install qt@6" >&2
+    echo ""
+    echo "CMake will now attempt to configure anyway..." >&2
+    echo ""
+  fi
+fi
+
 # ==============================================================================
 echo "[1/3] Configure (CMake)..."
 cmake -S "$PROJECT_DIR" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
