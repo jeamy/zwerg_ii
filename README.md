@@ -248,3 +248,7 @@ Windows (Developer Command Prompt / terminal with Qt + compiler in PATH):
 ```bat
 build_windows_release.bat
 ```
+
+### Acknowledgments
+This project implements the DWARF II API based on reverse-engineered protocol documentation. Special thanks to the DWARF Lab community for sharing API information.
+https://github.com/DwarfTelescopeUsers/dwarfii_api
