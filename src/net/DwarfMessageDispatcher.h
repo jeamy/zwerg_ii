@@ -32,7 +32,7 @@ signals:
 private:
   // Module IDs based on DWARF II API
   // Commands 10000-10999 = Camera Tele (Module 1)
-  // Commands 11000-11999 = Astro (Module 8)
+  // Commands 11000-11999 = Astro (Module 3)
   // Commands 12000-12999 = Camera Wide (Module 2)
   // Commands 13000-13999 = System (Module 4)
   // Notifications 15000+ = Notify (Module 9)

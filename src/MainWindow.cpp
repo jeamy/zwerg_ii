@@ -1572,8 +1572,8 @@ void MainWindow::updateOverlayVisibility() {
   if (m_paramsOverlayToggleButton)
     m_paramsOverlayToggleButton->setVisible(showOverlayToggles);
 
-  const bool motorVisible = allowOverlays && !blockedByFullscreenOverlay && m_motorOverlayUserVisible;
-  const bool paramsVisible = allowOverlays && !blockedByFullscreenOverlay && m_paramsOverlayUserVisible;
+  const bool motorVisible = connected && allowOverlays && !blockedByFullscreenOverlay && m_motorOverlayUserVisible;
+  const bool paramsVisible = connected && allowOverlays && !blockedByFullscreenOverlay && m_paramsOverlayUserVisible;
 
   if (m_motorOverlay)
     m_motorOverlay->setVisible(motorVisible);
@@ -3138,15 +3138,13 @@ void MainWindow::loadSettings() {
   }
 
   // Display / overlay settings
+  // Always start on the first tab (Scan/Connect) to ensure clean UI state
   if (m_contentStack) {
-    const int idx = cfg->getValue("display", "last_tab", 0).toInt();
-    if (idx >= 0 && idx < m_contentStack->count()) {
-      m_contentStack->setCurrentIndex(idx);
-      if (m_sidebarGroup) {
-        if (auto *btn = m_sidebarGroup->button(idx)) {
-          const QSignalBlocker blocker(btn);
-          btn->setChecked(true);
-        }
+    m_contentStack->setCurrentIndex(0);
+    if (m_sidebarGroup) {
+      if (auto *btn = m_sidebarGroup->button(0)) {
+        const QSignalBlocker blocker(btn);
+        btn->setChecked(true);
       }
     }
   }

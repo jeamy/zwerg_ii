@@ -190,6 +190,9 @@ private:
     QTimer *m_stackingTimer;
     QElapsedTimer m_stackingElapsed;
     
+    // Calibration safety
+    QTimer *m_calibrationTimeoutTimer = nullptr;
+    
     // Settings Tab
     QDoubleSpinBox *m_magnitudeLimitSpin;
     QCheckBox *m_showConstellationsCheck;

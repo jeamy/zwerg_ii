@@ -46,7 +46,19 @@ AstroNavigationPanel::AstroNavigationPanel(QWidget *parent)
     , m_stackingTimer(new QTimer(this))
     , m_lx200Server(new Lx200Server(this))
     , m_catalogLoaded(false)
+    , m_calibrationTimeoutTimer(new QTimer(this))
 {
+    m_calibrationTimeoutTimer->setSingleShot(true);
+    connect(m_calibrationTimeoutTimer, &QTimer::timeout, this, [this]() {
+        qWarning() << "Calibration timed out (no response from device)";
+        m_calibrateButton->setEnabled(true);
+        m_calibrateButton->setText(tr("Calibrate"));
+        if (m_cancelCalibrationButton)
+            m_cancelCalibrationButton->setEnabled(false);
+        m_calibrationStatusLabel->setText(tr("Timed out"));
+        m_calibrationStatusLabel->setStyleSheet("color: orange;");
+    });
+
     setupUI();
     connectSignals();
     loadCatalog();
@@ -988,6 +1000,8 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
         
         // Connect calibration signals
         connect(m_astroController, &DwarfAstroController::calibrationStarted, this, [this]() {
+            if (m_calibrationTimeoutTimer)
+                m_calibrationTimeoutTimer->stop();
             m_calibrateButton->setEnabled(false);
             m_calibrateButton->setText(tr("Calibrating..."));
             if (m_cancelCalibrationButton)
@@ -996,6 +1010,8 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
             m_calibrationStatusLabel->setStyleSheet("color: blue;");
         });
         connect(m_astroController, &DwarfAstroController::calibrationCompleted, this, [this](bool success) {
+            if (m_calibrationTimeoutTimer)
+                m_calibrationTimeoutTimer->stop();
             m_calibrateButton->setEnabled(true);
             m_calibrateButton->setText(tr("Calibrate"));
             if (m_cancelCalibrationButton)
@@ -1009,6 +1025,8 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
             }
         });
         connect(m_astroController, &DwarfAstroController::calibrationFailed, this, [this](const QString &error) {
+            if (m_calibrationTimeoutTimer)
+                m_calibrationTimeoutTimer->stop();
             m_calibrateButton->setEnabled(true);
             m_calibrateButton->setText(tr("Calibrate"));
             if (m_cancelCalibrationButton)
@@ -1151,14 +1169,26 @@ void AstroNavigationPanel::onCalibrateClicked() {
         return;
     }
     
+    // Ensure "Astro Mode" is active on the device before starting calibration.
+    // This triggers the necessary internal state for plate solving.
+    m_astroController->goLive();
+    
     m_calibrateButton->setEnabled(false);
     m_calibrateButton->setText(tr("Calibrating..."));
     if (m_cancelCalibrationButton)
         m_cancelCalibrationButton->setEnabled(true);
-    m_calibrationStatusLabel->setText(tr("Plate solving in progress..."));
+    m_calibrationStatusLabel->setText(tr("Starting..."));
     m_calibrationStatusLabel->setStyleSheet("color: blue;");
     
-    m_astroController->startCalibration();
+    // Small delay to ensure goLive() is processed before calibration start.
+    // 500ms is safer for the device to switch internal modes.
+    QTimer::singleShot(500, this, [this]() {
+        if (m_astroController) {
+            m_astroController->startCalibration();
+            if (m_calibrationTimeoutTimer)
+                m_calibrationTimeoutTimer->start(15000); // 15s timeout for initial response
+        }
+    });
 }
 
 void AstroNavigationPanel::onCancelCalibrationClicked() {
@@ -1167,9 +1197,20 @@ void AstroNavigationPanel::onCancelCalibrationClicked() {
 
     qDebug() << "Stopping calibration...";
     m_astroController->stopCalibration();
+    
+    // Fallback: also send stop GOTO, as calibration is often part of a GOTO process
+    m_astroController->stopGoto();
+    
+    if (m_calibrationTimeoutTimer)
+        m_calibrationTimeoutTimer->stop();
+    
+    // Update UI immediately for better responsiveness
+    m_calibrateButton->setEnabled(true);
+    m_calibrateButton->setText(tr("Calibrate"));
     if (m_cancelCalibrationButton)
         m_cancelCalibrationButton->setEnabled(false);
-    // Status will be updated by calibrationCompleted/calibrationFailed
+    m_calibrationStatusLabel->setText(tr("Stopping..."));
+    m_calibrationStatusLabel->setStyleSheet("color: gray;");
 }
 
 void AstroNavigationPanel::gotoObject(const CelestialObject &obj) {

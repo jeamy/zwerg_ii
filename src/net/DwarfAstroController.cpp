@@ -15,7 +15,7 @@ void appendVarintU64(QByteArray &buf, quint64 value);
 void appendInt64Varint(QByteArray &buf, qint64 value);
 }
 
-// Astro module command IDs (module 8)
+// Astro module command IDs (module 3)
 namespace AstroCmd {
     constexpr quint32 START_CALIBRATION = 11000;
     constexpr quint32 STOP_CALIBRATION = 11001;
@@ -71,7 +71,9 @@ void DwarfAstroController::startCalibration() {
     dwarf::ReqStartCalibration req;
     sendCommand(AstroCmd::START_CALIBRATION, 
                 QByteArray::fromStdString(req.SerializeAsString()));
-    emit calibrationStarted();
+    // Do NOT emit calibrationStarted() here. 
+    // Wait for the device to acknowledge via response (handleAstroMessage)
+    // or notification (handleNotification).
 }
 
 void DwarfAstroController::stopCalibration() {
@@ -312,6 +314,46 @@ void DwarfAstroController::goLive() {
 void DwarfAstroController::handleAstroMessage(quint32 cmd, const QByteArray &data) {
     qWarning() << "[AstroController::handleAstroMessage] Cmd:" << cmd << "Size:" << data.size();
     switch (cmd) {
+        case AstroCmd::START_CALIBRATION: {
+            qWarning() << "=== CALIBRATION START response received, data size:" << data.size();
+            if (data.size() > 0) {
+                dwarf::ComResponse res;
+                if (res.ParseFromArray(data.data(), data.size())) {
+                    qWarning() << "    Response code:" << res.code();
+                    if (res.code() != 0) {
+                        QString errorMsg = QString("Calibration failed to start. Error code: %1").arg(res.code());
+                        if (res.code() == -10501) {
+                            errorMsg = tr("Camera is closed! Calibration requires an open camera.\n"
+                                          "Please wait for the stream to start or restart the app.");
+                        }
+                        qCritical() << "✗ Calibration start FAILED:" << errorMsg;
+                        emit calibrationFailed(errorMsg);
+                    } else {
+                        qWarning() << "    ✓ Calibration start command accepted";
+                    }
+                }
+            }
+            break;
+        }
+
+        case AstroCmd::STOP_CALIBRATION: {
+            qWarning() << "=== CALIBRATION STOP response received, data size:" << data.size();
+            if (data.size() > 0) {
+                dwarf::ComResponse res;
+                if (res.ParseFromArray(data.data(), data.size())) {
+                    qWarning() << "    Response code:" << res.code();
+                    if (res.code() == 0) {
+                        qWarning() << "    ✓ Calibration stopped successfully";
+                        emit calibrationCompleted(false); // Cancelled
+                    }
+                }
+            } else {
+                qWarning() << "    ✓ Calibration stop command acknowledged (empty response)";
+                emit calibrationCompleted(false); // Cancelled
+            }
+            break;
+        }
+
         case AstroCmd::CHECK_DARK_FRAME: {
             dwarf::ResCheckDarkFrame res;
             if (res.ParseFromArray(data.data(), data.size())) {
@@ -624,6 +666,7 @@ void DwarfAstroController::handleNotification(quint32 cmd, const QByteArray &dat
             if (res.ParseFromArray(data.data(), data.size())) {
                 qDebug() << "Calibration state:" << res.state() << "code:" << res.code();
                 switch (res.state()) {
+                    case 0: emit calibrationCompleted(false); break; // Idle/Stopped
                     case 1: emit calibrationStarted(); break;
                     case 2: emit calibrationCompleted(true); break;
                     case 3: emit calibrationFailed(QString("Error code: %1").arg(res.code())); break;
