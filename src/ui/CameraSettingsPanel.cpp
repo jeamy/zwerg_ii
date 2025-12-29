@@ -1,4 +1,5 @@
 #include "CameraSettingsPanel.h"
+#include "../AppConfig.h"
 #include "../net/DwarfCameraController.h"
 
 #include <QCheckBox>
@@ -330,12 +331,21 @@ void CameraSettingsPanel::setupUi() {
   connect(m_exposureModeCombo,
           QOverload<int>::of(&QComboBox::currentIndexChanged), this,
           &CameraSettingsPanel::onExposureModeChanged);
+  connect(m_exposureModeCombo,
+          QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+          &CameraSettingsPanel::saveSettings);
   connect(m_exposureSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onExposureSliderChanged);
+  connect(m_exposureSlider, &QSlider::valueChanged, this,
+          &CameraSettingsPanel::saveSettings);
   connect(m_gainModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
           this, &CameraSettingsPanel::onGainModeChanged);
+  connect(m_gainModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+          this, &CameraSettingsPanel::saveSettings);
   connect(m_gainSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onGainSliderChanged);
+  connect(m_gainSlider, &QSlider::valueChanged, this,
+          &CameraSettingsPanel::saveSettings);
 
   // === Image Parameters Group ===
   m_imageGroup = new QGroupBox(tr("Image"), this);
@@ -411,16 +421,28 @@ void CameraSettingsPanel::setupUi() {
 
   connect(m_irCutCheckBox, &QCheckBox::toggled, this,
           &CameraSettingsPanel::onIrCutToggled);
+  connect(m_irCutCheckBox, &QCheckBox::toggled, this,
+          &CameraSettingsPanel::saveSettings);
   connect(m_brightnessSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onBrightnessChanged);
+  connect(m_brightnessSlider, &QSlider::valueChanged, this,
+          &CameraSettingsPanel::saveSettings);
   connect(m_contrastSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onContrastChanged);
+  connect(m_contrastSlider, &QSlider::valueChanged, this,
+          &CameraSettingsPanel::saveSettings);
   connect(m_saturationSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onSaturationChanged);
+  connect(m_saturationSlider, &QSlider::valueChanged, this,
+          &CameraSettingsPanel::saveSettings);
   connect(m_sharpnessSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onSharpnessChanged);
+  connect(m_sharpnessSlider, &QSlider::valueChanged, this,
+          &CameraSettingsPanel::saveSettings);
   connect(m_hueSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onHueChanged);
+  connect(m_hueSlider, &QSlider::valueChanged, this,
+          &CameraSettingsPanel::saveSettings);
 
   // === White Balance Group ===
   m_wbGroup = new QGroupBox(tr("White Balance"), this);
@@ -449,8 +471,12 @@ void CameraSettingsPanel::setupUi() {
 
   connect(m_wbModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
           this, &CameraSettingsPanel::onWbModeChanged);
+  connect(m_wbModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+          this, &CameraSettingsPanel::saveSettings);
   connect(m_wbTemperatureSlider, &QSlider::valueChanged, this,
           &CameraSettingsPanel::onWbTemperatureChanged);
+  connect(m_wbTemperatureSlider, &QSlider::valueChanged, this,
+          &CameraSettingsPanel::saveSettings);
 
   setDisplayMode(m_displayMode);
 
@@ -492,6 +518,33 @@ void CameraSettingsPanel::setCameraMode(CameraMode mode) {
   emit cameraModeChanged(mode);
 }
 
+void CameraSettingsPanel::setClientMode(bool enabled) {
+  m_clientMode = enabled;
+  bool controlsEnabled = !m_clientMode;
+  
+  // Capture buttons
+  if (m_photoButton) m_photoButton->setEnabled(controlsEnabled);
+  if (m_recButton) m_recButton->setEnabled(controlsEnabled && m_cameraMode == CameraMode::Tele);
+  
+  // Exposure group
+  if (m_exposureModeCombo) m_exposureModeCombo->setEnabled(controlsEnabled);
+  if (m_exposureSlider) m_exposureSlider->setEnabled(controlsEnabled && (m_exposureModeCombo && m_exposureModeCombo->currentIndex() == 1));
+  if (m_gainModeCombo) m_gainModeCombo->setEnabled(controlsEnabled);
+  if (m_gainSlider) m_gainSlider->setEnabled(controlsEnabled && (m_gainModeCombo && m_gainModeCombo->currentIndex() == 1));
+  
+  // Image group
+  if (m_irCutCheckBox) m_irCutCheckBox->setEnabled(controlsEnabled && m_cameraMode == CameraMode::Tele);
+  if (m_brightnessSlider) m_brightnessSlider->setEnabled(controlsEnabled);
+  if (m_contrastSlider) m_contrastSlider->setEnabled(controlsEnabled);
+  if (m_saturationSlider) m_saturationSlider->setEnabled(controlsEnabled);
+  if (m_sharpnessSlider) m_sharpnessSlider->setEnabled(controlsEnabled);
+  if (m_hueSlider) m_hueSlider->setEnabled(controlsEnabled);
+  
+  // White balance group
+  if (m_wbModeCombo) m_wbModeCombo->setEnabled(controlsEnabled);
+  if (m_wbTemperatureSlider) m_wbTemperatureSlider->setEnabled(controlsEnabled && (m_wbModeCombo && m_wbModeCombo->currentIndex() == 1));
+}
+
 void CameraSettingsPanel::updateRangesForMode() {
   // Block signals during range update to avoid sending commands
   m_exposureSlider->blockSignals(true);
@@ -505,9 +558,9 @@ void CameraSettingsPanel::updateRangesForMode() {
     m_exposureSlider->setRange(0, exp.size() - 1);
     m_gainSlider->setRange(0, gain.size() - 1);
     // Video recording and IR-Cut only available on Tele
-    m_recButton->setEnabled(true);
-    m_recButton->setToolTip(QString());
-    m_irCutCheckBox->setEnabled(true);
+    m_recButton->setEnabled(!m_clientMode);
+    m_recButton->setToolTip(m_clientMode ? tr("Client Mode: Control disabled") : QString());
+    m_irCutCheckBox->setEnabled(!m_clientMode);
     m_irCutCheckBox->setVisible(true);
   } else {
     const auto &exp = m_wideExposureValuesDyn.isEmpty() ? s_wideExposureValues
@@ -1144,5 +1197,166 @@ void CameraSettingsPanel::setWhiteBalanceTemperature(int index) {
     m_wbTemperatureValueLabel->setText(
         QString("%1K").arg(s_wbTemperatureValues[index]));
   }
+}
+
+void CameraSettingsPanel::loadSettings() {
+  AppConfig *cfg = AppConfig::instance();
+  QString section = (m_cameraMode == CameraMode::Tele) ? "camera_tele" : "camera_wide";
+  
+  // Exposure settings
+  int expMode = cfg->getValue(section, "exposure_mode", 0).toInt();
+  if (m_exposureModeCombo) {
+    m_exposureModeCombo->blockSignals(true);
+    m_exposureModeCombo->setCurrentIndex(expMode);
+    m_exposureModeCombo->blockSignals(false);
+  }
+  
+  int expIndex = cfg->getValue(section, "exposure_index", 10).toInt();
+  if (m_exposureSlider) {
+    m_exposureSlider->blockSignals(true);
+    m_exposureSlider->setValue(expIndex);
+    m_exposureSlider->blockSignals(false);
+    m_exposureValueLabel->setText(formatExposureValue(expIndex));
+  }
+  
+  // Gain settings
+  int gainMode = cfg->getValue(section, "gain_mode", 0).toInt();
+  if (m_gainModeCombo) {
+    m_gainModeCombo->blockSignals(true);
+    m_gainModeCombo->setCurrentIndex(gainMode);
+    m_gainModeCombo->blockSignals(false);
+  }
+  
+  int gainIndex = cfg->getValue(section, "gain_index", 15).toInt();
+  if (m_gainSlider) {
+    m_gainSlider->blockSignals(true);
+    m_gainSlider->setValue(gainIndex);
+    m_gainSlider->blockSignals(false);
+    m_gainValueLabel->setText(formatGainValue(gainIndex));
+  }
+  
+  // Image parameters
+  if (m_brightnessSlider) {
+    int brightness = cfg->getValue(section, "brightness", 0).toInt();
+    m_brightnessSlider->blockSignals(true);
+    m_brightnessSlider->setValue(brightness);
+    m_brightnessSlider->blockSignals(false);
+    m_brightnessValueLabel->setText(QString::number(brightness));
+  }
+  
+  if (m_contrastSlider) {
+    int contrast = cfg->getValue(section, "contrast", 0).toInt();
+    m_contrastSlider->blockSignals(true);
+    m_contrastSlider->setValue(contrast);
+    m_contrastSlider->blockSignals(false);
+    m_contrastValueLabel->setText(QString::number(contrast));
+  }
+  
+  if (m_saturationSlider) {
+    int saturation = cfg->getValue(section, "saturation", 0).toInt();
+    m_saturationSlider->blockSignals(true);
+    m_saturationSlider->setValue(saturation);
+    m_saturationSlider->blockSignals(false);
+    m_saturationValueLabel->setText(QString::number(saturation));
+  }
+  
+  if (m_sharpnessSlider) {
+    int sharpness = cfg->getValue(section, "sharpness", 50).toInt();
+    m_sharpnessSlider->blockSignals(true);
+    m_sharpnessSlider->setValue(sharpness);
+    m_sharpnessSlider->blockSignals(false);
+    m_sharpnessValueLabel->setText(QString::number(sharpness));
+  }
+  
+  if (m_hueSlider) {
+    int hue = cfg->getValue(section, "hue", 0).toInt();
+    m_hueSlider->blockSignals(true);
+    m_hueSlider->setValue(hue);
+    m_hueSlider->blockSignals(false);
+    m_hueValueLabel->setText(QString::number(hue));
+  }
+  
+  // IR Cut (Tele only)
+  if (m_irCutCheckBox && m_cameraMode == CameraMode::Tele) {
+    bool irCut = cfg->getValue(section, "ir_cut", false).toBool();
+    m_irCutCheckBox->blockSignals(true);
+    m_irCutCheckBox->setChecked(irCut);
+    m_irCutCheckBox->blockSignals(false);
+  }
+  
+  // White balance
+  int wbMode = cfg->getValue(section, "wb_mode", 0).toInt();
+  if (m_wbModeCombo) {
+    m_wbModeCombo->blockSignals(true);
+    m_wbModeCombo->setCurrentIndex(wbMode);
+    m_wbModeCombo->blockSignals(false);
+  }
+  
+  int wbTemp = cfg->getValue(section, "wb_temperature", 5).toInt();
+  if (m_wbTemperatureSlider) {
+    m_wbTemperatureSlider->blockSignals(true);
+    m_wbTemperatureSlider->setValue(wbTemp);
+    m_wbTemperatureSlider->blockSignals(false);
+    if (wbTemp >= 0 && wbTemp < s_wbTemperatureValues.size()) {
+      m_wbTemperatureValueLabel->setText(
+          QString("%1K").arg(s_wbTemperatureValues[wbTemp]));
+    }
+  }
+  
+  qDebug() << "[CameraSettingsPanel] Loaded settings for" << section;
+}
+
+void CameraSettingsPanel::saveSettings() {
+  AppConfig *cfg = AppConfig::instance();
+  QString section = (m_cameraMode == CameraMode::Tele) ? "camera_tele" : "camera_wide";
+  
+  // Exposure settings
+  if (m_exposureModeCombo) {
+    cfg->setValue(section, "exposure_mode", m_exposureModeCombo->currentIndex());
+  }
+  if (m_exposureSlider) {
+    cfg->setValue(section, "exposure_index", m_exposureSlider->value());
+  }
+  
+  // Gain settings
+  if (m_gainModeCombo) {
+    cfg->setValue(section, "gain_mode", m_gainModeCombo->currentIndex());
+  }
+  if (m_gainSlider) {
+    cfg->setValue(section, "gain_index", m_gainSlider->value());
+  }
+  
+  // Image parameters
+  if (m_brightnessSlider) {
+    cfg->setValue(section, "brightness", m_brightnessSlider->value());
+  }
+  if (m_contrastSlider) {
+    cfg->setValue(section, "contrast", m_contrastSlider->value());
+  }
+  if (m_saturationSlider) {
+    cfg->setValue(section, "saturation", m_saturationSlider->value());
+  }
+  if (m_sharpnessSlider) {
+    cfg->setValue(section, "sharpness", m_sharpnessSlider->value());
+  }
+  if (m_hueSlider) {
+    cfg->setValue(section, "hue", m_hueSlider->value());
+  }
+  
+  // IR Cut (Tele only)
+  if (m_irCutCheckBox && m_cameraMode == CameraMode::Tele) {
+    cfg->setValue(section, "ir_cut", m_irCutCheckBox->isChecked());
+  }
+  
+  // White balance
+  if (m_wbModeCombo) {
+    cfg->setValue(section, "wb_mode", m_wbModeCombo->currentIndex());
+  }
+  if (m_wbTemperatureSlider) {
+    cfg->setValue(section, "wb_temperature", m_wbTemperatureSlider->value());
+  }
+  
+  cfg->save();
+  qDebug() << "[CameraSettingsPanel] Saved settings for" << section;
 }
 

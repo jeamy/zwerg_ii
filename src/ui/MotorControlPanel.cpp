@@ -54,6 +54,18 @@ void MotorControlPanel::setFocusController(DwarfFocusController *controller) {
     m_focusController = controller;
 }
 
+void MotorControlPanel::setClientMode(bool enabled) {
+    bool controlsEnabled = !enabled;
+    if (m_upButton) m_upButton->setEnabled(controlsEnabled);
+    if (m_downButton) m_downButton->setEnabled(controlsEnabled);
+    if (m_leftButton) m_leftButton->setEnabled(controlsEnabled);
+    if (m_rightButton) m_rightButton->setEnabled(controlsEnabled);
+    if (m_joystick) m_joystick->setEnabled(controlsEnabled);
+    if (m_focusFarButton) m_focusFarButton->setEnabled(controlsEnabled);
+    if (m_focusNearButton) m_focusNearButton->setEnabled(controlsEnabled);
+    if (m_autoFocusButton) m_autoFocusButton->setEnabled(controlsEnabled);
+}
+
 void MotorControlPanel::setupUi() {
     setObjectName("motorControlPanel");
     QVBoxLayout *mainLayout = new QVBoxLayout(this);

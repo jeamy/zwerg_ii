@@ -1,4 +1,5 @@
 #include "AstroNavigationPanel.h"
+#include "../AppConfig.h"
 #include "StarMapWidget.h"
 #include "ImageSettingsWidget.h"
 #include "CameraSettingsPanel.h"
@@ -618,9 +619,69 @@ void AstroNavigationPanel::connectSignals() {
     // Settings signals
     connect(m_magnitudeLimitSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &AstroNavigationPanel::onMagnitudeLimitChanged);
+    connect(m_magnitudeLimitSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, [this](double) { saveSettings(); });
     connect(m_showConstellationsCheck, &QCheckBox::toggled, this, &AstroNavigationPanel::onShowConstellationsToggled);
+    connect(m_showConstellationsCheck, &QCheckBox::toggled, this,
+            [this](bool) { saveSettings(); });
     connect(m_showGridCheck, &QCheckBox::toggled, this, &AstroNavigationPanel::onShowGridToggled);
+    connect(m_showGridCheck, &QCheckBox::toggled, this,
+            [this](bool) { saveSettings(); });
     connect(m_showLabelsCheck, &QCheckBox::toggled, this, &AstroNavigationPanel::onShowLabelsToggled);
+    connect(m_showLabelsCheck, &QCheckBox::toggled, this,
+            [this](bool) { saveSettings(); });
+
+    if (m_latitudeSpin) {
+        connect(m_latitudeSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+                [this](double) { saveSettings(); });
+    }
+    if (m_longitudeSpin) {
+        connect(m_longitudeSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+                [this](double) { saveSettings(); });
+    }
+    if (m_altitudeSpin) {
+        connect(m_altitudeSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+                [this](double) { saveSettings(); });
+    }
+
+    if (m_numFramesSpin) {
+        connect(m_numFramesSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                [this](int) { saveSettings(); });
+    }
+    if (m_astroExposureSlider) {
+        connect(m_astroExposureSlider, &QSlider::valueChanged, this,
+                [this](int) { saveSettings(); });
+    }
+    if (m_astroGainSlider) {
+        connect(m_astroGainSlider, &QSlider::valueChanged, this,
+                [this](int) { saveSettings(); });
+    }
+
+    if (m_useDarkFramesCheck) {
+        connect(m_useDarkFramesCheck, &QCheckBox::toggled, this,
+                [this](bool) { saveSettings(); });
+    }
+    if (m_darkFramesSpin) {
+        connect(m_darkFramesSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                [this](int) { saveSettings(); });
+    }
+    if (m_flatFramesSpin) {
+        connect(m_flatFramesSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                [this](int) { saveSettings(); });
+    }
+    if (m_biasFramesSpin) {
+        connect(m_biasFramesSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                [this](int) { saveSettings(); });
+    }
+
+    if (m_lx200EnableCheck) {
+        connect(m_lx200EnableCheck, &QCheckBox::toggled, this,
+                [this](bool) { saveSettings(); });
+    }
+    if (m_lx200PortSpin) {
+        connect(m_lx200PortSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+                [this](int) { saveSettings(); });
+    }
     
     // LX200 server signals
     connect(m_lx200Server, &Lx200Server::runningChanged, this, [this](bool running) {
@@ -1423,6 +1484,31 @@ void AstroNavigationPanel::onLocationReceived(const QJsonObject &location) {
     qDebug() << "Auto-detected location:" << lat << lon << "-" << locationStr;
 }
 
+void AstroNavigationPanel::setClientMode(bool enabled) {
+    bool controlsEnabled = !enabled;
+    if (m_gotoButton) m_gotoButton->setEnabled(controlsEnabled);
+    if (m_stopGotoButton) m_stopGotoButton->setEnabled(controlsEnabled);
+    if (m_calibrateButton) m_calibrateButton->setEnabled(controlsEnabled);
+    if (m_cancelCalibrationButton) m_cancelCalibrationButton->setEnabled(controlsEnabled);
+    if (m_radecGotoButton) m_radecGotoButton->setEnabled(controlsEnabled);
+    if (m_trackSunButton) m_trackSunButton->setEnabled(controlsEnabled);
+    if (m_trackMoonButton) m_trackMoonButton->setEnabled(controlsEnabled);
+    if (m_stopSpecialTrackingButton) m_stopSpecialTrackingButton->setEnabled(controlsEnabled);
+    if (m_startStackingButton) m_startStackingButton->setEnabled(controlsEnabled);
+    if (m_captureDarksButton) m_captureDarksButton->setEnabled(controlsEnabled);
+    if (m_captureFlatsButton) m_captureFlatsButton->setEnabled(controlsEnabled);
+    if (m_captureBiasButton) m_captureBiasButton->setEnabled(controlsEnabled);
+    
+    // Additional stacking settings
+    if (m_numFramesSpin) m_numFramesSpin->setEnabled(controlsEnabled);
+    if (m_astroExposureSlider) m_astroExposureSlider->setEnabled(controlsEnabled);
+    if (m_astroGainSlider) m_astroGainSlider->setEnabled(controlsEnabled);
+    if (m_useDarkFramesCheck) m_useDarkFramesCheck->setEnabled(controlsEnabled);
+    if (m_darkFramesSpin) m_darkFramesSpin->setEnabled(controlsEnabled && (m_useDarkFramesCheck && m_useDarkFramesCheck->isChecked()));
+    if (m_flatFramesSpin) m_flatFramesSpin->setEnabled(controlsEnabled);
+    if (m_biasFramesSpin) m_biasFramesSpin->setEnabled(controlsEnabled);
+}
+
 void AstroNavigationPanel::onLx200EnableToggled(bool enabled) {
     if (enabled) {
         quint16 port = static_cast<quint16>(m_lx200PortSpin->value());
@@ -1443,4 +1529,215 @@ void AstroNavigationPanel::onLx200PortChanged(int port) {
         m_lx200StatusLabel->setText(tr("Restart server to apply new port"));
         m_lx200StatusLabel->setStyleSheet("color: orange;");
     }
+}
+
+void AstroNavigationPanel::loadSettings() {
+    AppConfig *cfg = AppConfig::instance();
+
+    // Display settings
+    if (m_magnitudeLimitSpin) {
+        double mag = cfg->getValue("astro", "magnitude_limit", 6.0).toDouble();
+        m_magnitudeLimitSpin->blockSignals(true);
+        m_magnitudeLimitSpin->setValue(mag);
+        m_magnitudeLimitSpin->blockSignals(false);
+        if (m_starMap)
+            m_starMap->setMagnitudeLimit(mag);
+    }
+
+    if (m_showConstellationsCheck) {
+        bool v = cfg->getValue("astro", "show_constellations", true).toBool();
+        m_showConstellationsCheck->blockSignals(true);
+        m_showConstellationsCheck->setChecked(v);
+        m_showConstellationsCheck->blockSignals(false);
+        if (m_starMap)
+            m_starMap->setShowConstellations(v);
+    }
+
+    if (m_showGridCheck) {
+        bool v = cfg->getValue("astro", "show_grid", false).toBool();
+        m_showGridCheck->blockSignals(true);
+        m_showGridCheck->setChecked(v);
+        m_showGridCheck->blockSignals(false);
+        if (m_starMap)
+            m_starMap->setShowGrid(v);
+    }
+
+    if (m_showLabelsCheck) {
+        bool v = cfg->getValue("astro", "show_labels", true).toBool();
+        m_showLabelsCheck->blockSignals(true);
+        m_showLabelsCheck->setChecked(v);
+        m_showLabelsCheck->blockSignals(false);
+        if (m_starMap)
+            m_starMap->setShowLabels(v);
+    }
+
+    // Location settings
+    if (m_latitudeSpin) {
+        double lat = cfg->getValue("astro", "latitude", m_latitudeSpin->value()).toDouble();
+        m_latitudeSpin->blockSignals(true);
+        m_latitudeSpin->setValue(lat);
+        m_latitudeSpin->blockSignals(false);
+    }
+
+    if (m_longitudeSpin) {
+        double lon = cfg->getValue("astro", "longitude", m_longitudeSpin->value()).toDouble();
+        m_longitudeSpin->blockSignals(true);
+        m_longitudeSpin->setValue(lon);
+        m_longitudeSpin->blockSignals(false);
+    }
+
+    if (m_altitudeSpin) {
+        double alt = cfg->getValue("astro", "altitude", m_altitudeSpin->value()).toDouble();
+        m_altitudeSpin->blockSignals(true);
+        m_altitudeSpin->setValue(alt);
+        m_altitudeSpin->blockSignals(false);
+    }
+
+    // Stacking settings
+    if (m_numFramesSpin) {
+        int frames = cfg->getValue("astro", "num_frames", m_numFramesSpin->value()).toInt();
+        m_numFramesSpin->blockSignals(true);
+        m_numFramesSpin->setValue(frames);
+        m_numFramesSpin->blockSignals(false);
+    }
+
+    if (m_astroExposureSlider) {
+        int expIndex = cfg->getValue("astro", "exposure_index", m_astroExposureSlider->value()).toInt();
+        m_astroExposureSlider->blockSignals(true);
+        m_astroExposureSlider->setValue(expIndex);
+        m_astroExposureSlider->blockSignals(false);
+        if (m_astroExposureValueLabel)
+            m_astroExposureValueLabel->setText(formatExposureValue(expIndex));
+    }
+
+    if (m_astroGainSlider) {
+        int gainIndex = cfg->getValue("astro", "gain_index", m_astroGainSlider->value()).toInt();
+        m_astroGainSlider->blockSignals(true);
+        m_astroGainSlider->setValue(gainIndex);
+        m_astroGainSlider->blockSignals(false);
+        if (m_astroGainValueLabel)
+            m_astroGainValueLabel->setText(formatGainValue(gainIndex));
+    }
+
+    // Dark frames
+    if (m_useDarkFramesCheck) {
+        bool useDarks = cfg->getValue("astro", "use_dark_frames", m_useDarkFramesCheck->isChecked()).toBool();
+        m_useDarkFramesCheck->blockSignals(true);
+        m_useDarkFramesCheck->setChecked(useDarks);
+        m_useDarkFramesCheck->blockSignals(false);
+    }
+
+    if (m_darkFramesSpin) {
+        int darkFrames = cfg->getValue("astro", "dark_frames_count", m_darkFramesSpin->value()).toInt();
+        m_darkFramesSpin->blockSignals(true);
+        m_darkFramesSpin->setValue(darkFrames);
+        m_darkFramesSpin->blockSignals(false);
+    }
+
+    if (m_flatFramesSpin) {
+        int flatFrames = cfg->getValue("astro", "flat_frames_count", m_flatFramesSpin->value()).toInt();
+        m_flatFramesSpin->blockSignals(true);
+        m_flatFramesSpin->setValue(flatFrames);
+        m_flatFramesSpin->blockSignals(false);
+    }
+
+    if (m_biasFramesSpin) {
+        int biasFrames = cfg->getValue("astro", "bias_frames_count", m_biasFramesSpin->value()).toInt();
+        m_biasFramesSpin->blockSignals(true);
+        m_biasFramesSpin->setValue(biasFrames);
+        m_biasFramesSpin->blockSignals(false);
+    }
+
+    // LX200 settings
+    if (m_lx200EnableCheck) {
+        bool enabled = cfg->getValue("astro", "lx200_enabled", m_lx200EnableCheck->isChecked()).toBool();
+        m_lx200EnableCheck->blockSignals(true);
+        m_lx200EnableCheck->setChecked(enabled);
+        m_lx200EnableCheck->blockSignals(false);
+    }
+
+    if (m_lx200PortSpin) {
+        int port = cfg->getValue("astro", "lx200_port", m_lx200PortSpin->value()).toInt();
+        m_lx200PortSpin->blockSignals(true);
+        m_lx200PortSpin->setValue(port);
+        m_lx200PortSpin->blockSignals(false);
+    }
+
+    qDebug() << "[AstroNavigationPanel] Loaded settings";
+}
+
+void AstroNavigationPanel::saveSettings() {
+    AppConfig *cfg = AppConfig::instance();
+
+    // Display settings
+    if (m_magnitudeLimitSpin) {
+        cfg->setValue("astro", "magnitude_limit", m_magnitudeLimitSpin->value());
+    }
+
+    if (m_showConstellationsCheck) {
+        cfg->setValue("astro", "show_constellations", m_showConstellationsCheck->isChecked());
+    }
+
+    if (m_showGridCheck) {
+        cfg->setValue("astro", "show_grid", m_showGridCheck->isChecked());
+    }
+
+    if (m_showLabelsCheck) {
+        cfg->setValue("astro", "show_labels", m_showLabelsCheck->isChecked());
+    }
+    
+    // Location settings
+    if (m_latitudeSpin) {
+        cfg->setValue("astro", "latitude", m_latitudeSpin->value());
+    }
+    
+    if (m_longitudeSpin) {
+        cfg->setValue("astro", "longitude", m_longitudeSpin->value());
+    }
+    
+    if (m_altitudeSpin) {
+        cfg->setValue("astro", "altitude", m_altitudeSpin->value());
+    }
+    
+    // Stacking settings
+    if (m_numFramesSpin) {
+        cfg->setValue("astro", "num_frames", m_numFramesSpin->value());
+    }
+    
+    if (m_astroExposureSlider) {
+        cfg->setValue("astro", "exposure_index", m_astroExposureSlider->value());
+    }
+    
+    if (m_astroGainSlider) {
+        cfg->setValue("astro", "gain_index", m_astroGainSlider->value());
+    }
+    
+    // Dark frames
+    if (m_useDarkFramesCheck) {
+        cfg->setValue("astro", "use_dark_frames", m_useDarkFramesCheck->isChecked());
+    }
+    
+    if (m_darkFramesSpin) {
+        cfg->setValue("astro", "dark_frames_count", m_darkFramesSpin->value());
+    }
+    
+    if (m_flatFramesSpin) {
+        cfg->setValue("astro", "flat_frames_count", m_flatFramesSpin->value());
+    }
+    
+    if (m_biasFramesSpin) {
+        cfg->setValue("astro", "bias_frames_count", m_biasFramesSpin->value());
+    }
+
+    // LX200 settings
+    if (m_lx200EnableCheck) {
+        cfg->setValue("astro", "lx200_enabled", m_lx200EnableCheck->isChecked());
+    }
+
+    if (m_lx200PortSpin) {
+        cfg->setValue("astro", "lx200_port", m_lx200PortSpin->value());
+    }
+    
+    cfg->save();
+    qDebug() << "[AstroNavigationPanel] Saved settings";
 }

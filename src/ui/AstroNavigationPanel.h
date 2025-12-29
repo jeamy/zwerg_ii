@@ -40,6 +40,10 @@ public:
     void setWebSocketClient(DwarfWebSocketClient *client);
     void setCameraController(DwarfCameraController *controller);
     void setAstroController(DwarfAstroController *controller);
+    void setClientMode(bool enabled);
+    
+    void loadSettings();
+    void saveSettings();
     
     // Location settings
     void setLocation(double latitude, double longitude);

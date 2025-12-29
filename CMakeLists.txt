@@ -62,6 +62,8 @@ set(SOURCES
     src/main.cpp
     src/MainWindow.cpp
     src/MainWindow.h
+    src/AppConfig.cpp
+    src/AppConfig.h
     src/net/DwarfWebSocketClient.cpp
     src/net/DwarfWebSocketClient.h
     src/net/DwarfFinder.cpp

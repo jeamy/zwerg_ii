@@ -188,14 +188,23 @@ void DwarfAstroController::stopTrackSpecialTarget() {
 void DwarfAstroController::startLiveStacking(bool useDarks) {
     qWarning() << "=== DwarfAstroController::startLiveStacking() called, useDarks:" << useDarks;
     qWarning() << "    Module: 3, Cmd: 11005 (CAPTURE_RAW_LIVE_STACKING)";
+    
     QByteArray data;
-    data.append(static_cast<char>(0x08));
-    appendInt64Varint(data, useDarks ? static_cast<qint64>(-1) : static_cast<qint64>(0));
+    if (useDarks) {
+        // Field 1, wire type 0 (varint). Value -1 means use the latest matching dark frame.
+        data.append(static_cast<char>(0x08));
+        appendInt64Varint(data, static_cast<qint64>(-1));
+        qWarning() << "    Using dark frames (sending index -1)";
+    } else {
+        qWarning() << "    NOT using dark frames (sending empty payload)";
+        // If we don't want dark frames, we send an empty payload.
+        // Sending index 0 was likely interpreted as "use dark frame index 0",
+        // which failed if no dark frames existed.
+    }
+    
     qWarning() << "    Payload size:" << data.size() << "bytes";
     sendCommand(AstroCmd::CAPTURE_RAW_LIVE_STACKING, data);
     qWarning() << "    Command sent, emitting stackingStarted signal";
-    qWarning() << "    Waiting for response from Module 3 Cmd 11005...";
-    qWarning() << "    If no progress notifications (15209) come within 5s, stacking failed to start!";
     emit stackingStarted();
 }
 
@@ -209,8 +218,11 @@ void DwarfAstroController::stopLiveStacking() {
 
 void DwarfAstroController::startWideLiveStacking(bool useDarks) {
     QByteArray data;
-    data.append(static_cast<char>(0x08));
-    appendInt64Varint(data, useDarks ? static_cast<qint64>(-1) : static_cast<qint64>(0));
+    if (useDarks) {
+        data.append(static_cast<char>(0x08));
+        appendInt64Varint(data, static_cast<qint64>(-1));
+    }
+    // Else: empty payload for no darks
     sendCommand(AstroCmd::CAPTURE_WIDE_RAW_LIVE_STACKING, data);
     emit stackingStarted();
 }

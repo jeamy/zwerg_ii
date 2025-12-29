@@ -1,0 +1,70 @@
+{
+    "astro": {
+        "altitude": 400,
+        "bias_frames_count": 20,
+        "dark_frames_count": 20,
+        "exposure_index": 43,
+        "flat_frames_count": 20,
+        "gain_index": 2,
+        "latitude": 48.2084,
+        "longitude": 16.3725,
+        "lx200_enabled": false,
+        "lx200_port": 4030,
+        "magnitude_limit": 6,
+        "num_frames": 100,
+        "show_constellations": true,
+        "show_grid": false,
+        "show_labels": true,
+        "use_dark_frames": false
+    },
+    "camera_tele": {
+        "brightness": 0,
+        "contrast": 0,
+        "exposure_index": 40,
+        "exposure_mode": 1,
+        "gain_index": 2,
+        "gain_mode": 1,
+        "hue": 0,
+        "ir_cut": false,
+        "saturation": 0,
+        "sharpness": 0,
+        "wb_mode": 0,
+        "wb_temperature": 5
+    },
+    "camera_wide": {
+        "brightness": 0,
+        "contrast": 0,
+        "exposure_index": 35,
+        "exposure_mode": 1,
+        "gain_index": 1,
+        "gain_mode": 0,
+        "hue": 0,
+        "saturation": 0,
+        "sharpness": 0,
+        "wb_mode": 0,
+        "wb_temperature": 5
+    },
+    "connection": {
+        "client_mode": false,
+        "last_ip": "192.168.8.22",
+        "subnet": "192.168.8"
+    },
+    "display": {
+        "gallery_overlay_enabled": false,
+        "last_tab": 0,
+        "main_stream": 0,
+        "motor_overlay_visible": true,
+        "params_overlay_visible": true,
+        "pip_stream": 1,
+        "pip_x": 10,
+        "pip_y": 50,
+        "starmap_overlay_enabled": false
+    },
+    "media": {
+        "download_dir": "/home/lux/Downloads"
+    },
+    "panorama": {
+        "cols": 3,
+        "rows": 3
+    }
+}

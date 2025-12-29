@@ -36,6 +36,11 @@ void ParametersOverlayPanel::setCameraMode(CameraSettingsPanel::CameraMode mode)
     m_panel->setCameraMode(mode);
 }
 
+void ParametersOverlayPanel::setClientMode(bool enabled) {
+  if (m_panel)
+    m_panel->setClientMode(enabled);
+}
+
 void ParametersOverlayPanel::setCaptureStatusText(const QString &text) {
   if (m_panel)
     m_panel->setCaptureStatusText(text);

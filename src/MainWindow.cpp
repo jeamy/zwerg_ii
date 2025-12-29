@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "AppConfig.h"
 #include "net/DwarfAstroController.h"
 #include "net/DwarfCameraController.h"
 #include "net/DwarfFocusController.h"
@@ -36,11 +37,11 @@
 #include <QMessageBox>
 #include <QPixmap>
 #include <QGraphicsDropShadowEffect>
-#include <QSettings>
-#include <QStandardPaths>
+#include <QSignalBlocker>
 #include <QPainter>
 #include <QPen>
 #include <QSpinBox>
+#include <QStandardPaths>
 #include <functional>
 #include <QStatusBar>
 #include <QStyle>
@@ -289,15 +290,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), m_wsClient(nullptr), m_dispatcher(nullptr),
       m_scanCancelled(false), m_cameraController(nullptr),
       m_motorController(nullptr), m_focusController(nullptr),
-      m_mainVideoWidget(nullptr), m_pipVideoWidget(nullptr),
-      m_mainStream(CameraStream::Tele), m_pipStream(CameraStream::Wide),
-      m_motorOverlay(nullptr), m_paramsOverlay(nullptr),
-      m_motorOverlayUserVisible(true), m_paramsOverlayUserVisible(true),
-      m_motorOverlayToggleButton(nullptr), m_paramsOverlayToggleButton(nullptr),
-      m_starMapOverlayContainer(nullptr), m_starMapOverlayWidget(nullptr),
-      m_starMapOverlayEnabled(false), m_galleryOverlayContainer(nullptr),
-      m_galleryTab(nullptr), m_galleryOverlayEnabled(false),
-      m_astroTabsOverlayContainer(nullptr), m_astroTabsOverlayBar(nullptr),
+      m_astroController(nullptr), m_panoramaController(nullptr),
       m_finder(nullptr), m_httpClient(nullptr), m_openGalleryButton(nullptr),
       m_mediaTabs(nullptr), m_mediaPhotoList(nullptr), m_mediaVideoList(nullptr),
       m_mediaBurstList(nullptr), m_mediaAstroList(nullptr),
@@ -376,7 +369,17 @@ MainWindow::MainWindow(QWidget *parent)
             &DwarfPanoramaController::handlePanoramaUiMessage);
   }
 
+  // Load application configuration BEFORE building UI panels, because setupUi()
+  // constructs panels that call loadSettings()/saveSettings().
+  AppConfig::instance()->load();
+
   setupUi();
+  loadSettings();
+
+  // Persist defaults after the UI has been built and populated.
+  // This ensures config.json always contains all keys, even if the user never
+  // touches a control.
+  saveSettings();
 }
 
 void MainWindow::ensureHttpClientForCurrentIp() {
@@ -479,15 +482,6 @@ void MainWindow::onRecordFinished(DwarfCameraController::CameraKind kind,
   ensureHttpClientForCurrentIp();
   if (m_httpClient)
     m_httpClient->fetchMediaList();
-}
-
-MainWindow::~MainWindow() {
-  if (m_wsClient) {
-    m_wsClient->disconnect();
-    delete m_wsClient;
-  }
-
-  stopStreaming();
 }
 
 void MainWindow::updateStatusStyle(const char *statusKey) {
@@ -631,6 +625,8 @@ void MainWindow::onGalleryOverlayRequested(bool enabled) {
 void MainWindow::updateSidebarForConnectionState(bool connected) {
   if (!m_sidebarGroup)
     return;
+
+  bool isClient = m_wsClient && m_wsClient->isClientMode();
 
   // All sidebar buttons depend on connection, except SCAN (index 0) and SET (index 5)
   for (int idx = 0; idx <= 5; ++idx) {
@@ -946,35 +942,16 @@ void MainWindow::setupUi() {
 
   m_ipInput = new QLineEdit();
   m_ipInput->setPlaceholderText("DWARF II IP");
-  {
-    QSettings settings("DwarfLab", "DwarfController");
-    const QString ip = settings.value("ip", QStringLiteral("192.168.8.223")).toString();
-    m_ipInput->setText(ip);
-  }
+  m_ipInput->setText(QStringLiteral("192.168.8.223"));
 
   m_subnetInput = new QLineEdit();
   m_subnetInput->setPlaceholderText("Subnet (e.g. 192.168.1)");
-  {
-    QSettings settings("DwarfLab", "DwarfController");
-    const QString subnet = settings.value("subnet", QStringLiteral("192.168.8")).toString();
-    m_subnetInput->setText(subnet);
-  }
+  m_subnetInput->setText(QStringLiteral("192.168.8"));
   connect(m_subnetInput, &QLineEdit::textChanged, this,
           &MainWindow::onSubnetTextChanged);
 
-  connect(m_ipInput, &QLineEdit::editingFinished, this, [this]() {
-    if (!m_ipInput)
-      return;
-    QSettings settings("DwarfLab", "DwarfController");
-    settings.setValue("ip", m_ipInput->text().trimmed());
-  });
-
-  connect(m_subnetInput, &QLineEdit::editingFinished, this, [this]() {
-    if (!m_subnetInput)
-      return;
-    QSettings settings("DwarfLab", "DwarfController");
-    settings.setValue("subnet", m_subnetInput->text().trimmed());
-  });
+  connect(m_ipInput, &QLineEdit::editingFinished, this, [this]() { saveSettings(); });
+  connect(m_subnetInput, &QLineEdit::editingFinished, this, [this]() { saveSettings(); });
 
   QHBoxLayout *scanBtnLayout = new QHBoxLayout();
   m_scanButton = new QPushButton(QIcon(":/icons/icons/scan.svg"), tr("Scan Network"));
@@ -1023,14 +1000,7 @@ void MainWindow::setupUi() {
 
   m_clientModeCheck = new QCheckBox(tr("Client Mode (View Only)"));
   m_clientModeCheck->setToolTip(tr("In Client Mode, the app will only receive data and streams without sending control commands."));
-  {
-    QSettings settings("DwarfLab", "DwarfController");
-    m_clientModeCheck->setChecked(settings.value("clientMode", false).toBool());
-  }
-  connect(m_clientModeCheck, &QCheckBox::toggled, this, [](bool checked) {
-    QSettings settings("DwarfLab", "DwarfController");
-    settings.setValue("clientMode", checked);
-  });
+  connect(m_clientModeCheck, &QCheckBox::toggled, this, [this](bool) { saveSettings(); });
   cl->addWidget(m_clientModeCheck);
 
   cl->addLayout(connectBtnLayout);
@@ -1048,14 +1018,32 @@ void MainWindow::setupUi() {
   m_cameraSettingsPanel = new CameraSettingsPanel(this);
   m_cameraSettingsPanel->setCameraController(m_cameraController);
   m_cameraSettingsPanel->setDisplayMode(CameraSettingsPanel::DisplayMode::CaptureOnly);
+  m_cameraSettingsPanel->loadSettings();
   m_contentStack->addWidget(m_cameraSettingsPanel);
+
+  // Ensure both sections (camera_tele + camera_wide) exist even if the user
+  // never switches the camera mode.
+  {
+    const QSignalBlocker blocker(m_cameraSettingsPanel);
+    const auto origMode = m_cameraSettingsPanel->cameraMode();
+    m_cameraSettingsPanel->setCameraMode(CameraSettingsPanel::CameraMode::Tele);
+    m_cameraSettingsPanel->saveSettings();
+    m_cameraSettingsPanel->setCameraMode(CameraSettingsPanel::CameraMode::Wide);
+    m_cameraSettingsPanel->saveSettings();
+    m_cameraSettingsPanel->setCameraMode(origMode);
+  }
 
   // 2: Astro Panel
   m_astroPanel = new AstroNavigationPanel(this);
   m_astroPanel->setWebSocketClient(m_wsClient);
   m_astroPanel->setCameraController(m_cameraController);
   m_astroPanel->setAstroController(m_astroController);
+  m_astroPanel->loadSettings();
   m_contentStack->addWidget(m_astroPanel);
+
+  // Write astro defaults immediately.
+  if (m_astroPanel)
+    m_astroPanel->saveSettings();
   connect(m_astroPanel, &AstroNavigationPanel::starMapOverlayRequested, this,
           &MainWindow::onStarMapOverlayRequested);
 
@@ -1117,6 +1105,15 @@ void MainWindow::setupUi() {
   gridLayout->addStretch(1);
   pl->addWidget(gridRow);
 
+  if (m_panoRowsSpin) {
+    connect(m_panoRowsSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [this](int) { saveSettings(); });
+  }
+  if (m_panoColsSpin) {
+    connect(m_panoColsSpin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [this](int) { saveSettings(); });
+  }
+
   auto *panoStatus = new QLabel(tr("Idle"), m_panoTab);
   panoStatus->setStyleSheet("color: gray;");
   pl->addWidget(panoStatus);
@@ -1164,6 +1161,11 @@ void MainWindow::setupUi() {
     m_panoRunActive = true;
     m_panoRunRows = rows;
     m_panoRunCols = cols;
+
+    if (m_wsClient && m_wsClient->isClientMode()) {
+      qWarning() << "[MainWindow] Panorama START BLOCKED (Client Mode)";
+      return;
+    }
 
     // Robust start sequencing: stop any previous pano and WAIT for stop ACK.
     // Otherwise the device can keep previous pano settings and report a stale total_count.
@@ -1376,10 +1378,11 @@ void MainWindow::setupUi() {
   langCombo->addItem("English", "en");
   langCombo->addItem("Deutsch", "de");
   {
-      QSettings settings("DwarfLab", "DwarfController");
-      QString currentLang = settings.value("language", "en").toString();
+      AppConfig *cfg = AppConfig::instance();
+      QString currentLang = cfg->getValue("ui", "language", "en").toString();
       int idx = langCombo->findData(currentLang);
-      if (idx != -1) langCombo->setCurrentIndex(idx);
+      if (idx != -1)
+        langCombo->setCurrentIndex(idx);
   }
   langLayout->addWidget(langCombo);
   langLayout->addStretch();
@@ -1387,8 +1390,9 @@ void MainWindow::setupUi() {
 
   connect(langCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, langCombo](int index) {
       QString lang = langCombo->itemData(index).toString();
-      QSettings settings("DwarfLab", "DwarfController");
-      settings.setValue("language", lang);
+      AppConfig *cfg = AppConfig::instance();
+      cfg->setValue("ui", "language", lang);
+      cfg->save();
       QMessageBox::information(this, tr("Restart Required"), 
           tr("Please restart the application to apply the language change."));
   });
@@ -1538,22 +1542,7 @@ void MainWindow::setupUi() {
 
   statusBar()->showMessage(tr("Ready"));
 
-  // Settings
-  QSettings settings("DwarfLab", "DwarfController");
-  QString dir = settings.value("downloadDir").toString();
-  if (dir.isEmpty()) {
-    QString base =
-        QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-    if (base.isEmpty())
-      base = QDir::homePath();
-    QDir d(base);
-    if (!d.exists("DWARF_II"))
-      d.mkpath("DWARF_II");
-    dir = d.filePath("DWARF_II");
-  }
-  m_downloadDir = dir;
-  if (m_downloadDirEdit)
-    m_downloadDirEdit->setText(dir);
+  // Download directory is handled by AppConfig (see loadSettings()).
     
   // Ensure overlays are positioned correctly after layout is done
   QTimer::singleShot(0, this, &MainWindow::updateOverlayPositions);
@@ -1646,6 +1635,13 @@ void MainWindow::onDeviceSelected(QListWidgetItem *item) {
   m_ipInput->setText(ip);
   if (m_firmwareLabel) {
     m_firmwareLabel->setText(version.isEmpty() ? "--" : version);
+  }
+
+  // Cache firmware so it is still displayed when connecting via manual IP.
+  if (!version.isEmpty()) {
+    AppConfig *cfg = AppConfig::instance();
+    cfg->setValue("connection", "last_firmware", version);
+    cfg->save();
   }
   
   if (m_wsClient) {
@@ -1813,26 +1809,38 @@ void MainWindow::onWebSocketConnected() {
   m_connectButton->setText(tr("Disconnect"));
   m_cancelConnectButton->setEnabled(
       false); // Can't cancel if already connected, use Disconnect
-  m_statusLabel->setText(tr("Connected"));
+  m_statusLabel->setText(m_wsClient->isClientMode() ? tr("Connected (View Only)") : tr("Connected"));
   updateStatusStyle("ok");
-  statusBar()->showMessage(tr("Connected to DWARF II"));
+  statusBar()->showMessage(m_wsClient->isClientMode() ? tr("Connected to DWARF II (View Only)") : tr("Connected to DWARF II"));
 
   // Sync time with DWARF device
   syncTimeWithDevice();
 
-  // Update panels with the new client
   if (m_cameraSettingsPanel) {
-    // CameraSettingsPanel might need the client too, but it uses
-    // m_cameraController usually
+    m_cameraSettingsPanel->setClientMode(m_wsClient->isClientMode());
   }
   if (m_astroPanel) {
     m_astroPanel->setWebSocketClient(m_wsClient);
+    m_astroPanel->setClientMode(m_wsClient->isClientMode());
+  }
+  if (m_motorOverlay) {
+    m_motorOverlay->setClientMode(m_wsClient->isClientMode());
+  }
+  if (m_paramsOverlay) {
+    m_paramsOverlay->setClientMode(m_wsClient->isClientMode());
   }
 
   // Start streaming now that we are connected
   QString ip = m_ipInput->text().trimmed();
   startStreaming(ip);
 
+  if (m_wsClient && m_wsClient->isClientMode()) {
+    if (m_panoStartButton) m_panoStartButton->setEnabled(false);
+    if (m_panoStopButton) m_panoStopButton->setEnabled(false);
+    if (m_panoRowsSpin) m_panoRowsSpin->setEnabled(false);
+    if (m_panoColsSpin) m_panoColsSpin->setEnabled(false);
+  }
+  
   updateSidebarForConnectionState(true);
 
   // Switch to CAM tab automatically after connection
@@ -2524,8 +2532,7 @@ void MainWindow::onChangeDownloadDirClicked() {
   if (m_downloadDirEdit)
     m_downloadDirEdit->setText(dir);
 
-  QSettings settings("DwarfLab", "DwarfController");
-  settings.setValue("downloadDir", dir);
+  saveSettings();
 }
 
 void MainWindow::onMediaItemClicked(QListWidgetItem *item) {
@@ -3078,4 +3085,178 @@ void MainWindow::onCameraWideMessage(uint32_t cmd, const QByteArray &data) {
                  << cmd;
     }
   }
+}
+
+MainWindow::~MainWindow() {
+  saveSettings();
+  AppConfig::instance()->save();
+}
+
+void MainWindow::loadSettings() {
+  AppConfig *cfg = AppConfig::instance();
+  
+  // Connection settings
+  if (m_ipInput) {
+    QString lastIp = cfg->getValue("connection", "last_ip", "").toString();
+    if (!lastIp.isEmpty())
+      m_ipInput->setText(lastIp);
+  }
+  
+  if (m_subnetInput) {
+    QString subnet = cfg->getValue("connection", "subnet", "192.168.88").toString();
+    m_subnetInput->setText(subnet);
+  }
+  
+  if (m_clientModeCheck) {
+    bool clientMode = cfg->getValue("connection", "client_mode", false).toBool();
+    m_clientModeCheck->setChecked(clientMode);
+  }
+  
+  // Panorama settings
+  if (m_panoRowsSpin) {
+    int rows = cfg->getValue("panorama", "rows", 3).toInt();
+    m_panoRowsSpin->setValue(rows);
+  }
+  
+  if (m_panoColsSpin) {
+    int cols = cfg->getValue("panorama", "cols", 3).toInt();
+    m_panoColsSpin->setValue(cols);
+  }
+  
+  // Download directory
+  if (m_downloadDirEdit) {
+    QString downloadDir = cfg->getValue("media", "download_dir", 
+      QStandardPaths::writableLocation(QStandardPaths::DownloadLocation)).toString();
+    m_downloadDirEdit->setText(downloadDir);
+    m_downloadDir = downloadDir;
+  }
+
+  // Firmware (cached from scan/previous selection)
+  if (m_firmwareLabel) {
+    QString fw = cfg->getValue("connection", "last_firmware", "").toString();
+    m_firmwareLabel->setText(fw.isEmpty() ? "--" : fw);
+  }
+
+  // Display / overlay settings
+  if (m_contentStack) {
+    const int idx = cfg->getValue("display", "last_tab", 0).toInt();
+    if (idx >= 0 && idx < m_contentStack->count()) {
+      m_contentStack->setCurrentIndex(idx);
+      if (m_sidebarGroup) {
+        if (auto *btn = m_sidebarGroup->button(idx)) {
+          const QSignalBlocker blocker(btn);
+          btn->setChecked(true);
+        }
+      }
+    }
+  }
+
+  if (m_motorOverlayToggleButton) {
+    const bool v = cfg->getValue("display", "motor_overlay_visible", true).toBool();
+    const QSignalBlocker blocker(m_motorOverlayToggleButton);
+    m_motorOverlayToggleButton->setChecked(v);
+    m_motorOverlayUserVisible = v;
+  }
+
+  if (m_paramsOverlayToggleButton) {
+    const bool v = cfg->getValue("display", "params_overlay_visible", true).toBool();
+    const QSignalBlocker blocker(m_paramsOverlayToggleButton);
+    m_paramsOverlayToggleButton->setChecked(v);
+    m_paramsOverlayUserVisible = v;
+  }
+
+  m_starMapOverlayEnabled = cfg->getValue("display", "starmap_overlay_enabled", false).toBool();
+  m_galleryOverlayEnabled = cfg->getValue("display", "gallery_overlay_enabled", false).toBool();
+
+  const int mainStream = cfg->getValue("display", "main_stream", 0).toInt();
+  const int pipStream = cfg->getValue("display", "pip_stream", 1).toInt();
+  m_mainStream = (mainStream == 1) ? CameraStream::Wide : CameraStream::Tele;
+  m_pipStream = (pipStream == 1) ? CameraStream::Wide : CameraStream::Tele;
+  updateCameraStreamViews();
+
+  if (m_pipContainer) {
+    const int x = cfg->getValue("display", "pip_x", m_pipContainer->x()).toInt();
+    const int y = cfg->getValue("display", "pip_y", m_pipContainer->y()).toInt();
+    m_pipContainer->move(x, y);
+  }
+
+  updateOverlayVisibility();
+  
+  // Load panel settings
+  if (m_cameraSettingsPanel) {
+    QJsonObject camSettings = cfg->getSection("camera_settings");
+    if (!camSettings.isEmpty()) {
+      // Camera settings will be loaded by the panel itself
+    }
+  }
+  
+  if (m_astroPanel) {
+    QJsonObject astroSettings = cfg->getSection("astro_settings");
+    if (!astroSettings.isEmpty()) {
+      // Astro settings will be loaded by the panel itself
+    }
+  }
+  
+  qDebug() << "[MainWindow] Settings loaded from" << cfg->configFilePath();
+}
+
+void MainWindow::saveSettings() {
+  AppConfig *cfg = AppConfig::instance();
+  
+  // Connection settings
+  if (m_ipInput) {
+    cfg->setValue("connection", "last_ip", m_ipInput->text());
+  }
+  
+  if (m_subnetInput) {
+    cfg->setValue("connection", "subnet", m_subnetInput->text());
+  }
+  
+  if (m_clientModeCheck) {
+    cfg->setValue("connection", "client_mode", m_clientModeCheck->isChecked());
+  }
+  
+  // Panorama settings
+  if (m_panoRowsSpin) {
+    cfg->setValue("panorama", "rows", m_panoRowsSpin->value());
+  }
+  
+  if (m_panoColsSpin) {
+    cfg->setValue("panorama", "cols", m_panoColsSpin->value());
+  }
+  
+  // Download directory
+  if (m_downloadDirEdit) {
+    cfg->setValue("media", "download_dir", m_downloadDirEdit->text());
+  }
+  
+  // Save panel settings
+  if (m_cameraSettingsPanel) {
+    m_cameraSettingsPanel->saveSettings();
+  }
+  
+  if (m_astroPanel) {
+    m_astroPanel->saveSettings();
+  }
+
+  // Display / overlay settings
+  if (m_contentStack)
+    cfg->setValue("display", "last_tab", m_contentStack->currentIndex());
+
+  cfg->setValue("display", "motor_overlay_visible", m_motorOverlayUserVisible);
+  cfg->setValue("display", "params_overlay_visible", m_paramsOverlayUserVisible);
+  cfg->setValue("display", "starmap_overlay_enabled", m_starMapOverlayEnabled);
+  cfg->setValue("display", "gallery_overlay_enabled", m_galleryOverlayEnabled);
+
+  cfg->setValue("display", "main_stream", (m_mainStream == CameraStream::Wide) ? 1 : 0);
+  cfg->setValue("display", "pip_stream", (m_pipStream == CameraStream::Wide) ? 1 : 0);
+
+  if (m_pipContainer) {
+    cfg->setValue("display", "pip_x", m_pipContainer->x());
+    cfg->setValue("display", "pip_y", m_pipContainer->y());
+  }
+
+  cfg->save();
+
+  qDebug() << "[MainWindow] Settings saved to" << cfg->configFilePath();
 }

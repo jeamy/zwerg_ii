@@ -34,7 +34,12 @@ public:
   void setCameraController(DwarfCameraController *controller);
   void setDisplayMode(DisplayMode mode);
   void setCameraMode(CameraMode mode);
+  void setClientMode(bool enabled);
+  bool isClientMode() const { return m_clientMode; }
   CameraMode cameraMode() const { return m_cameraMode; }
+  
+  void loadSettings();
+  void saveSettings();
 
   // Update UI from external state (e.g., when receiving camera status)
   void setExposureMode(int mode);
@@ -112,6 +117,7 @@ private:
   CameraMode m_cameraMode = CameraMode::Tele;
   DisplayMode m_displayMode = DisplayMode::Full;
   bool m_isRecording = false;
+  bool m_clientMode = false;
 
   QWidget *m_sourceRow = nullptr;
   QWidget *m_captureRow = nullptr;

@@ -20,6 +20,7 @@ public:
 
     void setMotorController(DwarfMotorController *controller);
     void setFocusController(DwarfFocusController *controller);
+    void setClientMode(bool enabled);
 
 signals:
     void speedChanged(int speedIndex);

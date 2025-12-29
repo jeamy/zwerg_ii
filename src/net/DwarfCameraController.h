@@ -3,8 +3,7 @@
 #include "DwarfWebSocketClient.h"
 #include "camera.pb.h"
 #include <QObject>
-#include <QSettings>
- #include <QString>
+#include <QString>
 
 #include <memory>
 
@@ -86,12 +85,6 @@ private:
 
   bool m_teleRecordModeOpenAttempted = false;
   bool m_module15ImageParamsInitialized = false;
-
-  std::unique_ptr<QSettings> m_config;
-
-  void ensureConfigLoaded();
-  void loadConfig();
-  void saveConfig(CameraKind kind);
 
   void sendSetAllParams(CameraKind kind);
   void sendSingleInt32(CameraKind kind, quint32 cmd, int value);

@@ -3,9 +3,6 @@
 #include "ProtobufHelper.h"
 
 #include <QTimer>
-#include <QDir>
-#include <QSettings>
-#include <QStandardPaths>
 #include <cmath>
 
 using dwarf::ReqOpenCamera;
@@ -174,106 +171,6 @@ DwarfCameraController::DwarfCameraController(QObject *parent)
   m_wideParams.set_saturation(80);
   m_wideParams.set_sharpness(2);
   m_wideParams.set_jpg_quality(90);
-
-  ensureConfigLoaded();
-}
-
-void DwarfCameraController::ensureConfigLoaded() {
-  if (m_config)
-    return;
-
-  const QString baseDir =
-      QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-  QDir().mkpath(baseDir);
-  const QString path = QDir(baseDir).filePath(QStringLiteral("DwarfController.ini"));
-
-  m_config = std::make_unique<QSettings>(path, QSettings::IniFormat);
-  loadConfig();
-}
-
-void DwarfCameraController::loadConfig() {
-  if (!m_config)
-    return;
-
-  auto loadKind = [this](CameraKind kind) {
-    ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-    const QString group = QStringLiteral("camera/") + kindKey(kind);
-    m_config->beginGroup(group);
-
-    p.set_exp_mode(m_config->value(QStringLiteral("exp_mode"), p.exp_mode()).toInt());
-    p.set_exp_index(m_config->value(QStringLiteral("exp_index"), p.exp_index()).toInt());
-    p.set_gain_mode(m_config->value(QStringLiteral("gain_mode"), p.gain_mode()).toInt());
-    p.set_gain_index(m_config->value(QStringLiteral("gain_index"), p.gain_index()).toInt());
-    p.set_ircut_value(m_config->value(QStringLiteral("ircut_value"), p.ircut_value()).toInt());
-    p.set_wb_mode(m_config->value(QStringLiteral("wb_mode"), p.wb_mode()).toInt());
-    p.set_wb_index_type(m_config->value(QStringLiteral("wb_index_type"), p.wb_index_type()).toInt());
-    p.set_wb_index(m_config->value(QStringLiteral("wb_index"), p.wb_index()).toInt());
-    p.set_brightness(m_config->value(QStringLiteral("brightness"), p.brightness()).toInt());
-    p.set_contrast(m_config->value(QStringLiteral("contrast"), p.contrast()).toInt());
-    p.set_saturation(m_config->value(QStringLiteral("saturation"), p.saturation()).toInt());
-    p.set_hue(m_config->value(QStringLiteral("hue"), p.hue()).toInt());
-    p.set_sharpness(m_config->value(QStringLiteral("sharpness"), p.sharpness()).toInt());
-    p.set_jpg_quality(m_config->value(QStringLiteral("jpg_quality"), p.jpg_quality()).toInt());
-
-    if (kind == CameraKind::Wide) {
-      const int b = p.brightness();
-      if (b < -100 || b > 100)
-        p.set_brightness(scaleFromApi255(b));
-
-      const int c = p.contrast();
-      if (c < -100 || c > 100)
-        p.set_contrast(scaleFromApi255(c));
-
-      const int s = p.saturation();
-      if (s < 0 || s > 100) {
-        const int ui = scaleFromApi255(s);
-        p.set_saturation(scaleWideSaturationToApi100(ui));
-      }
-
-      const int h = p.hue();
-      if (h < -2000 || h > 2000) {
-        const int ui = scaleHueFromApi(h);
-        p.set_hue(scaleWideHueToApi2000(ui));
-      }
-
-      const int sh = p.sharpness();
-      if (sh < 1 || sh > 7)
-        p.set_sharpness(scaleWideSharpnessToApi1to7(sh));
-    }
-
-    m_config->endGroup();
-  };
-
-  loadKind(CameraKind::Tele);
-  loadKind(CameraKind::Wide);
-}
-
-void DwarfCameraController::saveConfig(CameraKind kind) {
-  ensureConfigLoaded();
-  if (!m_config)
-    return;
-
-  const ReqSetAllParams &p =
-      (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
-
-  const QString group = QStringLiteral("camera/") + kindKey(kind);
-  m_config->beginGroup(group);
-  m_config->setValue(QStringLiteral("exp_mode"), p.exp_mode());
-  m_config->setValue(QStringLiteral("exp_index"), p.exp_index());
-  m_config->setValue(QStringLiteral("gain_mode"), p.gain_mode());
-  m_config->setValue(QStringLiteral("gain_index"), p.gain_index());
-  m_config->setValue(QStringLiteral("ircut_value"), p.ircut_value());
-  m_config->setValue(QStringLiteral("wb_mode"), p.wb_mode());
-  m_config->setValue(QStringLiteral("wb_index_type"), p.wb_index_type());
-  m_config->setValue(QStringLiteral("wb_index"), p.wb_index());
-  m_config->setValue(QStringLiteral("brightness"), p.brightness());
-  m_config->setValue(QStringLiteral("contrast"), p.contrast());
-  m_config->setValue(QStringLiteral("saturation"), p.saturation());
-  m_config->setValue(QStringLiteral("hue"), p.hue());
-  m_config->setValue(QStringLiteral("sharpness"), p.sharpness());
-  m_config->setValue(QStringLiteral("jpg_quality"), p.jpg_quality());
-  m_config->endGroup();
-  m_config->sync();
 }
 
 void DwarfCameraController::setClient(DwarfWebSocketClient *client) {
@@ -422,8 +319,6 @@ void DwarfCameraController::setExposureMode(CameraKind kind, int mode) {
   // Use sendSingleInt32 which always serializes the field (even for value 0)
   sendSingleInt32(kind, cmdSetExpModeFor(kind), mode);
 
-  saveConfig(kind);
-
   // Fetch params to sync UI with actual values (especially when switching
   // Auto->Manual) Add a small delay to allow the camera to process the mode
   // change
@@ -437,8 +332,6 @@ void DwarfCameraController::setExposureIndex(CameraKind kind, int index) {
   p.set_exp_index(index);
   sendSingleInt32(kind, cmdSetExpFor(kind), index);
 
-  saveConfig(kind);
-
   // Refresh from device to see actual/clamped exposure index
   QTimer::singleShot(250, this, [this, kind]() { fetchAllParams(kind); });
 }
@@ -451,12 +344,9 @@ void DwarfCameraController::setGainMode(CameraKind kind, int mode) {
   p.set_gain_mode(mode);
   sendSingleInt32(kind, cmdSetGainModeFor(kind), mode);
 
-  saveConfig(kind);
-
   // Fetch params to sync UI
   QTimer::singleShot(200, this, [this, kind]() { fetchAllParams(kind); });
 
-  saveConfig(kind);
 }
 
 void DwarfCameraController::setGainIndex(CameraKind kind, int index) {
@@ -465,8 +355,6 @@ void DwarfCameraController::setGainIndex(CameraKind kind, int index) {
   ReqSetAllParams &p = (kind == CameraKind::Tele) ? m_teleParams : m_wideParams;
   p.set_gain_index(index);
   sendSingleInt32(kind, cmdSetGainFor(kind), index);
-
-  saveConfig(kind);
 }
 
 void DwarfCameraController::setIrCut(CameraKind kind, int value) {
@@ -477,8 +365,6 @@ void DwarfCameraController::setIrCut(CameraKind kind, int value) {
   value = clampInt(value, 0, 1);
   p.set_ircut_value(value);
   sendSingleInt32(kind, cmdSetIrCutFor(kind), value);
-
-  saveConfig(kind);
 }
 
 void DwarfCameraController::setWhiteBalanceMode(CameraKind kind, int mode) {
@@ -511,8 +397,6 @@ void DwarfCameraController::setWhiteBalanceByTemperature(CameraKind kind,
     // Use specific command for Wide (12020)
     sendSingleInt32(kind, 12020u, ctIndex);
   }
-
-  saveConfig(kind);
 }
 
 void DwarfCameraController::setBrightness(CameraKind kind, int value) {
@@ -538,8 +422,6 @@ void DwarfCameraController::setBrightness(CameraKind kind, int value) {
     }
   }
 
-  saveConfig(kind);
-
   QTimer::singleShot(200, this, [this, kind]() { fetchAllParams(kind); });
 }
 
@@ -564,8 +446,6 @@ void DwarfCameraController::setContrast(CameraKind kind, int value) {
     }
   }
 
-  saveConfig(kind);
-
   QTimer::singleShot(200, this, [this, kind]() { fetchAllParams(kind); });
 }
 
@@ -581,8 +461,6 @@ void DwarfCameraController::setHue(CameraKind kind, int value) {
   ensureModule15ImageParamsInitialized();
   sendModule15Cmd16703(module15SelectorFor(kind, kModule15SelectorHueTele),
                        scaledValue);
-
-  saveConfig(kind);
 
   QTimer::singleShot(200, this, [this, kind]() { fetchAllParams(kind); });
 }
@@ -600,8 +478,6 @@ void DwarfCameraController::setSaturation(CameraKind kind, int value) {
   sendModule15Cmd16703(
       module15SelectorFor(kind, kModule15SelectorSaturationTele), scaledValue);
 
-  saveConfig(kind);
-
   QTimer::singleShot(200, this, [this, kind]() { fetchAllParams(kind); });
 }
 
@@ -617,8 +493,6 @@ void DwarfCameraController::setSharpness(CameraKind kind, int value) {
   ensureModule15ImageParamsInitialized();
   sendModule15Cmd16703(
       module15SelectorFor(kind, kModule15SelectorSharpnessTele), scaledValue);
-
-  saveConfig(kind);
 
   QTimer::singleShot(200, this, [this, kind]() { fetchAllParams(kind); });
 }

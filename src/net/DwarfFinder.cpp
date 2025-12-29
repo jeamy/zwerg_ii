@@ -228,13 +228,51 @@ void DwarfFinder::onDeviceInfoReceived(QNetworkReply *reply) {
   DwarfDeviceInfo info;
   info.ip = ip;
   info.name = "DWARF II";
+  info.version.clear();
 
   if (reply->error() == QNetworkReply::NoError) {
     QByteArray data = reply->readAll();
 
     QJsonDocument doc = QJsonDocument::fromJson(data);
     if (!doc.isNull() && doc.isObject()) {
-      // Try to extract more info if available
+      const QJsonObject root = doc.object();
+      const QJsonObject dataObj = root.value(QStringLiteral("data")).toObject();
+
+      auto pickString = [&](const QJsonObject &obj,
+                            const QStringList &keys) -> QString {
+        for (const QString &k : keys) {
+          const QJsonValue v = obj.value(k);
+          if (v.isString()) {
+            const QString s = v.toString().trimmed();
+            if (!s.isEmpty())
+              return s;
+          }
+        }
+        return QString();
+      };
+
+      // Device name
+      QString name = pickString(root,
+                                {QStringLiteral("name"), QStringLiteral("deviceName"),
+                                 QStringLiteral("productName"), QStringLiteral("model")});
+      if (name.isEmpty())
+        name = pickString(dataObj,
+                          {QStringLiteral("name"), QStringLiteral("deviceName"),
+                           QStringLiteral("productName"), QStringLiteral("model")});
+      if (!name.isEmpty())
+        info.name = name;
+
+      // Firmware / version
+      QString ver = pickString(root,
+                               {QStringLiteral("version"), QStringLiteral("fwVersion"),
+                                QStringLiteral("firmware"), QStringLiteral("firmwareVersion"),
+                                QStringLiteral("deviceVersion"), QStringLiteral("romVersion")});
+      if (ver.isEmpty())
+        ver = pickString(dataObj,
+                         {QStringLiteral("version"), QStringLiteral("fwVersion"),
+                          QStringLiteral("firmware"), QStringLiteral("firmwareVersion"),
+                          QStringLiteral("deviceVersion"), QStringLiteral("romVersion")});
+      info.version = ver;
     }
 
     emit deviceFound(info);

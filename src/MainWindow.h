@@ -18,7 +18,6 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QMessageBox>
-#include <QSettings>
 #include <QStackedWidget>
 #include <QTabWidget>
 #include <QTimer>
@@ -162,6 +161,8 @@ private:
   void setCaptureStatusTextAllPanels(const QString &text);
   void persistParamsConfig(const QJsonDocument &document);
   void applyCachedParamsConfig();
+  void loadSettings();
+  void saveSettings();
 
   QLineEdit *m_ipInput;
   QLineEdit *m_subnetInput;

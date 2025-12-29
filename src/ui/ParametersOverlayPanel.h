@@ -16,6 +16,7 @@ public:
 
   void setCameraController(DwarfCameraController *controller);
   void setCameraMode(CameraSettingsPanel::CameraMode mode);
+  void setClientMode(bool enabled);
   void setCaptureStatusText(const QString &text);
   void setCapturePreview(const QPixmap &pixmap);
   void clearCapturePreview();

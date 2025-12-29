@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "AppConfig.h"
 #include <QApplication>
 #include <QCoreApplication>
 #include <QFile>
@@ -26,8 +27,9 @@ int main(int argc, char *argv[]) {
   QApplication app(argc, argv);
 
   // Load language preference
-  QSettings settings("DwarfLab", "DwarfController");
-  QString languageCode = settings.value("language", "").toString();
+  AppConfig::instance()->load();
+  QString languageCode =
+      AppConfig::instance()->getValue("ui", "language", "").toString();
   if (languageCode.isEmpty()) {
       languageCode = QLocale::system().name().left(2);
   }
