@@ -1,6 +1,6 @@
 {
     "astro": {
-        "altitude": 400,
+        "altitude": 170,
         "bias_frames_count": 20,
         "dark_frames_count": 20,
         "exposure_index": 43,
