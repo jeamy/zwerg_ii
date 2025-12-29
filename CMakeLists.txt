@@ -11,7 +11,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 # Find Qt6
-find_package(Qt6 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWidgets WebSockets Sql)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWidgets WebSockets Sql Svg)
 
 # Find Protobuf (try CONFIG mode first for modern installations, fallback to MODULE mode)
 find_package(Protobuf CONFIG QUIET)
@@ -130,6 +130,7 @@ if(TARGET protobuf::libprotobuf)
         Qt6::MultimediaWidgets
         Qt6::WebSockets
         Qt6::Sql
+        Qt6::Svg
         protobuf::libprotobuf
     )
 else()
@@ -141,6 +142,7 @@ else()
         Qt6::MultimediaWidgets
         Qt6::WebSockets
         Qt6::Sql
+        Qt6::Svg
         ${Protobuf_LIBRARIES}
     )
 endif()

@@ -239,7 +239,7 @@ elif (command -v qtpaths6 &>/dev/null || command -v qtpaths &>/dev/null) && comm
   done
 
   # Ensure core Qt libs exist
-  for base in libQt6Core.so libQt6Gui.so libQt6Widgets.so libQt6Network.so libQt6WebSockets.so libQt6Multimedia.so libQt6MultimediaWidgets.so libQt6Sql.so libQt6DBus.so libQt6OpenGL.so libQt6XcbQpa.so; do
+  for base in libQt6Core.so libQt6Gui.so libQt6Widgets.so libQt6Network.so libQt6WebSockets.so libQt6Multimedia.so libQt6MultimediaWidgets.so libQt6Sql.so libQt6DBus.so libQt6OpenGL.so libQt6XcbQpa.so libQt6Svg.so; do
     if [ -e "$QT_LIB_DIR/$base" ]; then
       copy_lib "$QT_LIB_DIR/$base"
     fi

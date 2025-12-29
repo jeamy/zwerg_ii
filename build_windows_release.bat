@@ -307,7 +307,7 @@ if not errorlevel 1 (
 
   if exist "!QT_BIN!\Qt6Core.dll" (
     echo Copying Qt runtime DLLs...
-    for %%D in (Qt6Core.dll Qt6Gui.dll Qt6Widgets.dll Qt6Network.dll Qt6WebSockets.dll Qt6Multimedia.dll Qt6MultimediaWidgets.dll Qt6Sql.dll) do (
+    for %%D in (Qt6Core.dll Qt6Gui.dll Qt6Widgets.dll Qt6Network.dll Qt6WebSockets.dll Qt6Multimedia.dll Qt6MultimediaWidgets.dll Qt6Sql.dll Qt6Svg.dll) do (
       if exist "!QT_BIN!\%%D" (
         copy /Y "!QT_BIN!\%%D" "%DIST_DIR%" >NUL
         echo   Copied %%D

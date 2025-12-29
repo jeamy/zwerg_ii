@@ -364,8 +364,7 @@ void DwarfCameraController::startRecord(CameraKind kind) {
     return;
   }
 
-  // Firmware hint: recording may require TELE camera opened with rtsp_encode_type=1 (1080p).
-  // Try switching once per connection/session to avoid flicker loops.
+  // Firmware hint for TELE: recording may require TELE camera opened with rtsp_encode_type=1 (1080p).
   if (!m_teleRecordModeOpenAttempted && m_teleLastRtspEncodeType != 1) {
     m_teleRecordModeOpenAttempted = true;
     openCamera(CameraKind::Tele, m_teleLastBinning, 1);
@@ -380,8 +379,6 @@ void DwarfCameraController::startRecord(CameraKind kind) {
     return;
   }
 
-  // Some firmware variants require the TELE camera to have been opened
-  // before startRecord works. Do this once if needed (no repeated reopen).
   if (!m_teleCameraOpenRequested) {
     openCamera(CameraKind::Tele, m_teleLastBinning, m_teleLastRtspEncodeType);
     QTimer::singleShot(600, this, [this]() {
@@ -814,22 +811,13 @@ void DwarfCameraController::handleCameraMessage(quint32 moduleId, quint32 cmd,
     dwarf::ComResponse res;
     bool ok = res.ParseFromArray(data.data(), data.size());
     const int code = ok ? res.code() : -1;
-    const bool success = ok && (code == 0);
-
-    qWarning() << "[DwarfCameraController] StartRecord response success="
-               << success << "code=" << code;
-    emit recordFinished(CameraKind::Tele, true, success, code);
-    return;
-  }
-
-  // Some firmwares also respond on the WIDE camera module with the same cmd.
-  // We log it for diagnostics but do not treat it as recording state.
-  if (moduleId == 2 && cmd == 10005) {
-    dwarf::ComResponse res;
-    bool ok = res.ParseFromArray(data.data(), data.size());
-    const int code = ok ? res.code() : -1;
-    qWarning() << "[DwarfCameraController] Wide module returned cmd 10005 (ignored), code="
-               << code;
+    if (code == 0) {
+      qWarning() << "[DwarfCameraController] Record started successfully";
+      emit recordFinished(CameraKind::Tele, true, true, 0);
+    } else {
+      qWarning() << "[DwarfCameraController] Record start failed, code=" << code;
+      emit recordFinished(CameraKind::Tele, false, false, code);
+    }
     return;
   }
 
@@ -838,20 +826,13 @@ void DwarfCameraController::handleCameraMessage(quint32 moduleId, quint32 cmd,
     dwarf::ComResponse res;
     bool ok = res.ParseFromArray(data.data(), data.size());
     const int code = ok ? res.code() : -1;
-    const bool success = ok && (code == 0 || code == -10518);
-
-    qWarning() << "[DwarfCameraController] StopRecord response success="
-               << success << "code=" << code;
-    emit recordFinished(CameraKind::Tele, false, success, code);
-    return;
-  }
-
-  if (moduleId == 2 && cmd == 10006) {
-    dwarf::ComResponse res;
-    bool ok = res.ParseFromArray(data.data(), data.size());
-    const int code = ok ? res.code() : -1;
-    qWarning() << "[DwarfCameraController] Wide module returned cmd 10006 (ignored), code="
-               << code;
+    if (code == 0) {
+      qWarning() << "[DwarfCameraController] Record stopped successfully";
+      emit recordFinished(CameraKind::Tele, false, true, 0);
+    } else {
+      qWarning() << "[DwarfCameraController] Record stop failed, code=" << code;
+      emit recordFinished(CameraKind::Tele, true, false, code);
+    }
     return;
   }
 
