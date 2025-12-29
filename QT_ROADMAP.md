@@ -1,92 +1,152 @@
-# Roadmap: DWARF II Steuerung mit Qt (C++)
+# Qt Implementation Status: DWARF II Controller
 
-Basierend auf der Machbarkeitsstudie (`CPP_WXWIDGETS_FEASIBILITY_STUDY.md`) wurde diese Roadmap für die Umsetzung mit dem **Qt Framework** erstellt. Qt bietet gegenüber der wxWidgets/Boost-Kombination den Vorteil einer integrierten Lösung ("Batteries Included") für Netzwerk, UI und Multimedia.
+> **Status:** ✅ **FULLY IMPLEMENTED** - This roadmap has been completed. The application is now in beta testing.
 
-## 1. Technologie-Stack
+This document originally outlined the roadmap for implementing the DWARF II controller with the **Qt Framework**. All phases described below have been successfully completed.
 
-| Komponente | Technologie | Beschreibung |
-|------------|-------------|--------------|
-| **Sprache** | C++17 | Moderner C++ Standard |
-| **Framework** | **Qt 6.x** | Umfassendes Framework für UI, Netzwerk, Events |
-| **Build System** | **CMake** | Industriestandard, hervorragende Qt-Integration |
-| **UI-Technologie** | **Qt Widgets** (oder QML) | Widgets für klassische Desktop-Apps, QML für Touch/Modern UI |
-| **Daten** | **Protocol Buffers** | Binäres Format für DWARF-Kommunikation |
-| **Video** | **Qt Multimedia** / libvlc | RTSP-Streaming und Wiedergabe |
+## 1. Technology Stack (✅ Implemented)
 
-## 2. Architektur-Mapping
+| Component | Technology | Description | Status |
+|-----------|------------|-------------|--------|
+| **Language** | C++17 | Modern C++ Standard | ✅ |
+| **Framework** | **Qt 6.5+** | Comprehensive framework for UI, Network, Events | ✅ |
+| **Build System** | **CMake** | Industry standard, excellent Qt integration | ✅ |
+| **UI Technology** | **Qt Widgets** | Classic desktop application framework | ✅ |
+| **Data Format** | **Protocol Buffers** | Binary format for DWARF communication | ✅ |
+| **Video** | **MJPEG over HTTP** | HTTP-based streaming (port 8092) | ✅ |
+| **Database** | **SQLite** | Star catalog and NGC objects | ✅ |
+| **Graphics** | **OpenGL** | Star map rendering | ✅ |
 
-Die Architektur wird analog zur wxWidgets-Studie aufgebaut, jedoch mit Qt-nativen Klassen ersetzt. Dies vereinfacht das Threading und Event-Handling massiv (Signals & Slots).
+## 2. Architecture Implementation (✅ Completed)
 
-| Konzept | wxWidgets/Boost | Qt Äquivalent |
-|---------|-----------------|---------------|
-| **WebSocket** | `boost::beast` / `websocketpp` | **`QWebSocket`** (Qt WebSockets) |
-| **HTTP Client** | `libcurl` / `cpp-httplib` | **`QNetworkAccessManager`** (Qt Network) |
-| **Event Loop** | `boost::asio::io_context` | **`QEventLoop`** (integriert in `QCoreApplication`) |
-| **Threading** | `std::thread` / `wxThread` | **`QThread`** / `QtConcurrent` |
-| **JSON** | `nlohmann/json` | **`QJsonDocument`** / `QJsonObject` |
-| **Video** | `libvlc` | **`QMediaPlayer`** (`QVideoWidget`) |
+The architecture uses Qt-native classes throughout, leveraging Signals & Slots for event handling.
 
-## 3. Detaillierter Implementierungsplan
+| Component | Technology Used | Implementation Status |
+|-----------|----------------|----------------------|
+| **WebSocket** | **`QWebSocket`** (Qt WebSockets) | ✅ `DwarfWebSocketClient` |
+| **HTTP Client** | **`QNetworkAccessManager`** (Qt Network) | ✅ `DwarfHttpClient` |
+| **Event Loop** | **`QEventLoop`** (integrated in `QCoreApplication`) | ✅ Native Qt event system |
+| **Threading** | **`QThread`** / `QtConcurrent` | ✅ Background processing |
+| **JSON** | **`QJsonDocument`** / `QJsonObject` | ✅ Configuration and API |
+| **Video** | **HTTP MJPEG Streaming** | ✅ Custom `QLabel` renderer |
+| **Protobuf** | **Google Protocol Buffers** | ✅ All DWARF II messages |
 
-### Phase 1: Projekt-Setup & Infrastruktur (1 Woche)
-*Ziel: Eine kompilierbare Qt-Anwendung mit integriertem Protobuf.*
+## 3. Implementation Phases (All Completed)
 
-1.  **CMake Setup**:
-    *   `CMakeLists.txt` erstellen mit `find_package(Qt6 COMPONENTS Widgets Network Multimedia REQUIRED)`.
-    *   Integration von `protobuf` via `find_package(Protobuf)`.
-2.  **Protobuf Integration**:
-    *   Kompilierung der `.proto` Dateien (camera, astro, motor, etc.) in C++ Klassen.
-    *   Erstellung einer Helper-Klasse `ProtobufHelper` zur Serialisierung/Deserialisierung (Qt `QByteArray` <-> `std::string`).
-3.  **Basis-GUI**:
-    *   Erstellung des `MainWindow` mit Platzhaltern für die verschiedenen Module (Tabs).
-4.  **Internationalisierung (i18n)**:
-    *   Alle UI-Texte mit `tr()` markieren.
-    *   Einrichtung von Qt Linguist (`.ts`/`.qm` Dateien) für **Englisch** und **Deutsch**.
+### Phase 1: Project Setup & Infrastructure ✅
+*Goal: Compilable Qt application with integrated Protobuf.*
 
-### Phase 2: Netzwerk-Layer (Core) (1-2 Wochen)
-*Ziel: Kommunikation mit dem Teleskop (Senden/Empfangen).*
+1.  **CMake Setup:** ✅
+    *   `CMakeLists.txt` with Qt6 components (Widgets, Network, Multimedia, WebSockets, Sql)
+    *   Protobuf integration with modern CONFIG mode support
+    *   Cross-platform build scripts (Linux, macOS, Windows)
+2.  **Protobuf Integration:** ✅
+    *   All `.proto` files compiled (camera, astro, motor, focus, panorama, notify, base)
+    *   Protobuf message serialization/deserialization
+    *   WsPacket envelope handling
+3.  **Base GUI:** ✅
+    *   `MainWindow` with sidebar navigation
+    *   Stacked widget for context panels
+    *   Video viewport with overlay support
+4.  **Internationalization (i18n):** ✅
+    *   All UI strings use `tr()` for translation
+    *   Qt Linguist `.ts`/`.qm` files for **English** and **German**
+    *   Language switcher in settings
 
-1.  **DwarfConnectionManager**:
-    *   Singleton-Klasse zur Verwaltung der Verbindung.
-    *   Implementierung von `QWebSocket` für Port 9900.
-    *   Signal-Slot-Verbindungen für eingehende Nachrichten.
-2.  **Nachrichten-Handling**:
-    *   Dispatcher, der eingehende Binärdaten (Protobuf) an die entsprechenden UI-Komponenten weiterleitet.
-    *   Mapping von `cmd` (Befehls-ID) auf Signale (z.B. `sigMotorStatusReceived`).
-3.  **HTTP-Client**:
-    *   Klasse `DwarfHttpClient` für REST-Anfragen (Medienlisten, Firmware).
-    *   Asynchrone Verarbeitung mit `QNetworkReply`.
+### Phase 2: Network Layer (Core) ✅
+*Goal: Communication with the telescope (Send/Receive).*
 
-### Phase 3: GUI-Module (Funktionalität) (2-3 Wochen)
-*Ziel: Steuerung der Teleskop-Funktionen.*
+1.  **DwarfWebSocketClient:** ✅
+    *   WebSocket connection management (port 9900)
+    *   Automatic reconnection handling
+    *   WsPacket envelope encoding/decoding
+    *   Signal-Slot connections for incoming messages
+2.  **Message Handling:** ✅
+    *   `DwarfMessageDispatcher` routes messages by module_id
+    *   Module-specific signals (camera, astro, motor, focus, panorama, notify)
+    *   Command ID mapping to handler functions
+3.  **HTTP Client:** ✅
+    *   `DwarfHttpClient` for REST API (port 8082)
+    *   Media list retrieval
+    *   System information queries
+    *   Asynchronous processing with `QNetworkReply`
+4.  **Device Discovery:** ✅
+    *   `DwarfFinder` network scanner
+    *   Automatic device detection on local network
+    *   Manual IP address input option
 
-1.  **Camera Panel**:
-    *   Controls für Belichtung, Gain, IR-Cut (Slider, Buttons).
-    *   Anzeige von Tele- und Weitwinkel-Bildern.
-2.  **Motor & Astro Panel**:
-    *   Joystick-Steuerung (Senden von `StepMotor`-Befehlen).
-    *   Goto-Interface (Eingabe RA/DEC oder Objektsuche).
-    *   Kalibrierungs-Workflow.
-3.  **Media Panel**:
-    *   Anzeige der aufgenommenen Fotos/Videos (Thumbnails via HTTP laden).
-    *   Download-Funktion.
+### Phase 3: GUI Modules (Functionality) ✅
+*Goal: Control of telescope functions.*
 
-### Phase 4: Video-Streaming (1 Woche)
-*Ziel: Live-Bild vom Teleskop.*
+1.  **Camera Panel:** ✅
+    *   `CameraSettingsPanel` with exposure, gain, IR-Cut controls
+    *   Brightness, contrast, hue, saturation, sharpness sliders
+    *   White balance control
+    *   Photo/video capture buttons
+    *   Format selection (RAW/FITS/TIFF)
+    *   Camera parameter overlay (floating panel)
+2.  **Astro & Navigation Panel:** ✅
+    *   `AstroNavigationPanel` with stacking controls
+    *   `StarMapWidget` with OpenGL rendering
+    *   HYG star catalog + NGC deep-sky objects
+    *   Constellation lines and labels
+    *   GOTO functionality (click-to-slew)
+    *   Manual RA/Dec input
+    *   Calibration workflow
+    *   Live stacking progress monitoring
+3.  **Motor Control:** ✅
+    *   Virtual joystick overlay
+    *   Directional controls (up/down/left/right)
+    *   Variable speed adjustment
+    *   Manual positioning
+4.  **Focus Control:** ✅
+    *   `DwarfFocusController` with step commands
+    *   Multiple step sizes (coarse/fine)
+    *   Focus position display
+5.  **Panorama Panel:** ✅
+    *   `PanoramaPanel` with start/stop controls
+    *   Progress monitoring
+    *   Parameter configuration
+6.  **Gallery Panel:** ✅
+    *   Media browser with thumbnails
+    *   Full-screen image viewer
+    *   Image management
+7.  **Settings Panel:** ✅
+    *   Connection management
+    *   Device information display
+    *   Language selection
+    *   System information
 
-1.  **RTSP-Stream**:
-    *   Implementierung eines Video-Players mit `QMediaPlayer`.
-    *   Setzen der Quelle: `rtsp://10.1.1.102:554/live/channel0` (Tele) bzw. `channel1` (Wide).
-    *   *Fallback*: Sollte `QMediaPlayer` Probleme mit dem spezifischen RTSP-Format haben, Integration von `libvlc` via Wrapper.
+### Phase 4: Video Streaming ✅
+*Goal: Live image from telescope.*
 
-### Phase 5: Testing & Deployment (1 Woche)
-*Ziel: Stabiles Release für Endanwender.*
+1.  **MJPEG Streaming:** ✅
+    *   HTTP-based MJPEG streams (port 8092)
+    *   Custom `QLabel` renderer for frame display
+    *   Dual camera support (Tele + Wide)
+    *   Picture-in-Picture mode
+    *   Stream switching (Tele ↔ Wide)
+    *   Frame rate optimization
 
-1.  **Cross-Platform Tests**:
-    *   Testen auf Linux und Windows (ggf. macOS).
-2.  **Packaging**:
-    *   **Windows**: `windeployqt` nutzen, um alle DLLs zu bündeln. Erstellung eines Installers (Inno Setup).
-    *   **Linux**: Erstellung eines AppImage (läuft auf fast allen Distros).
+### Phase 5: Testing & Deployment ✅
+*Goal: Stable release for end users.*
+
+1.  **Cross-Platform Testing:** ✅
+    *   Tested on Linux (Ubuntu 20.04+, Fedora)
+    *   Tested on Windows 10/11
+    *   Tested on macOS 10.15+
+2.  **Packaging:** ✅
+    *   **Windows**: `build_windows_release.bat` with automatic DLL bundling and ZIP creation
+    *   **Linux**: `build_linux_release_docker_ubuntu2004.sh` with Docker-based build for maximum compatibility
+    *   **macOS**: `build_macos_release.sh` with app bundle, `macdeployqt`, and DMG creation
+3.  **Documentation:** ✅
+    *   Comprehensive `README.md` with build instructions for all platforms
+    *   `DEVELOPMENT.md` with development environment setup
+    *   `GUI_ROADMAP.md` with UI/UX documentation
+    *   API documentation in `docs/` folder
+4.  **Beta Release:** ✅
+    *   First public beta release available
+    *   GitHub release with binaries for all platforms
 
 ## 4. Code-Beispiele (Qt)
 
@@ -128,20 +188,48 @@ void DwarfHttpClient::fetchMediaList() {
 }
 ```
 
-## 5. Zeitplan & Aufwandsschätzung
+## 5. Timeline & Effort (Completed)
 
-| Phase | Dauer | Fokus |
-|-------|-------|-------|
-| **1. Setup** | 3 Tage | Build-System, Protobuf |
-| **2. Netzwerk** | 7 Tage | WebSocket, HTTP, Protokoll |
-| **3. GUI** | 10 Tage | Panels, Interaktion, Logik |
-| **4. Video** | 4 Tage | Streaming Integration |
-| **5. Polish** | 4 Tage | Tests, Bugfixes, Deployment |
-| **Gesamt** | **~4-5 Wochen** | (Vollzeit) |
+| Phase | Planned | Actual Status |
+|-------|---------|---------------|
+| **1. Setup** | 3 days | ✅ Completed |
+| **2. Network** | 7 days | ✅ Completed |
+| **3. GUI** | 10 days | ✅ Completed |
+| **4. Video** | 4 days | ✅ Completed |
+| **5. Polish** | 4 days | ✅ Completed |
+| **Total** | **~4-5 weeks** | **✅ All phases completed** |
 
-## 6. Empfehlung: Qt Widgets vs. Qt Quick
+**Development Method:** Vibe coding with AI assistance (Windsurf + various AI models) enabled rapid prototyping and implementation.
 
-*   **Qt Widgets**: Empfohlen, wenn der Fokus auf einem klassischen Desktop-Tool liegt. Einfacher zu debuggen, striktere Trennung, näher an C++.
-*   **Qt Quick (QML)**: Empfohlen, wenn eine "moderne", animierte Oberfläche (wie auf Smartphones) gewünscht ist. Erfordert JavaScript-Kenntnisse für die UI-Logik.
+## 6. Technology Decision: Qt Widgets ✅
 
-**Entscheidung**: Für eine direkte Portierung und maximale Kontrolle über die Hardware-Steuerung ist **Qt Widgets** der sicherere und schnellere Weg.
+**Decision Made:** Qt Widgets was chosen for this project.
+
+**Rationale:**
+*   **Qt Widgets**: ✅ Best for classic desktop applications. Easier to debug, stricter separation, closer to C++.
+*   **Qt Quick (QML)**: Not chosen - would require JavaScript for UI logic, less suitable for hardware control.
+
+**Result:** Qt Widgets proved to be the correct choice, providing excellent control over hardware communication and a stable, performant UI.
+
+## 7. Current Status & Next Steps
+
+**Project Status:** ✅ **FULLY FUNCTIONAL BETA**
+
+All planned features have been implemented and are functional. The application is now in beta testing phase.
+
+**Available for:**
+*   Windows 10/11 (portable ZIP)
+*   macOS 10.15+ (app bundle + DMG)
+*   Linux (Docker-based build for Ubuntu 20.04+ compatibility)
+
+**Documentation:**
+*   Build instructions: `README.md`
+*   Development setup: `DEVELOPMENT.md`
+*   GUI documentation: `GUI_ROADMAP.md`
+*   API documentation: `docs/DWARF_II_API_COMPLETE.md`
+
+**For Users:**
+See `README.md` for download and usage instructions.
+
+**For Developers:**
+See `DEVELOPMENT.md` for build environment setup and contribution guidelines.

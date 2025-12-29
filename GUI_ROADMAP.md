@@ -1,164 +1,200 @@
-# GUI Design Roadmap & UX Spezifikation
+# GUI Design & Implementation Status
 
-Diese Roadmap definiert das visuelle Design und die Benutzeroberfläche (GUI) für die DWARF II Qt-Anwendung. Das Ziel ist eine professionelle, "Cockpit"-artige Oberfläche, die alle Funktionen logisch gruppiert und für die Nachtnutzung optimiert ist.
+> **Status:** ✅ **FULLY IMPLEMENTED** - All features described in this document are now functional in the beta release.
 
-## 1. Design-Philosophie
+This document describes the visual design and user interface (GUI) of the DWARF II Qt application. The goal is a professional, "cockpit"-like interface that groups all functions logically and is optimized for night use.
 
-*   **Dark Mode First:** Die gesamte Anwendung nutzt ein dunkles Farbschema (#2D2D30), um die Dunkeladaption der Augen bei der Astrofotografie nicht zu stören.
-*   **Modulares Layout:** Verwendung von "Docking Widgets". Der Nutzer kann Bereiche anpassen, aber der Standard ist fest definiert.
-*   **Fokus auf das Bild:** Der Live-Stream nimmt immer den maximal verfügbaren Platz ein.
-*   **Visuelles Feedback:** Aktive Zustände (z.B. "Aufnahme läuft", "Verbunden") werden durch klare Signalfarben (Orange/Rot) hervorgehoben.
+## 1. Design Philosophy (Implemented)
 
-## 2. Layout-Struktur (Main Window)
+*   **Dark Mode First:** ✅ The entire application uses a dark color scheme (#2D2D30) to preserve night vision during astrophotography.
+*   **Modular Layout:** ✅ Sidebar-based design with collapsible panels. Fixed layout optimized for telescope control.
+*   **Focus on the Image:** ✅ Live stream takes maximum available space with Picture-in-Picture (PiP) support.
+*   **Visual Feedback:** ✅ Active states (e.g., "Recording", "Connected") are highlighted with clear signal colors (Orange/Red).
 
-Das Hauptfenster (`QMainWindow`) ist in drei Bereiche unterteilt:
+## 2. Layout Structure (Implemented)
 
-### A. Zentraler Bereich (Viewport)
-*   **Komponente:** `QVideoWidget` (oder VLC-Wrapper).
-*   **Inhalt:** Zeigt den Live-Stream (Tele oder Weitwinkel).
-*   **HUD (Heads-Up Display):** Transparente Overlays über dem Video:
-    *   *Oben Links:* Akku-Stand (%), Speicherplatz (SD).
-    *   *Oben Rechts:* Ziel-Objekt (z.B. "M42"), Verbindungsstatus.
-    *   *Mitte:* Optionales Fadenkreuz (ein-/ausschaltbar).
-    *   *Unten:* Status der aktuellen Aktion (z.B. "Stacking: 15 Frames").
+The main window (`QMainWindow`) is divided into three areas:
 
-### B. Rechte Seitenleiste (Control Deck)
-*   **Komponente:** `QDockWidget` mit einem `QTabWidget`.
-*   **Breite:** Fixiert (ca. 300-350px), aber einklappbar.
-*   **Inhalt:** Beherbergt alle Steuerungsfunktionen in Tabs (siehe Punkt 3).
+### A. Central Area (Viewport) ✅
+*   **Component:** `QLabel` with MJPEG stream rendering
+*   **Content:** Displays live stream (Tele or Wide camera)
+*   **Picture-in-Picture:** ✅ Secondary camera view in corner (toggleable)
+*   **Overlays:** ✅ Transparent overlays for motor control, camera parameters, and star map
 
-### C. Fußleiste (Status Bar)
-*   **Komponente:** `QStatusBar`.
-*   **Inhalt:** Technische Telemetrie.
-    *   IP-Adresse.
-    *   Aktuelle FPS des Streams.
-    *   Ping/Latenz.
-    *   Temperatur des Sensors (falls verfügbar).
+### B. Left Sidebar (Navigation) ✅
+*   **Component:** Vertical button group with icons
+*   **Width:** Fixed (65px), always visible when connected
+*   **Tabs:**
+    *   📷 **CAM** - Camera control and settings
+    *   🔭 **ASTRO** - Astrophotography and GOTO navigation
+    *   🗺️ **PANO** - Panorama mode
+    *   🖼️ **GAL** - Gallery browser
+    *   ⚙️ **SET** - Settings and system info
 
----
+### C. Right Panel (Control Deck) ✅
+*   **Component:** `QStackedWidget` with fixed width (350px)
+*   **Content:** Context-sensitive controls for selected sidebar tab
+*   **Features:** Collapsible overlays for motor joystick and camera parameters
 
-## 3. Funktions-Module (Tabs)
-
-Hier werden "alle Funktionen" logisch sortiert.
-
-### Tab 1: 📷 Kamera & Aufnahme (Standard)
-Der wichtigste Tab für die allgemeine Nutzung.
-
-*   **Stream-Quelle:**
-    *   Umschalter: `[ TELE ]` / `[ WIDE ]`.
-*   **Aufnahme-Steuerung (Video & Foto):**
-    *   Großer Button: `[ FOTO ]`.
-    *   Großer Button: `[ REC ]` (Video).
-        *   *Funktion:* Startet die Aufnahme auf der **SD-Karte** des DWARF II.
-        *   *Status:* Button blinkt rot während der Aufnahme. Timer läuft (00:00:05).
-*   **Belichtung (Exposure):**
-    *   Modus: `Auto` / `Manuell`.
-    *   Slider: Belichtungszeit (Shutter).
-    *   Slider: Gain (ISO).
-*   **Bild-Parameter:**
-    *   Toggle: `IR-Cut` (Tag/Nacht Filter).
-    *   Dropdown: `Binning` (4k / 2k).
-    *   Slider: Kontrast, Sättigung, Schärfe, Farbton.
-
-### Tab 2: 🔭 Astro & Navigation (Erweitert)
-Integration eines vollwertigen Planetariums ("Point & Drive").
-
-*   **Sternkarte (Mini-Planetarium):**
-    *   **Komponente:** `StarMapWidget` (Custom `QGraphicsView`).
-    *   **Datenbasis:** Integrierte SQLite-Datenbank (HYG Star Catalog + OpenNGC).
-    *   **Funktion:** Zeigt den aktuellen Himmel basierend auf GPS-Position und Zeit.
-    *   **Interaktion:**
-        *   Klick auf Stern/Nebel -> Zeigt Info (Name, Helligkeit, Auf/Untergang).
-        *   Doppelklick oder Button `[ GOTO ]` -> Teleskop fährt Objekt an.
-    *   **Visualisierung:** Zeigt das aktuelle Sichtfeld (FOV) des Teleskops als Rechteck auf der Karte an.
-*   **Objekt-Suche:**
-    *   Suchfeld mit Autocomplete (z.B. "Andr..." -> "Andromeda Galaxie (M31)").
-    *   Listenansicht: "Heute sichtbar" (Vorschläge für die aktuelle Nacht).
-*   **Astro-Aufnahme:**
-    *   Einstellung: Anzahl der Bilder (z.B. 100).
-    *   Einstellung: Belichtung pro Bild (z.B. 15s).
-    *   Button: `[ Start Stacking ]`.
-    *   *Live-Feedback:* Kleines Histogramm und Kurve der "Rejected Frames".
-
-### Tab 3: 🕹️ Motor & Fokus
-Manuelle Feinsteuerung.
-
-*   **Joystick:**
-    *   Virtuelles Steuerkreuz für Pan/Tilt.
-    *   Slider: Geschwindigkeit (Speed).
-*   **Fokus:**
-    *   Button: `[ Auto-Fokus ]`.
-    *   Manuell: `<<<` `<<` `<` `>` `>>` `>>>`.
-    *   Anzeige: Numerischer Fokus-Wert (0-Max).
-
-### Tab 4: ⚙️ System & Medien
-Verwaltung und Einstellungen.
-
-*   **Verbindung:**
-    *   Eingabefeld: IP-Adresse.
-    *   Button: `Verbinden` / `Trennen`.
-*   **Medien-Galerie:**
-    *   Button: `[ Galerie öffnen ]`. Lädt Thumbnails von der SD-Karte.
-    *   Funktion: Download von Bildern/Videos auf den PC.
-*   **Erweitert:**
-    *   Firmware-Update.
-    *   Log-Download.
-    *   *Optional:* Lokale Video-Aufnahme (Stream-Dump auf PC-Festplatte).
-    *   **LX200 Server:** Option zum Aktivieren eines lokalen Servers, um externe Apps (SkySafari, Stellarium) zu verbinden.
+### D. Status Bar ✅
+*   **Component:** `QStatusBar`
+*   **Content:** Connection status, device info, telemetry
 
 ---
 
-## 4. Visuelles Design (Theme Spezifikation)
+## 3. Function Modules (Implemented)
 
-Das Design orientiert sich an professioneller Kreativ-Software (Blender, DaVinci Resolve).
+### Tab 1: 📷 Camera & Capture ✅
 
-*   **Farbschema:**
-    *   Hintergrund (App): `#1E1E1E` (Sehr dunkles Grau).
-    *   Hintergrund (Panels): `#2D2D30` (Dunkelgrau).
-    *   Text (Primary): `#E0E0E0` (Helles Grau, nicht Reinweiß).
-    *   Text (Secondary): `#AAAAAA`.
-    *   **Akzentfarbe:** `#FF9800` (Orange) oder `#D32F2F` (Dunkelrot) für Nachtmodus.
-*   **Typografie:**
-    *   Schriftart: `Segoe UI` (Windows) / `Roboto` (Linux) / `San Francisco` (macOS).
-    *   Größe: 10pt (Standard), 12pt (Buttons).
-*   **Icons:**
-    *   Verwendung von Vektor-Icons (SVG) in Weiß/Grau.
+**Implemented Features:**
+*   ✅ **Stream Source:** Toggle between TELE and WIDE cameras
+*   ✅ **Capture Controls:**
+    *   Photo capture button (both cameras)
+    *   Video recording button (Tele camera only)
+    *   Recording indicator with timer
+*   ✅ **Exposure Control:**
+    *   Exposure time slider with preset values
+    *   Gain/ISO slider with preset values
+    *   Real-time parameter updates
+*   ✅ **Image Parameters:**
+    *   IR-Cut filter toggle
+    *   Brightness, Contrast, Hue, Saturation, Sharpness sliders
+    *   White balance control
+    *   Format selection (RAW/FITS/TIFF)
+*   ✅ **Camera Parameter Overlay:** Floating panel with quick access to all settings
 
-## 5. Implementierung in Qt
+### Tab 2: 🔭 Astro & Navigation ✅
 
-### Qt Widgets Struktur
+**Implemented Features:**
+*   ✅ **Star Map Overlay:**
+    *   Custom `StarMapWidget` with OpenGL rendering
+    *   Integrated SQLite database (HYG Star Catalog + NGC catalog)
+    *   Real-time sky view based on location and time
+    *   Constellation lines and labels
+    *   Interactive object selection
+*   ✅ **GOTO Functionality:**
+    *   Click on celestial object to slew telescope
+    *   Manual RA/Dec coordinate input
+    *   Target tracking and position updates
+    *   Calibration workflow
+*   ✅ **Live Stacking:**
+    *   Start/Stop stacking controls
+    *   Exposure and gain settings for astro mode
+    *   Real-time progress monitoring (frame count, total exposure)
+    *   Stacking state notifications
+*   ✅ **Object Database:**
+    *   NGC deep-sky objects
+    *   Searchable catalog
+    *   Object information display
+
+### Tab 3: 🗺️ Panorama ✅
+
+**Implemented Features:**
+*   ✅ **Panorama Capture:** Start/stop panorama mode
+*   ✅ **Progress Monitoring:** Real-time panorama capture progress
+*   ✅ **Parameter Control:** Panorama settings and configuration
+
+**Motor Control (Overlay):** ✅
+*   ✅ **Virtual Joystick:** Floating overlay with directional controls
+*   ✅ **Speed Control:** Variable slew speed adjustment
+*   ✅ **Manual Positioning:** Fine control over azimuth and altitude
+
+**Focus Control:** ✅
+*   ✅ **Manual Focus:** Step-by-step focus adjustment
+*   ✅ **Focus Position:** Numerical focus value display
+*   ✅ **Focus Commands:** Multiple step sizes for coarse/fine adjustment
+
+### Tab 4: 🖼️ Gallery ✅
+
+**Implemented Features:**
+*   ✅ **Media Browser:** View captured photos and videos
+*   ✅ **Thumbnail Grid:** Quick preview of all images
+*   ✅ **Image Management:** Access to stored media on DWARF II
+*   ✅ **Full-Screen Overlay:** Dedicated gallery view
+
+### Tab 5: ⚙️ Settings & System ✅
+
+**Implemented Features:**
+*   ✅ **Connection Management:**
+    *   Network scanner for device discovery
+    *   Manual IP address input
+    *   Connect/Disconnect controls
+    *   Connection status monitoring
+*   ✅ **Device Information:**
+    *   Firmware version display
+    *   Battery status
+    *   Storage information
+*   ✅ **Application Settings:**
+    *   Language selection (English/German)
+    *   Theme customization
+*   ✅ **Advanced Features:**
+    *   System information display
+    *   Log viewing
+
+---
+
+## 4. Visual Design (Implemented)
+
+The design is inspired by professional creative software (Blender, DaVinci Resolve).
+
+**Color Scheme:** ✅
+*   Background (App): `#1E1E1E` (Very dark gray)
+*   Background (Panels): `#2D2D30` (Dark gray)
+*   Text (Primary): `#E0E0E0` (Light gray, not pure white)
+*   Text (Secondary): `#AAAAAA`
+*   **Accent Color:** `#FF9800` (Orange) for active states
+
+**Typography:** ✅
+*   Font: System default (Segoe UI/Roboto/San Francisco)
+*   Size: 10pt (Standard), 12pt (Buttons)
+
+**Icons:** ✅
+*   Vector icons (SVG) in white/gray
+*   Custom icons for all major functions
+*   Located in `resources/icons/`
+
+## 5. Implementation in Qt (Completed)
+
+### Qt Widgets Structure ✅
 ```cpp
-// MainWindow
+// MainWindow (Implemented)
 QMainWindow
 ├── QWidget (CentralWidget)
-│   └── QVBoxLayout
-│       └── QVideoWidget (Der Viewport)
-│           └── OverlayWidget (Transparentes HUD darübergelegt)
-├── QDockWidget (RightArea)
-│   └── QTabWidget
-│       ├── QWidget (Tab: Camera)
-│       │   └── QFormLayout (Controls)
-│       ├── QWidget (Tab: Astro)
-│       │   └── QVBoxLayout
-│       │       ├── StarMapWidget (Custom QGraphicsView)
-│       │       └── QListView (Objekt-Suche/Ergebnisse)
-│       ├── QWidget (Tab: Motor)
-│       └── QWidget (Tab: Settings)
+│   └── QHBoxLayout
+│       ├── QWidget (Sidebar) - Vertical button group
+│       ├── QLabel (VideoViewport) - MJPEG stream display
+│       │   ├── MotorOverlay (Floating joystick)
+│       │   ├── ParamsOverlay (Camera parameters)
+│       │   └── StarMapOverlay (Celestial navigation)
+│       └── QStackedWidget (RightPanel) - Context panels
+│           ├── CameraSettingsPanel
+│           ├── AstroNavigationPanel
+│           ├── PanoramaPanel
+│           ├── GalleryPanel
+│           └── SettingsPanel
 └── QStatusBar
 ```
 
-### Video-Aufnahme Logik
-Die Frage "Videoaufnahmen sind auch vorgesehen?" wird wie folgt beantwortet:
+### Network Architecture ✅
+*   **WebSocket Client:** `DwarfWebSocketClient` for Protobuf communication (port 9900)
+*   **HTTP Client:** `DwarfHttpClient` for REST API (port 8082)
+*   **Message Dispatcher:** Routes incoming messages to appropriate controllers
+*   **Controllers:**
+    *   `DwarfCameraController` - Camera parameters and capture
+    *   `DwarfAstroController` - Astrophotography and GOTO
+    *   `DwarfMotorController` - Manual telescope movement
+    *   `DwarfFocusController` - Focus control
+    *   `DwarfPanoramaController` - Panorama mode
 
-1.  **Native Aufnahme (SD-Karte):**
-    *   Dies ist die primäre Funktion.
-    *   Der Button `REC` sendet den Befehl `StartRecording` an das DWARF II.
-    *   Das Teleskop speichert die Datei intern (bessere Qualität, kein Netzwerk-Lag).
-2.  **Lokale Aufnahme (PC):**
-    *   *Optionales Feature.*
-    *   Der RTSP-Stream wird direkt auf die Festplatte des PCs geschrieben.
-    *   Vorteil: Sofortiger Zugriff ohne Download.
-    *   Nachteil: Abhängig von WLAN-Qualität.
+### Video Streaming ✅
+*   **MJPEG Streaming:** HTTP-based MJPEG streams (port 8092)
+*   **Dual Camera Support:** Simultaneous Tele and Wide streams
+*   **Picture-in-Picture:** Secondary camera view in corner
+*   **Recording:** Native recording to DWARF II SD card via WebSocket commands
 
-## 6. Mockup Referenz
-*(Siehe generiertes Bild-Artefakt für visuelle Referenz)*
+## 6. Current Status
+
+**All features described in this document are now implemented and functional in the beta release.**
+
+For build instructions and usage, see `README.md`.
+For development setup, see `DEVELOPMENT.md`.

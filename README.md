@@ -71,18 +71,60 @@ Note: System-specific installation instructions can be found in `DEVELOPMENT.md`
 
 ### Linux
 
-There is a simple build script:
+**Prerequisites:**
+- CMake >= 3.16
+- g++ or clang++ with C++17 support
+- Qt 6 (including Multimedia, WebSockets components)
+- Protobuf compiler and libraries
+- Development libraries: libgl1-mesa-dev, libdbus-1-dev, libfreetype6-dev, libfontconfig1-dev, libxkbcommon-dev, libvulkan-dev
+
+**Install dependencies (Ubuntu/Debian):**
+
+```bash
+sudo apt-get install build-essential cmake git \
+  qt6-base-dev qt6-multimedia-dev qt6-websockets-dev \
+  protobuf-compiler libprotobuf-dev \
+  libgl1-mesa-dev libdbus-1-dev libfreetype6-dev \
+  libfontconfig1-dev libxkbcommon-dev libvulkan-dev
+```
+
+**Build (Development):**
 
 ```bash
 ./build.sh
 ```
 
-Alternatively, use plain CMake:
+Or use plain CMake:
 
 ```bash
 mkdir -p build
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build
+```
+
+**Build (Release with Docker / Ubuntu 20.04):**
+
+For maximum compatibility (glibc 2.31), build in an Ubuntu 20.04 Docker container:
+
+```bash
+./build_linux_release_docker_ubuntu2004.sh
+```
+
+This will:
+- Build a Docker image with Qt 6.5.3 and all dependencies
+- Compile the project inside the container
+- Bundle all required libraries for portability
+- Create a distributable package in `dist/linux/`
+- Create a ZIP archive `dist/zwergII-linux-release.zip`
+
+**Requirements for Docker build:**
+- Docker installed and running
+- User must have permission to run Docker commands
+
+**Skip Docker image rebuild (if already built):**
+
+```bash
+./build_linux_release_docker_ubuntu2004.sh --skip-build
 ```
 
 ### macOS
@@ -250,5 +292,10 @@ build_windows_release.bat
 ```
 
 ### Acknowledgments
-This project implements the DWARF II API based on reverse-engineered protocol documentation. Special thanks to the DWARF Lab community for sharing API information.
+
+This project implements the DWARF II API based on reverse-engineered protocol documentation. Special thanks to the DWARF Lab community for sharing API information:
 https://github.com/DwarfTelescopeUsers/dwarfii_api
+
+**Development:** Vibe coding with support from Windsurf and various AI models, enabling rapid prototyping and implementation of the DWARF II protocol.
+
+**Testing:** This project was tested on Windows, macOS and Linux.
