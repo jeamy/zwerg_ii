@@ -1,8 +1,8 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Build toolchain
+# Build toolchain (Ubuntu 22.04 has GCC 11 with GLIBCXX_3.4.30)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \

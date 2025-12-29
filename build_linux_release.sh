@@ -190,10 +190,18 @@ elif (command -v qtpaths6 &>/dev/null || command -v qtpaths &>/dev/null) && comm
           ;;
       esac
 
+      # Bundle toolchain libs (libstdc++, libgcc_s) when requested (Docker build)
       if [ "$BUNDLE_TOOLCHAIN_LIBS" != "1" ]; then
         case "$base" in
           libstdc++.so.*|libgcc_s.so.*)
+            echo "  → Skipping toolchain lib (use BUNDLE_TOOLCHAIN_LIBS=1 to include): $base"
             continue
+            ;;
+        esac
+      else
+        case "$base" in
+          libstdc++.so.*|libgcc_s.so.*)
+            echo "  → Bundling toolchain lib: $dep"
             ;;
         esac
       fi
@@ -208,13 +216,16 @@ elif (command -v qtpaths6 &>/dev/null || command -v qtpaths &>/dev/null) && comm
         fi
       fi
 
-      # Exclude host-incompatible X11/XCB/XKB libs to prevent ABI mix (causes segfault)
-      case "$dep" in
-        *libxkbcommon-x11*|*libxcb-xkb*|*libxcb-icccm*|*libxcb-image*|*libxcb-keysyms*|*libxcb-randr*|*libxcb-render*|*libxcb-render-util*|*libxcb-shape*|*libxcb-shm*|*libxcb-sync*|*libxcb-xfixes*|*libxcb-xinerama*|*libxcb-cursor*)
-          echo "  → Skipping host-incompatible X11/XCB lib: $dep"
-          continue
-          ;;
-      esac
+      # Only exclude X11/XCB/XKB libs when NOT bundling everything (to prevent ABI mix on host system)
+      # When BUNDLE_NON_QT_LIBS=1 (Docker build), we bundle everything from the container
+      if [ "$BUNDLE_NON_QT_LIBS" != "1" ]; then
+        case "$dep" in
+          *libxkbcommon-x11*|*libxcb-xkb*|*libxcb-icccm*|*libxcb-image*|*libxcb-keysyms*|*libxcb-randr*|*libxcb-render*|*libxcb-render-util*|*libxcb-shape*|*libxcb-shm*|*libxcb-sync*|*libxcb-xfixes*|*libxcb-xinerama*|*libxcb-cursor*)
+            echo "  → Skipping host-incompatible X11/XCB lib: $dep"
+            continue
+            ;;
+        esac
+      fi
 
       if [ ! -f "$DIST_DIR/lib/$base" ]; then
         copy_lib "$dep"
@@ -246,6 +257,20 @@ elif (command -v qtpaths6 &>/dev/null || command -v qtpaths &>/dev/null) && comm
     [ -e "$lib" ] && copy_lib "$lib"
   done
 
+  # When bundling everything (Docker build), explicitly copy all XCB libs needed by Qt platform plugins
+  if [ "$BUNDLE_NON_QT_LIBS" = "1" ]; then
+    echo "Bundling XCB libraries for Qt platform plugins..."
+    for xcb_lib in libxcb-icccm.so.4 libxcb-image.so.0 libxcb-keysyms.so.1 libxcb-randr.so.0 libxcb-render.so.0 libxcb-render-util.so.0 libxcb-shape.so.0 libxcb-xinerama.so.0 libxcb-cursor.so.0 libxcb-xkb.so.1 libxkbcommon.so.0 libxkbcommon-x11.so.0; do
+      # Try to find the library in standard locations
+      for search_path in /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu /lib /usr/lib; do
+        if [ -e "$search_path/$xcb_lib" ]; then
+          copy_lib "$search_path/$xcb_lib"
+          break
+        fi
+      done
+    done
+  fi
+
   # Dependencies der Qt-Libs einsammeln
   if [ "$BUNDLE_NON_QT_LIBS" = "1" ]; then
     if ls "$DIST_DIR/lib/"libQt6*.so* >/dev/null 2>&1; then
@@ -269,10 +294,23 @@ elif (command -v qtpaths6 &>/dev/null || command -v qtpaths &>/dev/null) && comm
   fi
 
   # Plugins
+  echo "Copying Qt plugins from: $QT_PLUGIN_DIR"
   for sub in platforms styles imageformats xcbglintegrations iconengines sqldrivers; do
     if [ -n "$QT_PLUGIN_DIR" ] && [ -d "$QT_PLUGIN_DIR/$sub" ]; then
+      echo "  → Copying $sub plugins..."
       mkdir -p "$DIST_DIR/plugins/$sub"
       cp -L "$QT_PLUGIN_DIR/$sub"/*.so "$DIST_DIR/plugins/$sub"/ 2>/dev/null || true
+      
+      # Verify platform plugins were copied
+      if [ "$sub" = "platforms" ]; then
+        PLATFORM_COUNT=$(ls -1 "$DIST_DIR/plugins/$sub"/*.so 2>/dev/null | wc -l)
+        echo "     Copied $PLATFORM_COUNT platform plugins"
+        if [ "$PLATFORM_COUNT" -eq 0 ]; then
+          echo "     WARNING: No platform plugins copied!" >&2
+        fi
+      fi
+    else
+      echo "  → Skipping $sub (not found in $QT_PLUGIN_DIR)"
     fi
   done
 
@@ -309,14 +347,25 @@ fi
 # Launcher
 cat > "$DIST_DIR/run_zwergII.sh" <<'EOF'
 #!/usr/bin/env bash
-set -e
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-export LD_LIBRARY_PATH="$DIR/lib"
+# Set library and plugin paths
+export LD_LIBRARY_PATH="$DIR/lib:${LD_LIBRARY_PATH}"
 export QT_PLUGIN_PATH="$DIR/plugins"
 export QT_QPA_PLATFORM_PLUGIN_PATH="$DIR/plugins/platforms"
 
+# Debug mode: set QT_DEBUG_PLUGINS=1 to see plugin loading details
+if [ -n "$QT_DEBUG_PLUGINS" ]; then
+  echo "=== Debug Mode ==="
+  echo "DIR: $DIR"
+  echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+  echo "Platform plugins:"
+  ls -la "$DIR/plugins/platforms/" 2>/dev/null || echo "  (none found)"
+  echo "=================="
+fi
+
+# Run the application
 exec "$DIR/DwarfController" "$@"
 EOF
 chmod +x "$DIST_DIR/run_zwergII.sh" 2>/dev/null || true
