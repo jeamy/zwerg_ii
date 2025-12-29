@@ -110,6 +110,8 @@ set(SOURCES
     src/ui/MotorControlPanel.h
     src/ui/ParametersOverlayPanel.cpp
     src/ui/ParametersOverlayPanel.h
+    src/ui/HelpWindow.cpp
+    src/ui/HelpWindow.h
     ${PROTO_SRCS}
     ${PROTO_HDRS}
     resources.qrc

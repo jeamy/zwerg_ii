@@ -275,17 +275,17 @@ mkdir "%DIST_DIR%\styles" 2>NUL
 mkdir "%DIST_DIR%\i18n" 2>NUL
 mkdir "%DIST_DIR%\data" 2>NUL
 
-if exist "%PROJECT_DIR%styles\app.qss" copy /Y "%PROJECT_DIR%styles\app.qss" "%DIST_DIR%\styles" >NUL
+if exist "%PROJECT_DIR%\styles\app.qss" copy /Y "%PROJECT_DIR%\styles\app.qss" "%DIST_DIR%\styles" >NUL
 
-for %%F in ("%PROJECT_DIR%i18n\*.qm") do (
+for %%F in ("%PROJECT_DIR%\i18n\*.qm") do (
   if exist "%%~fF" copy /Y "%%~fF" "%DIST_DIR%\i18n" >NUL
 )
 
-if exist "%PROJECT_DIR%data\stars.db" copy /Y "%PROJECT_DIR%data\stars.db" "%DIST_DIR%\data" >NUL
-if exist "%PROJECT_DIR%data\constellationship.fab" copy /Y "%PROJECT_DIR%data\constellationship.fab" "%DIST_DIR%\data" >NUL
+if exist "%PROJECT_DIR%\data\stars.db" copy /Y "%PROJECT_DIR%\data\stars.db" "%DIST_DIR%\data" >NUL
+if exist "%PROJECT_DIR%\data\constellationship.fab" copy /Y "%PROJECT_DIR%\data\constellationship.fab" "%DIST_DIR%\data" >NUL
 
-if exist "%PROJECT_DIR%resources" (
-  xcopy "%PROJECT_DIR%resources" "%DIST_DIR%\resources" /E /I /Y >NUL
+if exist "%PROJECT_DIR%\resources" (
+  xcopy "%PROJECT_DIR%\resources" "%DIST_DIR%\resources" /E /I /Y >NUL
 )
 
 rem Qt deployment

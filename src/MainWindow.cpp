@@ -15,6 +15,7 @@
 #include "ui/AstroNavigationPanel.h"
 #include "ui/CameraSettingsPanel.h"
 #include "ui/MotorControlPanel.h"
+#include "ui/HelpWindow.h"
 #include "ui/ParametersOverlayPanel.h"
 #include "ui/MediaLightbox.h"
 #include "ui/StarMapWidget.h"
@@ -343,6 +344,20 @@ MainWindow::MainWindow(QWidget *parent)
             &DwarfAstroController::handleAstroMessage);
     connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage, m_astroController,
             &DwarfAstroController::handleNotification);
+
+    // Update System Info in SET tab
+    connect(m_astroController, &DwarfAstroController::batteryChanged, this, [this](int percent) {
+        if (m_batteryLabel) {
+            m_batteryLabel->setText(QString("%1%").arg(percent));
+            m_batteryLabel->setStyleSheet("");
+        }
+    });
+    connect(m_astroController, &DwarfAstroController::sdCardInfoReceived, this, [this](float total, float free) {
+        if (m_sdSpaceLabel) {
+            m_sdSpaceLabel->setText(tr("%1 GB / %2 GB free").arg(QString::number(free, 'f', 1)).arg(QString::number(total, 'f', 1)));
+            m_sdSpaceLabel->setStyleSheet("");
+        }
+    });
   }
 
   if (m_cameraController) {
@@ -551,6 +566,15 @@ void MainWindow::updatePanoramaGridOverlayTarget() {
     m_panoGridOverlay->raise();
 }
 
+void MainWindow::onHelpClicked() {
+  if (!m_helpWindow) {
+    m_helpWindow = new HelpWindow(this);
+  }
+  m_helpWindow->show();
+  m_helpWindow->raise();
+  m_helpWindow->activateWindow();
+}
+
 void MainWindow::onGalleryOverlayRequested(bool enabled) {
   m_galleryOverlayEnabled = enabled;
 
@@ -608,10 +632,10 @@ void MainWindow::updateSidebarForConnectionState(bool connected) {
   if (!m_sidebarGroup)
     return;
 
-  // All sidebar buttons (CAM, ASTRO, PANO, GAL, SET) depend on connection
-  for (int idx = 0; idx <= 4; ++idx) {
+  // All sidebar buttons depend on connection, except SCAN (index 0) and SET (index 5)
+  for (int idx = 0; idx <= 5; ++idx) {
     if (auto *btn = m_sidebarGroup->button(idx))
-      btn->setVisible(connected);
+      btn->setVisible(connected || idx == 0 || idx == 5);
   }
 
   // Overlay toggle buttons are controlled in updateOverlayVisibility() based on
@@ -745,6 +769,8 @@ void MainWindow::setupUi() {
       const bool gallerySelected = (index == 4);
       const bool astroSelected = (index == 2);
       const bool panoSelected = (index == 3);
+      const bool scanSelected = (index == 0);
+      const bool setSelected = (index == 5);
 
       if (gallerySelected) {
         // Ensure other overlays are off before enabling Gallery overlay.
@@ -784,11 +810,24 @@ void MainWindow::setupUi() {
     });
   };
 
-  addSidebarBtn(":/icons/icons/camera.svg", tr("CAM"), 0);
-  addSidebarBtn(":/icons/icons/astro.svg", tr("ASTRO"), 1);
-  addSidebarBtn(":/icons/icons/panorama.svg", tr("PANO"), 2);
-  addSidebarBtn(":/icons/icons/gallery.svg", tr("GAL"), 3);
-  addSidebarBtn(":/icons/icons/settings.svg", tr("SET"), 4);
+  addSidebarBtn(":/icons/icons/scan.svg", tr("SCAN"), 0);
+  addSidebarBtn(":/icons/icons/camera.svg", tr("CAM"), 1);
+  addSidebarBtn(":/icons/icons/astro.svg", tr("ASTRO"), 2);
+  addSidebarBtn(":/icons/icons/panorama.svg", tr("PANO"), 3);
+  addSidebarBtn(":/icons/icons/gallery.svg", tr("GAL"), 4);
+  addSidebarBtn(":/icons/icons/settings.svg", tr("SET"), 5);
+
+  // HELP BUTTON (at the top, above other buttons)
+  QToolButton *helpBtn = new QToolButton(m_sidebar);
+  helpBtn->setObjectName("helpButton");
+  helpBtn->setIcon(QIcon(":/icons/icons/help.svg"));
+  helpBtn->setToolTip(tr("Help / Hilfe"));
+  helpBtn->setText(tr("HELP"));
+  helpBtn->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+  helpBtn->setFixedSize(65, 75);
+  helpBtn->setIconSize(QSize(32, 32));
+  sidebarLayout->insertWidget(0, helpBtn);
+  connect(helpBtn, &QToolButton::clicked, this, &MainWindow::onHelpClicked);
 
   auto addOverlayToggleBtn = [&](const QString &iconPath, const QString &toolTip) {
     QToolButton *btn = new QToolButton(m_sidebar);
@@ -938,7 +977,7 @@ void MainWindow::setupUi() {
   });
 
   QHBoxLayout *scanBtnLayout = new QHBoxLayout();
-  m_scanButton = new QPushButton(tr("Scan Network"));
+  m_scanButton = new QPushButton(QIcon(":/icons/icons/scan.svg"), tr("Scan Network"));
   m_cancelScanButton = new QPushButton(tr("Cancel Scan"));
   m_cancelScanButton->setEnabled(false);
   scanBtnLayout->addWidget(m_scanButton);
@@ -1314,16 +1353,72 @@ void MainWindow::setupUi() {
   // 5: Settings Panel
   QWidget *settingsTab = new QWidget();
   auto *sl = new QVBoxLayout(settingsTab);
-  sl->addWidget(new QLabel("Application Settings"));
+  QLabel *setHeading = new QLabel(tr("Application Settings"));
+  setHeading->setProperty("heading", true);
+  sl->addWidget(setHeading);
 
+  // Language Section
+  QHBoxLayout *langLayout = new QHBoxLayout();
+  langLayout->addWidget(new QLabel(tr("Language:")));
+  QComboBox *langCombo = new QComboBox();
+  langCombo->addItem("English", "en");
+  langCombo->addItem("Deutsch", "de");
+  {
+      QSettings settings("DwarfLab", "DwarfController");
+      QString currentLang = settings.value("language", "en").toString();
+      int idx = langCombo->findData(currentLang);
+      if (idx != -1) langCombo->setCurrentIndex(idx);
+  }
+  langLayout->addWidget(langCombo);
+  langLayout->addStretch();
+  sl->addLayout(langLayout);
+
+  connect(langCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, langCombo](int index) {
+      QString lang = langCombo->itemData(index).toString();
+      QSettings settings("DwarfLab", "DwarfController");
+      settings.setValue("language", lang);
+      QMessageBox::information(this, tr("Restart Required"), 
+          tr("Please restart the application to apply the language change."));
+  });
+
+  // Download Folder Section
+  QGroupBox *downloadGroup = new QGroupBox(tr("Storage"));
+  auto *dl = new QVBoxLayout(downloadGroup);
   QHBoxLayout *downloadLayout = new QHBoxLayout();
-  downloadLayout->addWidget(new QLabel("Download folder:"));
+  downloadLayout->addWidget(new QLabel(tr("Download folder:")));
   m_downloadDirEdit = new QLineEdit();
   m_downloadDirEdit->setReadOnly(true);
-  m_changeDownloadDirButton = new QPushButton("Change...");
+  m_changeDownloadDirButton = new QPushButton(tr("Change..."));
   downloadLayout->addWidget(m_downloadDirEdit);
   downloadLayout->addWidget(m_changeDownloadDirButton);
-  sl->addLayout(downloadLayout);
+  dl->addLayout(downloadLayout);
+  sl->addWidget(downloadGroup);
+
+  // System Info Section
+  QGroupBox *sysGroup = new QGroupBox(tr("System Information (DWARF II)"));
+  auto *sgl = new QVBoxLayout(sysGroup);
+  
+  auto addInfoRow = [&](const QString &label) {
+      QHBoxLayout *row = new QHBoxLayout();
+      row->addWidget(new QLabel(label));
+      QLabel *val = new QLabel(tr("Not connected"));
+      val->setAlignment(Qt::AlignRight);
+      val->setStyleSheet("color: rgba(255, 255, 255, 0.4);");
+      row->addWidget(val);
+      sgl->addLayout(row);
+      return val;
+  };
+
+  m_batteryLabel = addInfoRow(tr("Battery:"));
+  m_firmwareLabel = addInfoRow(tr("Firmware:"));
+  m_sdSpaceLabel = addInfoRow(tr("SD Card:"));
+  
+  QLabel *infoNote = new QLabel(tr("Note: Battery and SD card info are updated when the device sends notifications."));
+  infoNote->setWordWrap(true);
+  infoNote->setStyleSheet("color: rgba(255, 255, 255, 0.5); font-size: 10px; margin-top: 5px;");
+  sgl->addWidget(infoNote);
+  
+  sl->addWidget(sysGroup);
 
   sl->addStretch();
   m_contentStack->addWidget(settingsTab);
@@ -1528,7 +1623,23 @@ void MainWindow::onDeviceFound(const DwarfDeviceInfo &info) {
   QString label = QString("%1 - %2").arg(info.ip).arg(info.name);
   QListWidgetItem *item = new QListWidgetItem(label);
   item->setData(Qt::UserRole, info.ip);
+  item->setData(Qt::UserRole + 1, info.version);
   m_deviceList->addItem(item);
+}
+
+void MainWindow::onDeviceSelected(QListWidgetItem *item) {
+  QString ip = item->data(Qt::UserRole).toString();
+  QString version = item->data(Qt::UserRole + 1).toString();
+  
+  m_ipInput->setText(ip);
+  if (m_firmwareLabel) {
+    m_firmwareLabel->setText(version.isEmpty() ? "--" : version);
+  }
+  
+  if (m_wsClient) {
+    onDisconnectClicked();
+  }
+  onConnectClicked();
 }
 
 void MainWindow::onScanFinished() {
@@ -1548,15 +1659,6 @@ void MainWindow::onScanFinished() {
     updateStatusStyle("ok");
     qDebug() << "Found" << m_deviceList->count() << "devices";
   }
-}
-
-void MainWindow::onDeviceSelected(QListWidgetItem *item) {
-  QString ip = item->data(Qt::UserRole).toString();
-  m_ipInput->setText(ip);
-  if (m_wsClient) {
-    onDisconnectClicked();
-  }
-  onConnectClicked();
 }
 
 void MainWindow::onConnectClicked() {
@@ -1622,11 +1724,28 @@ void MainWindow::onDisconnectClicked() {
 
   updateSidebarForConnectionState(false);
 
+  // Switch to SCAN tab automatically after disconnect
+  if (m_sidebarGroup && m_sidebarGroup->button(0)) {
+    m_sidebarGroup->button(0)->setChecked(true);
+    if (m_contentStack)
+      m_contentStack->setCurrentIndex(0);
+  }
+
   m_connectButton->setText(tr("Connect"));
   m_cancelConnectButton->setEnabled(false);
   m_statusLabel->setText(tr("Disconnected"));
   updateStatusStyle("disconnected");
   statusBar()->showMessage(tr("Disconnected"));
+
+  // Reset system info labels
+  if (m_batteryLabel) {
+    m_batteryLabel->setText(tr("Not connected"));
+    m_batteryLabel->setStyleSheet("color: rgba(255, 255, 255, 0.4);");
+  }
+  if (m_sdSpaceLabel) {
+    m_sdSpaceLabel->setText(tr("Not connected"));
+    m_sdSpaceLabel->setStyleSheet("color: rgba(255, 255, 255, 0.4);");
+  }
 
   if (m_cameraController)
     m_cameraController->setClient(nullptr);
@@ -1702,6 +1821,13 @@ void MainWindow::onWebSocketConnected() {
   startStreaming(ip);
 
   updateSidebarForConnectionState(true);
+
+  // Switch to CAM tab automatically after connection
+  if (m_sidebarGroup && m_sidebarGroup->button(1)) {
+    m_sidebarGroup->button(1)->setChecked(true);
+    if (m_contentStack)
+      m_contentStack->setCurrentIndex(1);
+  }
 
   // Load default parameter configuration (params_config.json)
   ensureHttpClientForCurrentIp();

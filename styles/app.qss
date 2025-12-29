@@ -366,8 +366,41 @@ VirtualJoystick {
     min-height: 28px;
 }
 
-#motorAutoFocusButton {
-    background: rgba(39, 174, 96, 180);
-    border-color: rgba(39, 174, 96, 220);
-    color: white;
+/* Help Window */
+HelpWindow {
+    background-color: #1a1a1a;
+    color: #eee;
+}
+
+HelpWindow QTextBrowser {
+    background-color: #121212;
+    color: #ddd;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+HelpWindow QComboBox {
+    background-color: #252525;
+    color: #eee;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
+HelpWindow QLabel {
+    color: #aaa;
+    font-weight: bold;
+}
+
+/* Sidebar Help Button Specifics */
+QToolButton#helpButton {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+QToolButton#helpButton:hover {
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.05);
 }

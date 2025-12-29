@@ -25,13 +25,19 @@ int main(int argc, char *argv[]) {
 
   QApplication app(argc, argv);
 
-  QTranslator translator;
-  const QString languageCode = QLocale::system().name().left(2);
+  // Load language preference
+  QSettings settings("DwarfLab", "DwarfController");
+  QString languageCode = settings.value("language", "").toString();
+  if (languageCode.isEmpty()) {
+      languageCode = QLocale::system().name().left(2);
+  }
+
+  QTranslator *translator = new QTranslator(&app);
   if (languageCode == "de") {
     const QString baseName = QStringLiteral("DwarfController_de");
     const QString i18nDir = QCoreApplication::applicationDirPath() + "/i18n";
-    if (translator.load(baseName, i18nDir)) {
-      app.installTranslator(&translator);
+    if (translator->load(baseName, i18nDir)) {
+      app.installTranslator(translator);
     }
   }
 

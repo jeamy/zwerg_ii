@@ -82,6 +82,7 @@ signals:
     
     void batteryChanged(int percent);
     void temperatureChanged(int celsius);
+    void sdCardInfoReceived(float totalGB, float freeGB);
 
 private:
     void sendCommand(quint32 cmd, const QByteArray &data);

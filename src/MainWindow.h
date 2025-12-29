@@ -17,6 +17,8 @@
 #include <QPointer>
 #include <QPushButton>
 #include <QSlider>
+#include <QMessageBox>
+#include <QSettings>
 #include <QStackedWidget>
 #include <QTabWidget>
 #include <QTimer>
@@ -35,6 +37,7 @@ class MediaLightbox;
 class DwarfMjpegView;
 class QPointF;
 class DwarfHttpClient;
+class HelpWindow;
 class DwarfFtpDownloader;
 class DwarfMtpClient;
 class CameraSettingsPanel;
@@ -146,6 +149,7 @@ private slots:
 
   void onStarMapOverlayRequested(bool enabled);
   void onGalleryOverlayRequested(bool enabled);
+  void onHelpClicked();
 
 private:
   void setupUi();
@@ -261,9 +265,13 @@ private:
   QListWidget *m_mediaPanoList;
   QLineEdit *m_downloadDirEdit;
   QPushButton *m_changeDownloadDirButton;
+  QLabel *m_batteryLabel = nullptr;
+  QLabel *m_firmwareLabel = nullptr;
+  QLabel *m_sdSpaceLabel = nullptr;
   QString m_downloadDir;
   DwarfFtpDownloader *m_ftpDownloader;
   DwarfMtpClient *m_mtpClient;
+  HelpWindow *m_helpWindow = nullptr;
   struct PendingThumbnail {
     QPointer<QListWidget> list;
     int row;

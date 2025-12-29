@@ -537,6 +537,15 @@ void DwarfAstroController::handleNotification(quint32 cmd, const QByteArray &dat
             }
             break;
         }
+
+        case NotifyCmd::SD_CARD_INFO: {
+            dwarf::ResNotifySDcardInfo res;
+            if (res.ParseFromArray(data.data(), data.size())) {
+                // Values are in MB
+                emit sdCardInfoReceived(res.total() / 1024.0f, res.available() / 1024.0f);
+            }
+            break;
+        }
         
         case NotifyCmd::STACKING_STATE: {
             qDebug() << "=== STACKING_STATE notification, data size:" << data.size();
