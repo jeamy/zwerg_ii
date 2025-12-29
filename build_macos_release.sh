@@ -187,6 +187,10 @@ mkdir -p "$APP_BUNDLE/Contents/MacOS/styles" \
          "$APP_BUNDLE/Contents/MacOS/i18n" \
          "$APP_BUNDLE/Contents/MacOS/data"
 
+if [ -f "$PROJECT_DIR/config.json" ]; then
+  cp "$PROJECT_DIR/config.json" "$APP_BUNDLE/Contents/MacOS/"
+fi
+
 if [ -f "$PROJECT_DIR/styles/app.qss" ]; then
   cp "$PROJECT_DIR/styles/app.qss" "$APP_BUNDLE/Contents/MacOS/styles/"
 fi

@@ -275,6 +275,8 @@ mkdir "%DIST_DIR%\styles" 2>NUL
 mkdir "%DIST_DIR%\i18n" 2>NUL
 mkdir "%DIST_DIR%\data" 2>NUL
 
+if exist "%PROJECT_DIR%\config.json" copy /Y "%PROJECT_DIR%\config.json" "%DIST_DIR%" >NUL
+
 if exist "%PROJECT_DIR%\styles\app.qss" copy /Y "%PROJECT_DIR%\styles\app.qss" "%DIST_DIR%\styles" >NUL
 
 for %%F in ("%PROJECT_DIR%\i18n\*.qm") do (

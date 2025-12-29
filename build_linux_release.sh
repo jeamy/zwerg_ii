@@ -82,6 +82,10 @@ fi
 # Required runtime assets
 mkdir -p "$DIST_DIR/styles" "$DIST_DIR/i18n" "$DIST_DIR/data"
 
+if [ -f "$PROJECT_DIR/config.json" ]; then
+  cp "$PROJECT_DIR/config.json" "$DIST_DIR/"
+fi
+
 if [ -f "$PROJECT_DIR/styles/app.qss" ]; then
   cp "$PROJECT_DIR/styles/app.qss" "$DIST_DIR/styles/"
 fi
