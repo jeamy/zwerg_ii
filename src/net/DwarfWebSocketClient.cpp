@@ -3,8 +3,8 @@
 #include <QDebug>
 #include <QUuid>
 
-DwarfWebSocketClient::DwarfWebSocketClient(const QString &ip, QObject *parent)
-    : QObject(parent), m_ip(ip),
+DwarfWebSocketClient::DwarfWebSocketClient(const QString &ip, bool clientMode, QObject *parent)
+    : QObject(parent), m_ip(ip), m_clientMode(clientMode),
       m_clientId(QUuid::createUuid().toString(QUuid::WithoutBraces)) {
   connect(&m_webSocket, &QWebSocket::connected, this,
           &DwarfWebSocketClient::onConnected);
@@ -50,6 +50,11 @@ bool DwarfWebSocketClient::isConnected() const {
 
 void DwarfWebSocketClient::sendCommand(uint32_t moduleId, uint32_t cmd,
                                        const QByteArray &data) {
+  if (m_clientMode) {
+    qWarning() << "[DwarfWebSocketClient] COMMAND BLOCKED (Client Mode):"
+               << "module" << moduleId << "cmd" << cmd;
+    return;
+  }
   if (!isConnected()) {
     qWarning() << "[DwarfWebSocketClient] Cannot send command: not connected"
                << "module" << moduleId << "cmd" << cmd << "data size" << data.size();
@@ -65,6 +70,10 @@ void DwarfWebSocketClient::sendCommand(uint32_t moduleId, uint32_t cmd,
 }
 
 void DwarfWebSocketClient::sendTextCommand(const QString &text) {
+  if (m_clientMode) {
+    qWarning() << "[DwarfWebSocketClient] TEXT COMMAND BLOCKED (Client Mode):" << text;
+    return;
+  }
   if (!isConnected()) {
     qWarning() << "[DwarfWebSocketClient] Cannot send text command: not connected. Text:" << text;
     return;

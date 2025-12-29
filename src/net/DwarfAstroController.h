@@ -33,9 +33,9 @@ public:
     void stopTrackSpecialTarget();
     
     // Stacking
-    void startLiveStacking();
+    void startLiveStacking(bool useDarks = true);
     void stopLiveStacking();
-    void startWideLiveStacking();
+    void startWideLiveStacking(bool useDarks = true);
     void stopWideLiveStacking();
     
     // Dark frames
@@ -80,6 +80,9 @@ signals:
     
     void eqSolvingResult(double aziError, double altError);
     
+    void specialTrackingStarted(int index);
+    void specialTrackingStopped();
+    
     void batteryChanged(int percent);
     void temperatureChanged(int celsius);
     void sdCardInfoReceived(float totalGB, float freeGB);
@@ -88,4 +91,5 @@ private:
     void sendCommand(quint32 cmd, const QByteArray &data);
     
     DwarfWebSocketClient *m_client = nullptr;
+    int m_currentSpecialTargetIndex = -1;
 };

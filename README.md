@@ -62,7 +62,7 @@ This project implements communication with the device via **WebSocket (Protobuf)
 - **CMake** >= 3.16
 - **C++ compiler** with C++17 support
 - **Qt 6** (at least 6.2 LTS recommended)
-  - Widgets, Network, Multimedia, MultimediaWidgets, WebSockets, Sql
+  - Widgets, Network, Multimedia, MultimediaWidgets, WebSockets, Sql, Svg
 - **Protocol Buffers** (Compiler + C++ libs)
 
 Note: System-specific installation instructions can be found in `DEVELOPMENT.md`.
@@ -74,7 +74,7 @@ Note: System-specific installation instructions can be found in `DEVELOPMENT.md`
 **Prerequisites:**
 - CMake >= 3.16
 - g++ or clang++ with C++17 support
-- Qt 6 (including Multimedia, WebSockets components)
+- Qt 6 (including Multimedia, WebSockets, Svg components)
 - Protobuf compiler and libraries
 - Development libraries: libgl1-mesa-dev, libdbus-1-dev, libfreetype6-dev, libfontconfig1-dev, libxkbcommon-dev, libvulkan-dev
 
@@ -82,7 +82,7 @@ Note: System-specific installation instructions can be found in `DEVELOPMENT.md`
 
 ```bash
 sudo apt-get install build-essential cmake git \
-  qt6-base-dev qt6-multimedia-dev qt6-websockets-dev \
+  qt6-base-dev qt6-multimedia-dev qt6-websockets-dev qt6-svg-dev \
   protobuf-compiler libprotobuf-dev \
   libgl1-mesa-dev libdbus-1-dev libfreetype6-dev \
   libfontconfig1-dev libxkbcommon-dev libvulkan-dev
@@ -132,7 +132,7 @@ This will:
 **Prerequisites:**
 - Xcode Command Line Tools: `xcode-select --install`
 - CMake: `brew install cmake`
-- Qt 6 (including Multimedia, WebSockets components)
+- Qt 6 (including Multimedia, WebSockets, Svg components)
 - Protobuf: `brew install protobuf`
 
 **Qt6 Installation:**
@@ -178,7 +178,7 @@ export Protobuf_DIR=/usr/local/lib/cmake/protobuf
 **Prerequisites:**
 - CMake >= 3.16
 - MinGW-w64 (g++) or MSVC compiler
-- Qt 6 (including WebSockets component)
+- Qt 6 (including WebSockets, Svg components)
 - Protobuf compiler (`protoc.exe`) and libraries
 
 **Protobuf Setup (required for Windows):**

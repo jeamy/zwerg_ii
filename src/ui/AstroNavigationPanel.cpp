@@ -196,13 +196,37 @@ void AstroNavigationPanel::setupStarMapTab() {
     calibrationLayout->addWidget(m_calibrateButton);
     calibrationLayout->addWidget(m_cancelCalibrationButton);
     calibrationLayout->addWidget(m_calibrationStatusLabel, 1);
+
+    // Special Tracking controls (Sun/Moon)
+    auto *specialTrackingGroup = new QGroupBox(tr("Solar System Tracking"), m_starMapContent);
+    auto *specialTrackingLayout = new QHBoxLayout(specialTrackingGroup);
+
+    m_trackSunButton = new QPushButton(tr("Track Sun"), specialTrackingGroup);
+    m_trackSunButton->setStyleSheet("QPushButton { background-color: #f39c12; color: white; font-weight: bold; }");
+    
+    m_trackMoonButton = new QPushButton(tr("Track Moon"), specialTrackingGroup);
+    m_trackMoonButton->setStyleSheet("QPushButton { background-color: #7f8c8d; color: white; font-weight: bold; }");
+
+    m_stopSpecialTrackingButton = new QPushButton(tr("Stop Tracking"), specialTrackingGroup);
+    m_stopSpecialTrackingButton->setEnabled(false);
+    m_stopSpecialTrackingButton->setStyleSheet("QPushButton { background-color: #c0392b; color: white; font-weight: bold; }");
+
+    specialTrackingLayout->addWidget(m_trackSunButton);
+    specialTrackingLayout->addWidget(m_trackMoonButton);
+    specialTrackingLayout->addWidget(m_stopSpecialTrackingButton);
     
     connect(m_calibrateButton, &QPushButton::clicked, this, &AstroNavigationPanel::onCalibrateClicked);
     connect(m_cancelCalibrationButton, &QPushButton::clicked, this, &AstroNavigationPanel::onCancelCalibrationClicked);
 
-    // Place Selected Object + Calibration under Visible Tonight in the right column
+    // Connect special tracking buttons
+    connect(m_trackSunButton, &QPushButton::clicked, this, &AstroNavigationPanel::onTrackSunClicked);
+    connect(m_trackMoonButton, &QPushButton::clicked, this, &AstroNavigationPanel::onTrackMoonClicked);
+    connect(m_stopSpecialTrackingButton, &QPushButton::clicked, this, &AstroNavigationPanel::onStopSpecialTrackingClicked);
+
+    // Place Selected Object + Calibration + Special Tracking under Visible Tonight in the right column
     rightPanelLayout->addWidget(infoGroup);
     rightPanelLayout->addWidget(calibrationGroup);
+    rightPanelLayout->addWidget(specialTrackingGroup);
 
     contentLayout->addLayout(topRowLayout, 1);
 
@@ -382,13 +406,23 @@ void AstroNavigationPanel::setupStackingTab() {
     auto *calibrationLayout = new QGridLayout(calibrationGroup);
     
     // Dark frames
-    calibrationLayout->addWidget(new QLabel(tr("Dark Frames:")), 0, 0);
+    m_useDarkFramesCheck = new QCheckBox(tr("Use Dark Frames"), calibrationGroup);
+    m_useDarkFramesCheck->setChecked(true);
+    calibrationLayout->addWidget(m_useDarkFramesCheck, 0, 0);
+
     m_darkFramesSpin = new QSpinBox(calibrationGroup);
     m_darkFramesSpin->setRange(0, 100);
     m_darkFramesSpin->setValue(20);
     calibrationLayout->addWidget(m_darkFramesSpin, 0, 1);
+    
     m_captureDarksButton = new QPushButton(tr("Capture Darks"), calibrationGroup);
     calibrationLayout->addWidget(m_captureDarksButton, 0, 2);
+
+    // Connect checkbox to spinbox and capture button
+    connect(m_useDarkFramesCheck, &QCheckBox::toggled, this, [this](bool checked) {
+        m_darkFramesSpin->setEnabled(checked);
+        m_captureDarksButton->setEnabled(checked);
+    });
     
     // Flat frames
     calibrationLayout->addWidget(new QLabel(tr("Flat Frames:")), 1, 0);
@@ -751,6 +785,39 @@ static bool parseDecDegrees(const QString &text, double *outDecDeg) {
     return true;
 }
 
+void AstroNavigationPanel::onTrackSunClicked() {
+    if (!m_astroController) return;
+    
+    qDebug() << "Tracking Sun...";
+    m_trackSunButton->setEnabled(false);
+    m_trackMoonButton->setEnabled(false);
+    m_stopSpecialTrackingButton->setEnabled(true);
+    
+    m_astroController->trackSpecialTarget(0, longitude(), latitude());
+}
+
+void AstroNavigationPanel::onTrackMoonClicked() {
+    if (!m_astroController) return;
+    
+    qDebug() << "Tracking Moon...";
+    m_trackSunButton->setEnabled(false);
+    m_trackMoonButton->setEnabled(false);
+    m_stopSpecialTrackingButton->setEnabled(true);
+    
+    m_astroController->trackSpecialTarget(1, longitude(), latitude());
+}
+
+void AstroNavigationPanel::onStopSpecialTrackingClicked() {
+    if (!m_astroController) return;
+    
+    qDebug() << "Stopping special tracking...";
+    m_astroController->stopTrackSpecialTarget();
+    
+    m_trackSunButton->setEnabled(true);
+    m_trackMoonButton->setEnabled(true);
+    m_stopSpecialTrackingButton->setEnabled(false);
+}
+
 void AstroNavigationPanel::onRaDecGotoClicked() {
     if (!m_raInput || !m_decInput)
         return;
@@ -889,23 +956,14 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
             m_calibrationStatusLabel->setStyleSheet("color: red;");
         });
         
-        // Connect stacking progress signals
-        connect(m_astroController, &DwarfAstroController::stackingProgress, this, 
-                [this](int currentFrame, int totalFrames, int stackedFrames, int rejectedFrames) {
-            m_frameCountLabel->setText(QString("%1 / %2").arg(stackedFrames).arg(totalFrames > 0 ? totalFrames : currentFrame));
-            m_rejectedFramesLabel->setText(QString::number(rejectedFrames));
-            
-            if (totalFrames > 0) {
-                m_stackingProgress->setRange(0, totalFrames);
-                m_stackingProgress->setValue(stackedFrames);
-            } else {
-                // Unlimited mode - just show current count
-                m_stackingProgress->setRange(0, 0);  // Indeterminate
-            }
-            
-            m_stackingStatusLabel->setText(tr("Capturing frame %1...").arg(currentFrame));
+        // Connect stacking signals
+        connect(m_astroController, &DwarfAstroController::stackingProgress, this, [this](int current, int total, int stacked, int rejected) {
+            m_currentFrame = stacked;
+            m_totalFrames = total;
+            m_rejectedFrames = rejected;
+            updateStackingProgress();
         });
-        
+
         connect(m_astroController, &DwarfAstroController::stackingStateChanged, this, [this](int state) {
             switch (state) {
                 case 0:
@@ -935,6 +993,25 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
             
             // Show error in message box
             QMessageBox::warning(this, tr("Stacking Failed"), error);
+        });
+
+        // Connect special tracking signals
+        connect(m_astroController, &DwarfAstroController::specialTrackingStarted, this, [this](int index) {
+            m_trackSunButton->setEnabled(false);
+            m_trackMoonButton->setEnabled(false);
+            m_stopSpecialTrackingButton->setEnabled(true);
+            
+            QString target = (index == 0) ? tr("Sun") : tr("Moon");
+            m_calibrationStatusLabel->setText(tr("Tracking %1...").arg(target));
+            m_calibrationStatusLabel->setStyleSheet("color: green; font-weight: bold;");
+        });
+        connect(m_astroController, &DwarfAstroController::specialTrackingStopped, this, [this]() {
+            m_trackSunButton->setEnabled(true);
+            m_trackMoonButton->setEnabled(true);
+            m_stopSpecialTrackingButton->setEnabled(false);
+            
+            m_calibrationStatusLabel->setText(tr("Tracking stopped"));
+            m_calibrationStatusLabel->setStyleSheet("color: gray;");
         });
     }
 }
@@ -1210,8 +1287,8 @@ void AstroNavigationPanel::onStartStackingClicked() {
             if (!m_isStacking) return; // User cancelled
             
             m_stackingStatusLabel->setText(tr("Starting stacking..."));
-            qDebug() << "=== STEP 3: Starting live stacking:" << m_totalFrames << "frames";
-            m_astroController->startLiveStacking();
+            qDebug() << "=== STEP 3: Starting live stacking:" << m_totalFrames << "frames, useDarks:" << m_useDarkFramesCheck->isChecked();
+            m_astroController->startLiveStacking(m_useDarkFramesCheck->isChecked());
         });
     });
 }

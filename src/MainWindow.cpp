@@ -1021,6 +1021,18 @@ void MainWindow::setupUi() {
   ipLabel->setFixedWidth(labelW);
   netLabel->setFixedWidth(labelW);
 
+  m_clientModeCheck = new QCheckBox(tr("Client Mode (View Only)"));
+  m_clientModeCheck->setToolTip(tr("In Client Mode, the app will only receive data and streams without sending control commands."));
+  {
+    QSettings settings("DwarfLab", "DwarfController");
+    m_clientModeCheck->setChecked(settings.value("clientMode", false).toBool());
+  }
+  connect(m_clientModeCheck, &QCheckBox::toggled, this, [](bool checked) {
+    QSettings settings("DwarfLab", "DwarfController");
+    settings.setValue("clientMode", checked);
+  });
+  cl->addWidget(m_clientModeCheck);
+
   cl->addLayout(connectBtnLayout);
 
   m_deviceList = new QListWidget();
@@ -1678,7 +1690,8 @@ void MainWindow::onConnectClicked() {
   }
 
   // Create new client
-  m_wsClient = new DwarfWebSocketClient(ip, this);
+  bool clientMode = m_clientModeCheck->isChecked();
+  m_wsClient = new DwarfWebSocketClient(ip, clientMode, this);
 
   connect(m_wsClient, &DwarfWebSocketClient::connected, this,
           &MainWindow::onWebSocketConnected);

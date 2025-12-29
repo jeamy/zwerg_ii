@@ -31,7 +31,7 @@ ARG QT_VERSION=6.5.3
 ARG QT_TARGET_DIR=/opt/Qt
 
 RUN python3 -m pip install --no-cache-dir --upgrade aqtinstall \
-    && python3 -m aqt install-qt linux desktop "$QT_VERSION" gcc_64 -O "$QT_TARGET_DIR" --modules qtmultimedia qtwebsockets qtshadertools \
+    && python3 -m aqt install-qt linux desktop "$QT_VERSION" gcc_64 -O "$QT_TARGET_DIR" --modules qtmultimedia qtwebsockets qtshadertools qtsvg \
     && rm -rf /root/.cache/pip
 
 # Make Qt discoverable for CMake in subsequent layers / container sessions.

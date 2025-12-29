@@ -10,12 +10,13 @@ class DwarfWebSocketClient : public QObject {
   Q_OBJECT
 
 public:
-  explicit DwarfWebSocketClient(const QString &ip, QObject *parent = nullptr);
+  explicit DwarfWebSocketClient(const QString &ip, bool clientMode = false, QObject *parent = nullptr);
   ~DwarfWebSocketClient();
 
   void connectToDevice();
   void disconnect();
   bool isConnected() const;
+  bool isClientMode() const { return m_clientMode; }
 
   // Send command to DWARF II
   void sendCommand(uint32_t moduleId, uint32_t cmd,
@@ -43,6 +44,7 @@ private:
 
   QWebSocket m_webSocket;
   QString m_ip;
+  bool m_clientMode;
   QTimer m_pingTimer;
   QString m_clientId;
 

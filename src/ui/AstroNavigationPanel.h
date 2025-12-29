@@ -74,6 +74,11 @@ private slots:
     void onCalibrateClicked();
     void onCancelCalibrationClicked();
     
+    // Special Tracking
+    void onTrackSunClicked();
+    void onTrackMoonClicked();
+    void onStopSpecialTrackingClicked();
+    
     // Search
     void onSearchTextChanged(const QString &text);
     void onSearchResultClicked(QListWidgetItem *item);
@@ -141,6 +146,11 @@ private:
     QLineEdit *m_raInput = nullptr;
     QLineEdit *m_decInput = nullptr;
     QPushButton *m_radecGotoButton = nullptr;
+
+    // Special Tracking
+    QPushButton *m_trackSunButton = nullptr;
+    QPushButton *m_trackMoonButton = nullptr;
+    QPushButton *m_stopSpecialTrackingButton = nullptr;
     
     // Stacking Tab - Capture Settings
     QSpinBox *m_numFramesSpin;
@@ -157,6 +167,7 @@ private:
     QLabel *m_rejectedFramesLabel;
     
     // Calibration Frames (Dark, Flat, Bias)
+    QCheckBox *m_useDarkFramesCheck;
     QSpinBox *m_darkFramesSpin;
     QSpinBox *m_flatFramesSpin;
     QSpinBox *m_biasFramesSpin;

@@ -174,6 +174,7 @@ private:
   QStackedWidget *m_contentStack;
   QWidget *m_sidebar;
   QButtonGroup *m_sidebarGroup;
+  QCheckBox *m_clientModeCheck;
   DwarfWebSocketClient *m_wsClient;
   DwarfMessageDispatcher *m_dispatcher;
   

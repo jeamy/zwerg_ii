@@ -164,6 +164,7 @@ void DwarfAstroController::oneClickGotoSolarSystem(int index, double lon, double
 
 void DwarfAstroController::trackSpecialTarget(int index, double lon, double lat) {
     qDebug() << "Track special target:" << (index == 0 ? "Sun" : "Moon");
+    m_currentSpecialTargetIndex = index;
     
     dwarf::ReqTrackSpecialTarget req;
     req.set_index(index);
@@ -184,12 +185,12 @@ void DwarfAstroController::stopTrackSpecialTarget() {
 // Stacking
 // ============================================================================
 
-void DwarfAstroController::startLiveStacking() {
-    qWarning() << "=== DwarfAstroController::startLiveStacking() called";
+void DwarfAstroController::startLiveStacking(bool useDarks) {
+    qWarning() << "=== DwarfAstroController::startLiveStacking() called, useDarks:" << useDarks;
     qWarning() << "    Module: 3, Cmd: 11005 (CAPTURE_RAW_LIVE_STACKING)";
     QByteArray data;
     data.append(static_cast<char>(0x08));
-    appendInt64Varint(data, static_cast<qint64>(-1));
+    appendInt64Varint(data, useDarks ? static_cast<qint64>(-1) : static_cast<qint64>(0));
     qWarning() << "    Payload size:" << data.size() << "bytes";
     sendCommand(AstroCmd::CAPTURE_RAW_LIVE_STACKING, data);
     qWarning() << "    Command sent, emitting stackingStarted signal";
@@ -206,10 +207,10 @@ void DwarfAstroController::stopLiveStacking() {
     emit stackingStopped();
 }
 
-void DwarfAstroController::startWideLiveStacking() {
+void DwarfAstroController::startWideLiveStacking(bool useDarks) {
     QByteArray data;
     data.append(static_cast<char>(0x08));
-    appendInt64Varint(data, static_cast<qint64>(-1));
+    appendInt64Varint(data, useDarks ? static_cast<qint64>(-1) : static_cast<qint64>(0));
     sendCommand(AstroCmd::CAPTURE_WIDE_RAW_LIVE_STACKING, data);
     emit stackingStarted();
 }
@@ -637,6 +638,20 @@ void DwarfAstroController::handleNotification(quint32 cmd, const QByteArray &dat
             dwarf::ResNotifyProgressCaptureRawDark res;
             if (res.ParseFromArray(data.data(), data.size())) {
                 emit darkFrameProgress(res.current_count(), res.total_count());
+            }
+            break;
+        }
+
+        case NotifyCmd::TRACKING_STATE: {
+            dwarf::ResNotifyStateAstroTracking res;
+            if (res.ParseFromArray(data.data(), data.size())) {
+                qDebug() << "Special tracking state:" << res.state();
+                if (res.state() == 1) { // Tracking active
+                    emit specialTrackingStarted(m_currentSpecialTargetIndex);
+                } else {
+                    m_currentSpecialTargetIndex = -1;
+                    emit specialTrackingStopped();
+                }
             }
             break;
         }
