@@ -52,6 +52,12 @@ public:
     // Go Live
     void goLive();
     
+    // Stacking state getters
+    bool isStacking() const { return m_stackingState != 0; }
+    int stackingState() const { return m_stackingState; }
+    void getStackingProgress(int &current, int &total, int &stacked, int &rejected) const;
+    void getStackingSettings(int &expIndex, int &gainIndex, int &binIndex) const;
+    
     // Handle incoming astro messages
     void handleAstroMessage(quint32 cmd, const QByteArray &data);
     
@@ -60,20 +66,20 @@ public:
 
 signals:
     void calibrationStarted();
-    void calibrationProgress(int progress);
+    void calibrationProgress(int step, int total);
     void calibrationCompleted(bool success);
-    void calibrationFailed(const QString &error);
+    void calibrationFailed(const QString &error, int code = 0);
     
     void gotoStarted(const QString &targetName);
     void gotoProgress(int step);  // 10, 20, 30, 40
     void gotoCompleted();
-    void gotoFailed(const QString &error);
+    void gotoFailed(const QString &error, int code = 0);
     
     void stackingStarted();
     void stackingProgress(int currentFrame, int totalFrames, int stackedFrames, int rejectedFrames);
     void stackingStateChanged(int state);  // 0=idle, 1=capturing, 2=stacking
     void stackingStopped();
-    void stackingFailed(const QString &error);
+    void stackingFailed(const QString &error, int code = 0);
     
     void darkFrameProgress(int current, int total);
     void darkFrameListReceived(const QList<QVariantMap> &frames);
@@ -92,4 +98,14 @@ private:
     
     DwarfWebSocketClient *m_client = nullptr;
     int m_currentSpecialTargetIndex = -1;
+    
+    // Stacking state tracking
+    int m_stackingState = 0; // 0=idle, 1=capturing, 2=stacking
+    int m_stackingCurrentFrame = 0;
+    int m_stackingTotalFrames = 0;
+    int m_stackingStackedFrames = 0;
+    int m_stackingRejectedFrames = 0;
+    int m_stackingExpIndex = -1;
+    int m_stackingGainIndex = -1;
+    int m_stackingBinIndex = -1;
 };

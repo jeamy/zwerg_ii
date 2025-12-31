@@ -94,6 +94,7 @@ private slots:
     void onStartStackingClicked();
     void onStopStackingClicked();
     void updateStackingProgress();
+    void refreshStackingUI();
     
     // Settings
     void onMagnitudeLimitChanged(double value);

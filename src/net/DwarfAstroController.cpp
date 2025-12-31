@@ -307,6 +307,19 @@ void DwarfAstroController::goLive() {
                 QByteArray::fromStdString(req.SerializeAsString()));
 }
 
+void DwarfAstroController::getStackingProgress(int &current, int &total, int &stacked, int &rejected) const {
+    current = m_stackingCurrentFrame;
+    total = m_stackingTotalFrames;
+    stacked = m_stackingStackedFrames;
+    rejected = m_stackingRejectedFrames;
+}
+
+void DwarfAstroController::getStackingSettings(int &expIndex, int &gainIndex, int &binIndex) const {
+    expIndex = m_stackingExpIndex;
+    gainIndex = m_stackingGainIndex;
+    binIndex = m_stackingBinIndex;
+}
+
 // ============================================================================
 // Message Handler
 // ============================================================================
@@ -325,9 +338,12 @@ void DwarfAstroController::handleAstroMessage(quint32 cmd, const QByteArray &dat
                         if (res.code() == -10501) {
                             errorMsg = tr("Camera is closed! Calibration requires an open camera.\n"
                                           "Please wait for the stream to start or restart the app.");
+                        } else if (res.code() == -11501) {
+                            errorMsg = tr("Astro mode not ready! Please ensure the 'Go Live' / Astro mode is active.\n"
+                                          "Wait a few seconds and try again.");
                         }
                         qCritical() << "✗ Calibration start FAILED:" << errorMsg;
-                        emit calibrationFailed(errorMsg);
+                        emit calibrationFailed(errorMsg, res.code());
                     } else {
                         qWarning() << "    ✓ Calibration start command accepted";
                     }
@@ -377,16 +393,20 @@ void DwarfAstroController::handleAstroMessage(quint32 cmd, const QByteArray &dat
                         QString errorMsg;
                         switch (res.code()) {
                             case -10501:
-                                errorMsg = "Camera is closed! GOTO requires an open camera for plate solving.\n\n"
+                                errorMsg = tr("Camera is closed! GOTO requires an open camera for plate solving.\n\n"
                                           "Solution: Do NOT use 'Go Live' or stop stacking before GOTO.\n"
-                                          "Restart the app if needed.";
+                                          "Restart the app if needed.");
+                                break;
+                            case -11501:
+                                errorMsg = tr("Astro mode not ready! Please ensure the 'Go Live' / Astro mode is active.\n"
+                                          "Wait a few seconds and try again.");
                                 break;
                             default:
                                 errorMsg = QString("Error code: %1").arg(res.code());
                                 break;
                         }
                         qCritical() << "    ✗ GOTO failed:" << errorMsg;
-                        emit gotoFailed(errorMsg);
+                        emit gotoFailed(errorMsg, res.code());
                     }
                 }
             } else {
@@ -433,20 +453,24 @@ void DwarfAstroController::handleAstroMessage(quint32 cmd, const QByteArray &dat
                         QString errorMsg;
                         switch (res.code()) {
                             case -11513:
-                                errorMsg = "GOTO required! Please use GOTO to a target first, then start stacking.";
+                                errorMsg = tr("GOTO required! Please use GOTO to a target first, then start stacking.");
                                 break;
                             case -11514:
-                                errorMsg = "Parameters not suitable! Check exposure/gain settings.";
+                                errorMsg = tr("Parameters not suitable! Check exposure/gain settings.");
                                 break;
                             case -11503:
-                                errorMsg = "Dark frame not found! Capture dark frames first.";
+                                errorMsg = tr("Dark frame not found! Capture dark frames first.");
+                                break;
+                            case -11501:
+                                errorMsg = tr("Astro mode not ready! Please ensure the 'Go Live' / Astro mode is active.\n"
+                                          "Wait a few seconds and try again.");
                                 break;
                             default:
                                 errorMsg = QString("Error code: %1").arg(res.code());
                                 break;
                         }
                         qCritical() << "✗ Stacking start FAILED:" << errorMsg;
-                        emit stackingFailed(errorMsg);
+                        emit stackingFailed(errorMsg, res.code());
                     } else {
                         qWarning() << "    ✓ Stacking started successfully";
                     }
@@ -601,6 +625,16 @@ void DwarfAstroController::handleNotification(quint32 cmd, const QByteArray &dat
             }
             break;
         }
+
+        case NotifyCmd::DARK_OPERATION_STATE: {
+            dwarf::ResNotifyDarkOperationState res;
+            if (res.ParseFromArray(data.data(), data.size())) {
+                qDebug() << "Dark operation state:" << res.state();
+                // We don't have a specific signal for this yet, but we could add one
+                // if we want to track dark capture state separately.
+            }
+            break;
+        }
         
         case NotifyCmd::STACKING_STATE: {
             qDebug() << "=== STACKING_STATE notification, data size:" << data.size();
@@ -611,6 +645,13 @@ void DwarfAstroController::handleNotification(quint32 cmd, const QByteArray &dat
             dwarf::ResNotifyOperationState res;
             if (res.ParseFromArray(data.data(), data.size())) {
                 qDebug() << "Stacking state:" << res.state();
+                m_stackingState = res.state();
+                if (m_stackingState == 0) {
+                    m_stackingCurrentFrame = 0;
+                    m_stackingTotalFrames = 0;
+                    m_stackingStackedFrames = 0;
+                    m_stackingRejectedFrames = 0;
+                }
                 emit stackingStateChanged(res.state());
             } else {
                 qWarning() << "Failed to parse stacking state notification";
@@ -619,57 +660,79 @@ void DwarfAstroController::handleNotification(quint32 cmd, const QByteArray &dat
         }
         
         case NotifyCmd::STACKING_PROGRESS: {
-            qDebug() << "=== STACKING_PROGRESS notification, data size:" << data.size();
-            
-            if (data.size() == 0) {
-                qWarning() << "Empty stacking progress notification";
-                break;
+            dwarf::ResNotifyProgressCaptureRawLiveStacking res;
+            if (res.ParseFromArray(data.data(), data.size())) {
+                m_stackingTotalFrames = res.total_count();
+                m_stackingCurrentFrame = res.current_count();
+                m_stackingStackedFrames = res.stacked_count();
+                m_stackingRejectedFrames = res.rejected_count();
+                m_stackingExpIndex = res.exp_index();
+                m_stackingGainIndex = res.gain_index();
+                m_stackingBinIndex = res.bin_index();
+                
+                if (m_stackingStackedFrames <= 0)
+                    m_stackingStackedFrames = m_stackingCurrentFrame;
+
+                emit stackingProgress(m_stackingCurrentFrame, m_stackingTotalFrames, m_stackingStackedFrames, m_stackingRejectedFrames);
             }
-
-            const auto fields = parseVarintFields(data);
-            const int totalCount = firstFieldOr(fields, 1, 0);
-            const int updateCountType = firstFieldOr(fields, 2, -1);
-            const int currentCount = firstFieldOr(fields, 3, 0);
-            const int stackedCountRaw = firstFieldOr(fields, 4, 0);
-            const int expIndex = firstFieldOr(fields, 5, -1);
-            const int gainIndex = firstFieldOr(fields, 6, -1);
-
-            int stackedCount = stackedCountRaw;
-            if (stackedCount <= 0)
-                stackedCount = currentCount;
-
-            qDebug() << "✓ Stacking progress: current=" << currentCount
-                     << "total=" << totalCount << "stacked=" << stackedCount
-                     << "updateType=" << updateCountType << "expIndex=" << expIndex
-                     << "gainIndex=" << gainIndex;
-
-            emit stackingProgress(currentCount, totalCount, stackedCount, 0);
-            break;
-        }
-
-        case NotifyCmd::WIDE_STACKING_PROGRESS: {
-            if (data.size() == 0)
-                break;
-            const auto fields = parseVarintFields(data);
-            const int totalCount = firstFieldOr(fields, 1, 0);
-            const int currentCount = firstFieldOr(fields, 3, 0);
-            const int stackedCountRaw = firstFieldOr(fields, 4, 0);
-            int stackedCount = stackedCountRaw;
-            if (stackedCount <= 0)
-                stackedCount = currentCount;
-            emit stackingProgress(currentCount, totalCount, stackedCount, 0);
             break;
         }
         
+        case NotifyCmd::WIDE_STACKING_PROGRESS: {
+            dwarf::ResNotifyProgressCaptureWideRawLiveStacking res;
+            if (res.ParseFromArray(data.data(), data.size())) {
+                m_stackingTotalFrames = res.total_count();
+                m_stackingCurrentFrame = res.current_count();
+                m_stackingStackedFrames = res.stacked_count();
+                m_stackingRejectedFrames = res.rejected_count();
+                
+                if (m_stackingStackedFrames <= 0)
+                    m_stackingStackedFrames = m_stackingCurrentFrame;
+
+                emit stackingProgress(m_stackingCurrentFrame, m_stackingTotalFrames, m_stackingStackedFrames, m_stackingRejectedFrames);
+            }
+            break;
+        }
+        
+        case NotifyCmd::WIDE_STACKING_STATE: {
+            dwarf::ResNotifyWideOperationState res;
+            if (res.ParseFromArray(data.data(), data.size())) {
+                qDebug() << "Wide stacking state:" << res.state();
+                m_stackingState = res.state();
+                if (m_stackingState == 0) {
+                    m_stackingCurrentFrame = 0;
+                    m_stackingTotalFrames = 0;
+                    m_stackingStackedFrames = 0;
+                    m_stackingRejectedFrames = 0;
+                }
+                emit stackingStateChanged(res.state());
+            }
+            break;
+        }
+
         case NotifyCmd::CALIBRATION_STATE: {
             dwarf::ResNotifyStateAstroCalibration res;
             if (res.ParseFromArray(data.data(), data.size())) {
                 qDebug() << "Calibration state:" << res.state() << "code:" << res.code();
                 switch (res.state()) {
-                    case 0: emit calibrationCompleted(false); break; // Idle/Stopped
+                    case 0: break; // Idle/Stopped - don't emit as error
                     case 1: emit calibrationStarted(); break;
-                    case 2: emit calibrationCompleted(true); break;
-                    case 3: emit calibrationFailed(QString("Error code: %1").arg(res.code())); break;
+                    case 2:
+                    case 3:
+                        // State 3 is often "Tracking" or "Success" on some firmware versions,
+                        // especially when it follows a sequence of photos.
+                        emit calibrationCompleted(true);
+                        break;
+                    case 4:
+                        // State 4 indicates progress (taking photos)
+                        emit calibrationProgress(res.code(), 3);
+                        break;
+                    default:
+                        // Unknown states are emitted as failures only if code is non-zero
+                        if (res.code() != 0) {
+                            emit calibrationFailed(QString("Error code: %1").arg(res.code()), res.code());
+                        }
+                        break;
                 }
             }
             break;
@@ -683,7 +746,7 @@ void DwarfAstroController::handleNotification(quint32 cmd, const QByteArray &dat
                 if (res.state() == 1) {
                     emit gotoCompleted();
                 } else if (res.state() == 2) {
-                    emit gotoFailed(QString("Error code: %1").arg(res.code()));
+                    emit gotoFailed(QString("Error code: %1").arg(res.code()), res.code());
                 }
             }
             break;

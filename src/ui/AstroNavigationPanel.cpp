@@ -609,6 +609,11 @@ void AstroNavigationPanel::connectSignals() {
 
     connect(m_tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
         emit starMapOverlayRequested(index == 0);
+        
+        // When switching to Stacking tab (index 2)
+        if (index == 2 && m_astroController) {
+            refreshStackingUI();
+        }
     });
     connect(m_gotoButton, &QPushButton::clicked, this, &AstroNavigationPanel::onGotoClicked);
     connect(m_stopGotoButton, &QPushButton::clicked, this, &AstroNavigationPanel::onStopGotoClicked);
@@ -991,7 +996,8 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
             m_gotoButton->setText(tr("GOTO"));
             m_stopGotoButton->setEnabled(false);
         });
-        connect(m_astroController, &DwarfAstroController::gotoFailed, this, [this](const QString &error) {
+        connect(m_astroController, &DwarfAstroController::gotoFailed, this, [this](const QString &error, int code) {
+            Q_UNUSED(code);
             m_gotoButton->setEnabled(true);
             m_gotoButton->setText(tr("GOTO"));
             m_stopGotoButton->setEnabled(false);
@@ -1009,6 +1015,19 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
             m_calibrationStatusLabel->setText(tr("Plate solving..."));
             m_calibrationStatusLabel->setStyleSheet("color: blue;");
         });
+        connect(m_astroController, &DwarfAstroController::calibrationProgress, this, [this](int step, int total) {
+            if (m_calibrationTimeoutTimer)
+                m_calibrationTimeoutTimer->stop();
+            
+            QString msg;
+            if (total > 0) {
+                msg = tr("Taking photo %1 of %2...").arg(step).arg(total);
+            } else {
+                msg = tr("Taking photo %1...").arg(step);
+            }
+            m_calibrationStatusLabel->setText(msg);
+            m_calibrationStatusLabel->setStyleSheet("color: blue;");
+        });
         connect(m_astroController, &DwarfAstroController::calibrationCompleted, this, [this](bool success) {
             if (m_calibrationTimeoutTimer)
                 m_calibrationTimeoutTimer->stop();
@@ -1024,9 +1043,22 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
                 m_calibrationStatusLabel->setStyleSheet("color: red;");
             }
         });
-        connect(m_astroController, &DwarfAstroController::calibrationFailed, this, [this](const QString &error) {
+        connect(m_astroController, &DwarfAstroController::calibrationFailed, this, [this](const QString &error, int code) {
             if (m_calibrationTimeoutTimer)
                 m_calibrationTimeoutTimer->stop();
+            
+            // Error -11501: Astro mode not ready. Auto-retry after a delay.
+            if (code == -11501) {
+                m_calibrationStatusLabel->setText(tr("Astro mode initializing... retrying..."));
+                m_calibrationStatusLabel->setStyleSheet("color: orange;");
+                
+                // Retry after 2 seconds
+                QTimer::singleShot(2000, this, [this]() {
+                    onCalibrateClicked();
+                });
+                return;
+            }
+
             m_calibrateButton->setEnabled(true);
             m_calibrateButton->setText(tr("Calibrate"));
             if (m_cancelCalibrationButton)
@@ -1048,19 +1080,44 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
                 case 0:
                     m_stackingStatusLabel->setText(tr("Idle"));
                     m_isStacking = false;
+                    m_stackingTimer->stop();
                     m_startStackingButton->setEnabled(true);
                     m_stopStackingButton->setEnabled(false);
+                    m_numFramesSpin->setEnabled(true);
+                    m_astroExposureSlider->setEnabled(true);
+                    m_astroGainSlider->setEnabled(true);
                     break;
                 case 1:
                     m_stackingStatusLabel->setText(tr("Capturing..."));
+                    m_isStacking = true;
+                    m_startStackingButton->setEnabled(false);
+                    m_stopStackingButton->setEnabled(true);
+                    m_numFramesSpin->setEnabled(false);
+                    m_astroExposureSlider->setEnabled(false);
+                    m_astroGainSlider->setEnabled(false);
+                    if (!m_stackingTimer->isActive()) {
+                        m_stackingElapsed.start();
+                        m_stackingTimer->start(100);
+                    }
                     break;
                 case 2:
                     m_stackingStatusLabel->setText(tr("Stacking..."));
+                    m_isStacking = true;
+                    m_startStackingButton->setEnabled(false);
+                    m_stopStackingButton->setEnabled(true);
+                    m_numFramesSpin->setEnabled(false);
+                    m_astroExposureSlider->setEnabled(false);
+                    m_astroGainSlider->setEnabled(false);
+                    if (!m_stackingTimer->isActive()) {
+                        m_stackingElapsed.start();
+                        m_stackingTimer->start(100);
+                    }
                     break;
             }
         });
         
-        connect(m_astroController, &DwarfAstroController::stackingFailed, this, [this](const QString &error) {
+        connect(m_astroController, &DwarfAstroController::stackingFailed, this, [this](const QString &error, int code) {
+            Q_UNUSED(code);
             m_stackingStatusLabel->setText(tr("Failed: %1").arg(error));
             m_isStacking = false;
             m_stackingTimer->stop();
@@ -1180,13 +1237,13 @@ void AstroNavigationPanel::onCalibrateClicked() {
     m_calibrationStatusLabel->setText(tr("Starting..."));
     m_calibrationStatusLabel->setStyleSheet("color: blue;");
     
-    // Small delay to ensure goLive() is processed before calibration start.
-    // 500ms is safer for the device to switch internal modes.
-    QTimer::singleShot(500, this, [this]() {
+    // Increase delay to ensure Astro mode (goLive) is fully initialized.
+    // Error -11501 suggests the device needs more time to transition.
+    QTimer::singleShot(1500, this, [this]() {
         if (m_astroController) {
             m_astroController->startCalibration();
             if (m_calibrationTimeoutTimer)
-                m_calibrationTimeoutTimer->start(15000); // 15s timeout for initial response
+                m_calibrationTimeoutTimer->start(20000); // 20s timeout
         }
     });
 }
@@ -1419,26 +1476,125 @@ void AstroNavigationPanel::updateStackingProgress() {
     if (!m_isStacking) return;
     
     // Update elapsed time
-    qint64 elapsed = m_stackingElapsed.elapsed();
-    int hours = elapsed / 3600000;
-    int mins = (elapsed % 3600000) / 60000;
-    int secs = (elapsed % 60000) / 1000;
-    m_elapsedTimeLabel->setText(QString("%1:%2:%3")
-        .arg(hours, 2, 10, QChar('0'))
-        .arg(mins, 2, 10, QChar('0'))
-        .arg(secs, 2, 10, QChar('0')));
+    if (m_stackingElapsed.isValid()) {
+        qint64 elapsed = m_stackingElapsed.elapsed();
+        int hours = elapsed / 3600000;
+        int mins = (elapsed % 3600000) / 60000;
+        int secs = (elapsed % 60000) / 1000;
+        m_elapsedTimeLabel->setText(QString("%1:%2:%3")
+            .arg(hours, 2, 10, QChar('0'))
+            .arg(mins, 2, 10, QChar('0'))
+            .arg(secs, 2, 10, QChar('0')));
+    }
     
-    // Simulate progress for now (TODO: get actual progress from camera)
-    // In real implementation, this would be updated by camera callbacks
-    m_frameCountLabel->setText(QString("%1 / %2").arg(m_currentFrame).arg(m_totalFrames));
+    // Update labels and progress bar
+    if (m_totalFrames > 0) {
+        m_frameCountLabel->setText(QString("%1 / %2").arg(m_currentFrame).arg(m_totalFrames));
+        m_stackingProgress->setRange(0, m_totalFrames);
+    } else {
+        m_frameCountLabel->setText(QString("%1 / ∞").arg(m_currentFrame));
+        m_stackingProgress->setRange(0, 0); // Indeterminate or just show current vs nothing
+    }
+    
     m_rejectedFramesLabel->setText(QString::number(m_rejectedFrames));
     m_stackingProgress->setValue(m_currentFrame);
     
-    if (m_currentFrame >= m_totalFrames) {
+    if (m_totalFrames > 0 && m_currentFrame >= m_totalFrames) {
         m_stackingStatusLabel->setText(tr("Complete!"));
         onStopStackingClicked();
     } else {
-        m_stackingStatusLabel->setText(tr("Capturing frame %1...").arg(m_currentFrame + 1));
+        int state = m_astroController ? m_astroController->stackingState() : 0;
+        if (state == 1) {
+            m_stackingStatusLabel->setText(tr("Capturing frame %1...").arg(m_currentFrame + 1));
+        } else if (state == 2) {
+            m_stackingStatusLabel->setText(tr("Stacking frame %1...").arg(m_currentFrame));
+        }
+    }
+}
+
+void AstroNavigationPanel::refreshStackingUI() {
+    if (!m_astroController) return;
+
+    int current, total, stacked, rejected;
+    m_astroController->getStackingProgress(current, total, stacked, rejected);
+    
+    m_isStacking = m_astroController->isStacking();
+    m_currentFrame = stacked;
+    m_totalFrames = total;
+    m_rejectedFrames = rejected;
+
+    if (m_isStacking) {
+        m_startStackingButton->setEnabled(false);
+        m_stopStackingButton->setEnabled(true);
+        m_numFramesSpin->setEnabled(false);
+        m_astroExposureSlider->setEnabled(false);
+        m_astroGainSlider->setEnabled(false);
+        
+        m_useDarkFramesCheck->setEnabled(false);
+        m_captureDarksButton->setEnabled(false);
+        m_captureFlatsButton->setEnabled(false);
+        m_captureBiasButton->setEnabled(false);
+        
+        m_stackingProgress->setRange(0, m_totalFrames > 0 ? m_totalFrames : 100);
+        m_stackingProgress->setValue(m_currentFrame);
+        
+        int expIndex, gainIndex, binIndex;
+        m_astroController->getStackingSettings(expIndex, gainIndex, binIndex);
+        
+        if (expIndex != -1) {
+            const auto &expValues = astroExposureValues();
+            for (int i = 0; i < expValues.size(); ++i) {
+                if (expValues[i].first == expIndex) {
+                    m_astroExposureSlider->setValue(i);
+                    m_astroExposureValueLabel->setText(formatExposureValue(i));
+                    break;
+                }
+            }
+        }
+        
+        if (gainIndex != -1) {
+            const auto &gainValues = astroGainValues();
+            for (int i = 0; i < gainValues.size(); ++i) {
+                if (gainValues[i].first == gainIndex) {
+                    m_astroGainSlider->setValue(i);
+                    m_astroGainValueLabel->setText(formatGainValue(i));
+                    break;
+                }
+            }
+        }
+        
+        int state = m_astroController->stackingState();
+        if (state == 1) {
+            m_stackingStatusLabel->setText(tr("Capturing..."));
+        } else if (state == 2) {
+            m_stackingStatusLabel->setText(tr("Stacking..."));
+        } else {
+            m_stackingStatusLabel->setText(tr("Active"));
+        }
+        
+        m_frameCountLabel->setText(QString("%1 / %2").arg(m_currentFrame).arg(m_totalFrames));
+        m_rejectedFramesLabel->setText(QString::number(m_rejectedFrames));
+        
+        // Ensure timer and elapsed tracking are active
+        if (!m_stackingElapsed.isValid()) {
+            m_stackingElapsed.start();
+        }
+        if (!m_stackingTimer->isActive()) {
+            m_stackingTimer->start(100);
+        }
+    } else {
+        m_startStackingButton->setEnabled(true);
+        m_stopStackingButton->setEnabled(false);
+        m_numFramesSpin->setEnabled(true);
+        m_astroExposureSlider->setEnabled(true);
+        m_astroGainSlider->setEnabled(true);
+        
+        m_useDarkFramesCheck->setEnabled(true);
+        m_captureDarksButton->setEnabled(m_useDarkFramesCheck->isChecked());
+        m_captureFlatsButton->setEnabled(true);
+        m_captureBiasButton->setEnabled(true);
+        
+        m_stackingStatusLabel->setText(tr("Idle"));
     }
 }
 
