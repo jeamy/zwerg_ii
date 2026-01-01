@@ -394,8 +394,11 @@ void DwarfAstroController::handleAstroMessage(quint32 cmd, const QByteArray &dat
                         switch (res.code()) {
                             case -10501:
                                 errorMsg = tr("Camera is closed! GOTO requires an open camera for plate solving.\n\n"
-                                          "Solution: Do NOT use 'Go Live' or stop stacking before GOTO.\n"
-                                          "Restart the app if needed.");
+                                              "Solution:\n"
+                                              "- Ensure the camera streams are running (connect + start streaming).\n"
+                                              "- Ensure Astro mode is active (Go Live) before starting GOTO.\n"
+                                              "- Do not stop streaming/stacking during GOTO.\n"
+                                              "Restart the app if needed.");
                                 break;
                             case -11501:
                                 errorMsg = tr("Astro mode not ready! Please ensure the 'Go Live' / Astro mode is active.\n"

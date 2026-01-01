@@ -120,6 +120,9 @@ private:
     void loadCatalog();
     void updateVisibleObjectsList();
     void gotoObject(const CelestialObject &obj);
+
+    void startPendingGoto(int delayMs);
+    void sendPendingGotoNow();
     
     // Formatting helpers
     QString formatExposureValue(int sliderIndex) const;
@@ -220,4 +223,13 @@ private:
     
     // Current selection
     CelestialObject m_selectedObject;
+
+    bool m_hasPendingGoto = false;
+    int m_pendingGotoRetryCount = 0;
+    bool m_pendingGotoWaitingCalibration = false;
+    double m_pendingGotoRa = 0.0;
+    double m_pendingGotoDec = 0.0;
+    bool m_pendingGotoIsSolarSystem = false;
+    int m_pendingGotoSolarSystemIndex = -1;
+    QString m_pendingGotoDisplayName;
 };

@@ -377,7 +377,14 @@ void AstroNavigationPanel::setupStackingTab() {
     // Gain slider (like camera panel)
     settingsLayout->addWidget(new QLabel(tr("Gain:")), 2, 0);
     m_astroGainSlider = new QSlider(Qt::Horizontal, settingsGroup);
-    m_astroGainSlider->setRange(0, astroGainValues().size() - 1);
+    int minGainUiIndex = 0;
+    for (int i = 0; i < astroGainValues().size(); ++i) {
+        if (astroGainValues().at(i).second >= 40) {
+            minGainUiIndex = i;
+            break;
+        }
+    }
+    m_astroGainSlider->setRange(minGainUiIndex, astroGainValues().size() - 1);
     int defaultGainUiIndex = 0;
     for (int i = 0; i < astroGainValues().size(); ++i) {
         if (astroGainValues().at(i).second == 60) {
@@ -385,6 +392,8 @@ void AstroNavigationPanel::setupStackingTab() {
             break;
         }
     }
+    if (defaultGainUiIndex < minGainUiIndex)
+        defaultGainUiIndex = minGainUiIndex;
     m_astroGainSlider->setValue(defaultGainUiIndex); // Default: 60
     m_astroGainValueLabel = new QLabel(formatGainValue(defaultGainUiIndex), settingsGroup);
     m_astroGainValueLabel->setMinimumWidth(40);
@@ -995,12 +1004,27 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
             m_gotoButton->setEnabled(true);
             m_gotoButton->setText(tr("GOTO"));
             m_stopGotoButton->setEnabled(false);
+
+            m_hasPendingGoto = false;
+            m_pendingGotoRetryCount = 0;
+            m_pendingGotoWaitingCalibration = false;
         });
         connect(m_astroController, &DwarfAstroController::gotoFailed, this, [this](const QString &error, int code) {
-            Q_UNUSED(code);
+            if ((code == -10501 || code == -11501) && m_hasPendingGoto && m_pendingGotoRetryCount < 1) {
+                m_pendingGotoRetryCount += 1;
+                if (m_gotoButton)
+                    m_gotoButton->setText(tr("Retrying..."));
+                startPendingGoto(2500);
+                return;
+            }
+
             m_gotoButton->setEnabled(true);
             m_gotoButton->setText(tr("GOTO"));
             m_stopGotoButton->setEnabled(false);
+
+            m_hasPendingGoto = false;
+            m_pendingGotoRetryCount = 0;
+            m_pendingGotoWaitingCalibration = false;
             QMessageBox::warning(this, tr("GOTO Failed"), error);
         });
         
@@ -1042,6 +1066,11 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
                 m_calibrationStatusLabel->setText(tr("Calibration failed"));
                 m_calibrationStatusLabel->setStyleSheet("color: red;");
             }
+
+            if (success && m_hasPendingGoto && m_pendingGotoWaitingCalibration) {
+                m_pendingGotoWaitingCalibration = false;
+                sendPendingGotoNow();
+            }
         });
         connect(m_astroController, &DwarfAstroController::calibrationFailed, this, [this](const QString &error, int code) {
             if (m_calibrationTimeoutTimer)
@@ -1065,6 +1094,11 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
                 m_cancelCalibrationButton->setEnabled(false);
             m_calibrationStatusLabel->setText(tr("Failed: %1").arg(error));
             m_calibrationStatusLabel->setStyleSheet("color: red;");
+
+            if (m_hasPendingGoto && m_pendingGotoWaitingCalibration) {
+                m_pendingGotoWaitingCalibration = false;
+                Q_UNUSED(code);
+            }
         });
         
         // Connect stacking signals
@@ -1217,6 +1251,10 @@ void AstroNavigationPanel::onStopGotoClicked() {
         m_gotoButton->setEnabled(true);
         m_gotoButton->setText(tr("GOTO"));
         m_stopGotoButton->setEnabled(false);
+
+        m_hasPendingGoto = false;
+        m_pendingGotoRetryCount = 0;
+        m_pendingGotoWaitingCalibration = false;
     }
 }
 
@@ -1288,14 +1326,55 @@ void AstroNavigationPanel::gotoObject(const CelestialObject &obj) {
         {"Sun", 9}, {"Moon", 8}, {"Mercury", 1}, {"Venus", 2}, {"Mars", 3},
         {"Jupiter", 4}, {"Saturn", 5}, {"Uranus", 6}, {"Neptune", 7}
     };
-    
-    if (solarSystemObjects.contains(obj.name)) {
-        // Solar system object - needs GPS coordinates
-        int index = solarSystemObjects[obj.name];
-        m_astroController->oneClickGotoSolarSystem(index, longitude(), latitude(), displayName);
+
+    const bool isSolarSystemTarget = solarSystemObjects.contains(obj.name);
+    const int solarSystemIndex = isSolarSystemTarget ? solarSystemObjects.value(obj.name) : -1;
+
+    m_hasPendingGoto = true;
+    m_pendingGotoRetryCount = 0;
+    m_pendingGotoWaitingCalibration = false;
+    m_pendingGotoRa = obj.ra;
+    m_pendingGotoDec = obj.dec;
+    m_pendingGotoIsSolarSystem = isSolarSystemTarget;
+    m_pendingGotoSolarSystemIndex = solarSystemIndex;
+    m_pendingGotoDisplayName = displayName;
+
+    startPendingGoto(1500);
+}
+
+void AstroNavigationPanel::startPendingGoto(int delayMs) {
+    if (!m_astroController || !m_hasPendingGoto)
+        return;
+
+    m_astroController->goLive();
+
+    if (m_cameraController) {
+        m_cameraController->openCamera(DwarfCameraController::CameraKind::Tele, true, 0);
+        m_cameraController->openCamera(DwarfCameraController::CameraKind::Wide, false, 0);
+    }
+
+    m_pendingGotoWaitingCalibration = true;
+    QTimer::singleShot(delayMs, this, [this]() {
+        if (!m_astroController || !m_hasPendingGoto)
+            return;
+
+        if (!m_pendingGotoWaitingCalibration)
+            return;
+
+        m_astroController->startCalibration();
+        if (m_calibrationTimeoutTimer)
+            m_calibrationTimeoutTimer->start(25000);
+    });
+}
+
+void AstroNavigationPanel::sendPendingGotoNow() {
+    if (!m_astroController || !m_hasPendingGoto)
+        return;
+
+    if (m_pendingGotoIsSolarSystem) {
+        m_astroController->oneClickGotoSolarSystem(m_pendingGotoSolarSystemIndex, longitude(), latitude(), m_pendingGotoDisplayName);
     } else {
-        // Deep sky object - only needs RA/Dec
-        m_astroController->oneClickGotoDSO(obj.ra, obj.dec, displayName);
+        m_astroController->oneClickGotoDSO(m_pendingGotoRa, m_pendingGotoDec, m_pendingGotoDisplayName);
     }
 }
 
@@ -1809,6 +1888,7 @@ void AstroNavigationPanel::loadSettings() {
 
     if (m_astroGainSlider) {
         int gainIndex = cfg->getValue("astro", "gain_index", m_astroGainSlider->value()).toInt();
+        gainIndex = qBound(m_astroGainSlider->minimum(), gainIndex, m_astroGainSlider->maximum());
         m_astroGainSlider->blockSignals(true);
         m_astroGainSlider->setValue(gainIndex);
         m_astroGainSlider->blockSignals(false);
