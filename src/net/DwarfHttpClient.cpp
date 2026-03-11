@@ -4,6 +4,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QFileInfo>
 #include <QNetworkRequest>
 #include <QUrl>
 #include <functional>
@@ -87,47 +88,101 @@ void DwarfHttpClient::fetchDefaultParamsConfig() {
 }
 
 void DwarfHttpClient::deleteMedia(const QString &filePath) {
-  // DWARF II HTTP API endpoint for deleting media
-  // Try the /sdcard/deleteFile endpoint which is more likely to exist
-  QUrl url(QString("http://%1:%2/sdcard/deleteFile").arg(m_ip).arg(HTTP_PORT));
-  QNetworkRequest request(url);
-  request.setHeader(QNetworkRequest::ContentTypeHeader,
-                    QStringLiteral("application/json"));
+  auto sendDeleteRequest =
+      std::make_shared<std::function<void(bool legacyFallbackAllowed)>>();
 
-  // Try with filePath directly
-  QJsonObject payload;
-  payload.insert(QStringLiteral("filePath"), filePath);
-  QJsonDocument doc(payload);
+  *sendDeleteRequest = [this, filePath, sendDeleteRequest](bool legacyFallbackAllowed) {
+    const bool useLegacyEndpoint = !legacyFallbackAllowed;
+    const QString endpoint = useLegacyEndpoint ? QStringLiteral("/sdcard/deleteFile")
+                                               : QStringLiteral("/album/delete");
+    QUrl url(QString("http://%1:%2%3").arg(m_ip).arg(HTTP_PORT).arg(endpoint));
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader,
+                      QStringLiteral("application/json"));
 
-  qDebug() << "[HttpClient] Deleting media:" << filePath;
-  qDebug() << "[HttpClient] URL:" << url.toString();
-  qDebug() << "[HttpClient] Request:" << doc.toJson();
-
-  QNetworkReply *reply = m_manager->post(request, doc.toJson());
-
-  connect(reply, &QNetworkReply::finished, this, [this, reply, filePath]() {
-    QByteArray responseData = reply->readAll();
-    qDebug() << "[HttpClient] Delete response code:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    qDebug() << "[HttpClient] Delete response:" << responseData;
-
-    if (reply->error() == QNetworkReply::NoError) {
-      QJsonDocument response = QJsonDocument::fromJson(responseData);
-      QJsonObject obj = response.object();
-      int code = obj.value(QStringLiteral("code")).toInt(-1);
-      QString msg = obj.value(QStringLiteral("msg")).toString();
-
-      if (code == 0 || msg.contains("success", Qt::CaseInsensitive)) {
-        emit mediaDeleted(filePath);
-      } else if (msg.contains("not implemented", Qt::CaseInsensitive)) {
-        // Try alternative: maybe we need to use WebSocket command
-        qWarning() << "[HttpClient] Delete API not implemented on this DWARF firmware";
-        emit deleteError(filePath, tr("Delete not supported by DWARF firmware. Please delete files using the DWARF app."));
-      } else {
-        emit deleteError(filePath, msg.isEmpty() ? tr("Unknown error") : msg);
-      }
+    QJsonObject payload;
+    if (useLegacyEndpoint) {
+      payload.insert(QStringLiteral("filePath"), filePath);
     } else {
-      emit deleteError(filePath, reply->errorString());
+      QJsonObject item;
+      item.insert(QStringLiteral("mediaType"), 0);
+      item.insert(QStringLiteral("filePath"), filePath);
+      item.insert(QStringLiteral("fileName"), QFileInfo(filePath).fileName());
+
+      QJsonArray datas;
+      datas.append(item);
+      payload.insert(QStringLiteral("datas"), datas);
     }
-    reply->deleteLater();
-  });
+
+    const QJsonDocument doc(payload);
+    qDebug() << "[HttpClient] Deleting media:" << filePath
+             << "endpoint:" << endpoint;
+    qDebug() << "[HttpClient] Delete request:" << doc.toJson(QJsonDocument::Compact);
+
+    QNetworkReply *reply = m_manager->post(request, doc.toJson());
+    connect(reply, &QNetworkReply::finished, this,
+            [this, reply, filePath, sendDeleteRequest, legacyFallbackAllowed]() {
+              const QByteArray responseData = reply->readAll();
+              const int httpCode =
+                  reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+              qDebug() << "[HttpClient] Delete response code:" << httpCode;
+              qDebug() << "[HttpClient] Delete response:" << responseData;
+
+              auto retryLegacy = [reply, sendDeleteRequest, legacyFallbackAllowed]() {
+                if (!legacyFallbackAllowed)
+                  return false;
+                const int httpCode =
+                    reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+                const QString networkError = reply->errorString();
+                const bool missingEndpoint =
+                    reply->error() == QNetworkReply::ContentNotFoundError ||
+                    httpCode == 404 ||
+                    networkError.contains(QStringLiteral("404")) ||
+                    networkError.contains(QStringLiteral("not found"),
+                                          Qt::CaseInsensitive);
+                return missingEndpoint;
+              };
+
+              if (reply->error() == QNetworkReply::NoError) {
+                const QJsonDocument response = QJsonDocument::fromJson(responseData);
+                const QJsonObject obj = response.object();
+                const int code = obj.value(QStringLiteral("code")).toInt(-1);
+                const QString msg = obj.value(QStringLiteral("msg")).toString();
+
+                if (code == 0 || msg.contains(QStringLiteral("success"),
+                                              Qt::CaseInsensitive)) {
+                  emit mediaDeleted(filePath);
+                } else if (legacyFallbackAllowed &&
+                           (msg.contains(QStringLiteral("not implemented"),
+                                         Qt::CaseInsensitive) ||
+                            msg.contains(QStringLiteral("not found"),
+                                         Qt::CaseInsensitive) ||
+                            msg.contains(QStringLiteral("404")))) {
+                  qWarning() << "[HttpClient] /album/delete unavailable, retrying legacy delete";
+                  reply->deleteLater();
+                  (*sendDeleteRequest)(false);
+                  return;
+                } else if (msg.contains(QStringLiteral("not implemented"),
+                                        Qt::CaseInsensitive)) {
+                  emit deleteError(
+                      filePath,
+                      tr("Delete not supported by DWARF firmware. Please delete files using the DWARF app."));
+                } else {
+                  emit deleteError(filePath,
+                                   msg.isEmpty() ? tr("Unknown error") : msg);
+                }
+              } else if (retryLegacy()) {
+                qWarning() << "[HttpClient] /album/delete HTTP endpoint missing, retrying legacy delete";
+                reply->deleteLater();
+                (*sendDeleteRequest)(false);
+                return;
+              } else {
+                emit deleteError(filePath, reply->errorString());
+              }
+
+              reply->deleteLater();
+            });
+  };
+
+  (*sendDeleteRequest)(true);
 }

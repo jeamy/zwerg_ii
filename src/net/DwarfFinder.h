@@ -32,11 +32,13 @@ private slots:
   void onSocketConnected();
   void onSocketError(QAbstractSocket::SocketError socketError);
   void onDeviceInfoReceived(QNetworkReply *reply);
+  void onFirmwareVersionReceived(QNetworkReply *reply);
 
 private:
   void checkNextIp();
   void checkIp(const QString &ip);
   void getDeviceInfo(const QString &ip);
+  void requestFirmwareVersion(const QString &ip, const QString &name);
   void handleSocketTimeout(QTcpSocket *socket);
 
   QList<QString> m_ipsToScan;

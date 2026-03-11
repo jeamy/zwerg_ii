@@ -20,7 +20,6 @@ Nicht vollständig umgesetzt ist die API aber klar in den Bereichen:
 - Device-/HTTP-Management
 - Tracking-Modul 7 ist erst teilweise verifiziert
 - Fokus-API ist weitgehend, aber nicht vollständig verifiziert
-- dokumentierte Album-Delete-API
 - dokumentierte RTSP-Nutzung
 
 Zusätzlich gibt es mehrere Stellen, an denen `zwergII` nicht der dokumentierten API folgt, sondern auf Reverse Engineering und Firmware-Workarounds setzt. Das ist funktional nachvollziehbar, aber nicht gleichbedeutend mit sauberer Spezifikationsabdeckung.
@@ -36,8 +35,8 @@ Zusätzlich gibt es mehrere Stellen, an denen `zwergII` nicht der dokumentierten
 
 | API-Bereich | Status | Einschätzung |
 |---|---|---|
-| HTTP Device API | Teilweise | Discovery vorhanden, aber mit abweichendem Endpoint; Name/Passwort/Firmware-Upload fehlen |
-| HTTP Album API | Teilweise | `mediaInfos` vorhanden; `mediaCounts` fehlt; Delete weicht von Spec ab |
+| HTTP Device API | Teilweise bis weitgehend | Discovery nutzt jetzt `/deviceInfo` plus `/firmwareVersion`; Name/Passwort/Firmware-Upload fehlen weiter |
+| HTTP Album API | Teilweise bis weitgehend | `mediaInfos` und `delete` sind da; `mediaCounts` fehlt |
 | JPG Stream | Implementiert | MJPEG `mainstream`/`secondstream` wird genutzt |
 | RTSP Stream | Fehlend | In Doku vorhanden, im Qt-Client nicht verwendet |
 | Kamera Tele | Teilweise bis weitgehend | Open/Close/Photo/Video/Params da; Burst/Timelapse fehlen |
@@ -74,19 +73,19 @@ Spezifikation:
 - `POST /uploadFirmware`
 
 Implementiert:
-- Discovery ruft Geräteinfo ab und extrahiert Name/Firmware heuristisch in [src/net/DwarfFinder.cpp](/media/data/programming/zwergII/src/net/DwarfFinder.cpp#L199).
+- Discovery nutzt jetzt primär den dokumentierten Endpoint `/deviceInfo` in [src/net/DwarfFinder.cpp](/media/data/programming/zwergII/src/net/DwarfFinder.cpp#L218).
+- Wenn in der Device-Info keine Version enthalten ist, wird zusätzlich `/firmwareVersion` abgefragt, siehe [src/net/DwarfFinder.cpp](/media/data/programming/zwergII/src/net/DwarfFinder.cpp#L292).
 
 Fehlt:
 - Name/Passwort ändern
-- dedizierter Firmware-Request
 - Firmware-Upload
 
-Abweichend/Falsch:
-- Es wird `http://IP:8082/getdeviceInfo` verwendet statt des in der Doku beschriebenen `/deviceInfo`, siehe [src/net/DwarfFinder.cpp](/media/data/programming/zwergII/src/net/DwarfFinder.cpp#L199).
-- Firmware wird nicht über den dokumentierten Endpoint abgefragt, sondern aus einer Device-Info-Antwort herausgeraten, siehe [src/net/DwarfFinder.cpp](/media/data/programming/zwergII/src/net/DwarfFinder.cpp#L265).
+Teilweise / abweichend:
+- Für ältere/abweichende Firmwares bleibt `getdeviceInfo` als Fallback erhalten, siehe [src/net/DwarfFinder.cpp](/media/data/programming/zwergII/src/net/DwarfFinder.cpp#L257).
 
 Bewertung:
-- Discovery ist vorhanden, aber die Device-HTTP-API ist nur rudimentär implementiert.
+- Discovery und Firmware-Ermittlung sind jetzt deutlich näher an der Spezifikation.
+- Vollständig offen bleibt der schreibende Teil der Device-HTTP-API.
 
 ### 3. HTTP Album API
 
@@ -98,20 +97,18 @@ Spezifikation:
 Implementiert:
 - Medienliste via `/album/list/mediaInfos` in [src/net/DwarfHttpClient.cpp](/media/data/programming/zwergII/src/net/DwarfHttpClient.cpp#L15).
 - Gallery/UI-Klassifikation nach `mediaType` in [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp#L2140).
+- Delete nutzt jetzt primär den dokumentierten Endpoint `/album/delete`, siehe [src/net/DwarfHttpClient.cpp](/media/data/programming/zwergII/src/net/DwarfHttpClient.cpp#L89).
 
 Teilweise:
 - `mediaCounts` wird nicht verwendet; die UI baut ihre Kategorien aus `mediaInfos` nach.
 
-Fehlend:
-- dokumentierter Delete-Endpoint `/album/delete`
-
 Abweichend/Falsch:
-- Delete nutzt stattdessen `/sdcard/deleteFile`, siehe [src/net/DwarfHttpClient.cpp](/media/data/programming/zwergII/src/net/DwarfHttpClient.cpp#L89).
-- Wenn das nicht funktioniert, fällt die App auf USB/MTP zurück, siehe [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp#L2605) und [src/net/DwarfMtpClient.cpp](/media/data/programming/zwergII/src/net/DwarfMtpClient.cpp#L135).
+- Als Firmware-Fallback bleibt `/sdcard/deleteFile` zusätzlich erhalten, falls `/album/delete` auf älteren Geräten fehlt, siehe [src/net/DwarfHttpClient.cpp](/media/data/programming/zwergII/src/net/DwarfHttpClient.cpp#L89).
+- Wenn beide HTTP-Wege nicht funktionieren, fällt die App weiter auf USB/MTP zurück, siehe [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp#L3096) und [src/net/DwarfMtpClient.cpp](/media/data/programming/zwergII/src/net/DwarfMtpClient.cpp#L153).
 
 Bewertung:
 - Listen/Thumbnails/Download sind brauchbar.
-- Delete ist keine saubere Spezifikationsumsetzung, sondern ein Workaround.
+- Delete ist jetzt spezifikationsnah umgesetzt, mit pragmatischem Legacy-Fallback.
 
 ### 4. JPG- und RTSP-Streams
 
@@ -287,9 +284,9 @@ Bewertung:
 
 ### Hoch
 
-1. Album-Delete auf dokumentierten API-Pfad prüfen und sauber abbilden
-2. Tracking-Modul 7 gegen reale Firmware validieren, insbesondere `14809/14810`
-3. Fokus- und Tracking-Neuerungen gegen reale Firmware validieren
+1. Tracking-Modul 7 gegen reale Firmware validieren, insbesondere `14809/14810`
+2. Fokus- und Tracking-Neuerungen gegen reale Firmware validieren
+3. Device-HTTP-API vervollständigen (Name/Passwort, Firmware-Upload)
 
 ### Mittel
 
