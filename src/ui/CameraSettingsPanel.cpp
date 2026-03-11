@@ -274,13 +274,34 @@ void CameraSettingsPanel::setupUi() {
   captureLayout->addWidget(m_photoButton, 1);
   captureLayout->addWidget(m_recButton, 1);
 
+  auto *captureButtonsRow2 = new QWidget(m_captureRow);
+  auto *captureLayout2 = new QHBoxLayout(captureButtonsRow2);
+  captureLayout2->setContentsMargins(0, 0, 0, 0);
+  captureLayout2->setSpacing(8);
+
+  m_burstButton = new QPushButton(tr("Burst"), captureButtonsRow2);
+  m_timelapseButton = new QPushButton(tr("Timelapse"), captureButtonsRow2);
+  m_burstButton->setCheckable(false);
+  m_timelapseButton->setCheckable(false);
+  m_burstButton->setMinimumHeight(32);
+  m_timelapseButton->setMinimumHeight(32);
+  m_burstButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  m_timelapseButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  captureLayout2->addWidget(m_burstButton, 1);
+  captureLayout2->addWidget(m_timelapseButton, 1);
+
   captureV->addWidget(captureButtonsRow);
+  captureV->addWidget(captureButtonsRow2);
   captureV->addWidget(statusRow);
   captureV->addWidget(m_capturePreviewLabel);
   mainLayout->addWidget(m_captureRow);
 
   connect(m_photoButton, &QPushButton::clicked, this,
           &CameraSettingsPanel::onPhotoClicked);
+  connect(m_burstButton, &QPushButton::clicked, this,
+          &CameraSettingsPanel::onBurstClicked);
+  connect(m_timelapseButton, &QPushButton::clicked, this,
+          &CameraSettingsPanel::onTimelapseClicked);
   connect(m_recButton, &QPushButton::clicked, this,
           &CameraSettingsPanel::onRecordClicked);
 
@@ -491,8 +512,16 @@ void CameraSettingsPanel::setCameraController(
   if (m_controller) {
     connect(m_controller, &DwarfCameraController::photoCaptureFinished, this,
             &CameraSettingsPanel::onPhotoCaptureFinished);
+    connect(m_controller, &DwarfCameraController::burstFinished, this,
+            &CameraSettingsPanel::onBurstFinished);
+    connect(m_controller, &DwarfCameraController::timelapseFinished, this,
+            &CameraSettingsPanel::onTimelapseFinished);
     connect(m_controller, &DwarfCameraController::recordFinished, this,
             &CameraSettingsPanel::onRecordFinished);
+    connect(m_controller, &DwarfCameraController::burstProgress, this,
+            &CameraSettingsPanel::onBurstProgress);
+    connect(m_controller, &DwarfCameraController::timelapseStatus, this,
+            &CameraSettingsPanel::onTimelapseStatus);
   }
 
   if (!m_recordTimer) {
@@ -524,6 +553,8 @@ void CameraSettingsPanel::setClientMode(bool enabled) {
   
   // Capture buttons
   if (m_photoButton) m_photoButton->setEnabled(controlsEnabled);
+  if (m_burstButton) m_burstButton->setEnabled(controlsEnabled);
+  if (m_timelapseButton) m_timelapseButton->setEnabled(controlsEnabled);
   if (m_recButton) m_recButton->setEnabled(controlsEnabled && m_cameraMode == CameraMode::Tele);
   
   // Exposure group
@@ -560,6 +591,10 @@ void CameraSettingsPanel::updateRangesForMode() {
     // Video recording and IR-Cut only available on Tele
     m_recButton->setEnabled(!m_clientMode);
     m_recButton->setToolTip(m_clientMode ? tr("Client Mode: Control disabled") : QString());
+    if (m_burstButton)
+      m_burstButton->setEnabled(!m_clientMode);
+    if (m_timelapseButton)
+      m_timelapseButton->setEnabled(!m_clientMode);
     m_irCutCheckBox->setEnabled(!m_clientMode);
     m_irCutCheckBox->setVisible(true);
   } else {
@@ -573,6 +608,10 @@ void CameraSettingsPanel::updateRangesForMode() {
     m_recButton->setEnabled(false);
     m_recButton->setToolTip(
         tr("Video recording only available on TELE camera"));
+    if (m_burstButton)
+      m_burstButton->setEnabled(!m_clientMode);
+    if (m_timelapseButton)
+      m_timelapseButton->setEnabled(!m_clientMode);
     m_irCutCheckBox->setEnabled(false);
     m_irCutCheckBox->setVisible(false);
   }
@@ -724,6 +763,44 @@ void CameraSettingsPanel::onPhotoClicked() {
   emit photoRequested();
 }
 
+void CameraSettingsPanel::onBurstClicked() {
+  if (!m_controller || m_burstPending)
+    return;
+
+  auto kind = (m_cameraMode == CameraMode::Tele)
+                  ? DwarfCameraController::CameraKind::Tele
+                  : DwarfCameraController::CameraKind::Wide;
+
+  m_burstPending = true;
+  m_burstButton->setEnabled(false);
+  if (m_burstRunning) {
+    m_captureStatusLabel->setText(tr("Stopping burst..."));
+    m_controller->stopBurst(kind);
+  } else {
+    m_captureStatusLabel->setText(tr("Starting burst..."));
+    m_controller->startBurst(kind);
+  }
+}
+
+void CameraSettingsPanel::onTimelapseClicked() {
+  if (!m_controller || m_timelapsePending)
+    return;
+
+  auto kind = (m_cameraMode == CameraMode::Tele)
+                  ? DwarfCameraController::CameraKind::Tele
+                  : DwarfCameraController::CameraKind::Wide;
+
+  m_timelapsePending = true;
+  m_timelapseButton->setEnabled(false);
+  if (m_timelapseRunning) {
+    m_captureStatusLabel->setText(tr("Stopping timelapse..."));
+    m_controller->stopTimelapse(kind);
+  } else {
+    m_captureStatusLabel->setText(tr("Starting timelapse..."));
+    m_controller->startTimelapse(kind);
+  }
+}
+
 void CameraSettingsPanel::onRecordClicked() {
   if (!m_controller || m_recordPending)
     return;
@@ -741,6 +818,57 @@ void CameraSettingsPanel::onRecordClicked() {
   } else {
     m_captureStatusLabel->setText(tr("Starting video..."));
     m_controller->startRecord(DwarfCameraController::CameraKind::Tele);
+  }
+}
+
+void CameraSettingsPanel::onBurstFinished(DwarfCameraController::CameraKind kind,
+                                          bool running, bool success,
+                                          int code) {
+  const auto expected = (m_cameraMode == CameraMode::Tele)
+                            ? DwarfCameraController::CameraKind::Tele
+                            : DwarfCameraController::CameraKind::Wide;
+  if (kind != expected)
+    return;
+
+  m_burstPending = false;
+  m_burstRunning = success ? running : m_burstRunning;
+  m_burstButton->setEnabled(!m_clientMode);
+  m_burstButton->setText(m_burstRunning ? tr("Stop Burst") : tr("Burst"));
+  m_burstButton->setStyleSheet(
+      m_burstRunning ? QStringLiteral("background-color: #e67e22; color: white;")
+                     : QString());
+
+  if (success) {
+    m_captureStatusLabel->setText(
+        m_burstRunning ? tr("Burst running...") : tr("Burst stopped"));
+  } else {
+    m_captureStatusLabel->setText(tr("Burst failed (code %1)").arg(code));
+  }
+}
+
+void CameraSettingsPanel::onTimelapseFinished(
+    DwarfCameraController::CameraKind kind, bool running, bool success,
+    int code) {
+  const auto expected = (m_cameraMode == CameraMode::Tele)
+                            ? DwarfCameraController::CameraKind::Tele
+                            : DwarfCameraController::CameraKind::Wide;
+  if (kind != expected)
+    return;
+
+  m_timelapsePending = false;
+  m_timelapseRunning = success ? running : m_timelapseRunning;
+  m_timelapseButton->setEnabled(!m_clientMode);
+  m_timelapseButton->setText(m_timelapseRunning ? tr("Stop Timelapse")
+                                                : tr("Timelapse"));
+  m_timelapseButton->setStyleSheet(
+      m_timelapseRunning ? QStringLiteral("background-color: #8e44ad; color: white;")
+                         : QString());
+
+  if (success) {
+    m_captureStatusLabel->setText(
+        m_timelapseRunning ? tr("Timelapse running...") : tr("Timelapse stopped"));
+  } else {
+    m_captureStatusLabel->setText(tr("Timelapse failed (code %1)").arg(code));
   }
 }
 
@@ -865,6 +993,32 @@ void CameraSettingsPanel::onRecordTimerTick() {
   m_recordTimerLabel->setText(QStringLiteral("%1:%2")
                                   .arg(mm, 2, 10, QLatin1Char('0'))
                                   .arg(ss, 2, 10, QLatin1Char('0')));
+}
+
+void CameraSettingsPanel::onBurstProgress(
+    DwarfCameraController::CameraKind kind, int totalCount, int completedCount) {
+  const auto expected = (m_cameraMode == CameraMode::Tele)
+                            ? DwarfCameraController::CameraKind::Tele
+                            : DwarfCameraController::CameraKind::Wide;
+  if (kind != expected || !m_burstRunning)
+    return;
+  m_captureStatusLabel->setText(
+      tr("Burst %1/%2").arg(completedCount).arg(totalCount));
+}
+
+void CameraSettingsPanel::onTimelapseStatus(
+    DwarfCameraController::CameraKind kind, int intervalSec, int outTimeSec,
+    int totalTimeSec) {
+  const auto expected = (m_cameraMode == CameraMode::Tele)
+                            ? DwarfCameraController::CameraKind::Tele
+                            : DwarfCameraController::CameraKind::Wide;
+  if (kind != expected || !m_timelapseRunning)
+    return;
+  m_captureStatusLabel->setText(
+      tr("Timelapse %1s interval, out %2s, total %3s")
+          .arg(intervalSec)
+          .arg(outTimeSec)
+          .arg(totalTimeSec));
 }
 
 void CameraSettingsPanel::onExposureModeChanged(int index) {
@@ -1359,4 +1513,3 @@ void CameraSettingsPanel::saveSettings() {
   cfg->save();
   qDebug() << "[CameraSettingsPanel] Saved settings for" << section;
 }
-

@@ -17,7 +17,7 @@ Quellenbasis:
 - Medienliste, Thumbnails und Download
 
 Nicht vollständig umgesetzt ist die API aber klar in den Bereichen:
-- Device-/HTTP-Management
+- einzelne Device-/HTTP-Randfunktionen
 - Tracking-Modul 7 ist erst teilweise verifiziert
 - Fokus-API ist weitgehend, aber nicht vollständig verifiziert
 - dokumentierte RTSP-Nutzung
@@ -35,15 +35,15 @@ Zusätzlich gibt es mehrere Stellen, an denen `zwergII` nicht der dokumentierten
 
 | API-Bereich | Status | Einschätzung |
 |---|---|---|
-| HTTP Device API | Teilweise bis weitgehend | Discovery nutzt jetzt `/deviceInfo` plus `/firmwareVersion`; Name/Passwort/Firmware-Upload fehlen weiter |
+| HTTP Device API | Weitgehend | Discovery, Name/Passwort und Firmware-Upload sind ergänzt; Reset/Validierung offen |
 | HTTP Album API | Teilweise bis weitgehend | `mediaInfos` und `delete` sind da; `mediaCounts` fehlt |
 | JPG Stream | Implementiert | MJPEG `mainstream`/`secondstream` wird genutzt |
 | RTSP Stream | Fehlend | In Doku vorhanden, im Qt-Client nicht verwendet |
-| Kamera Tele | Teilweise bis weitgehend | Open/Close/Photo/Video/Params da; Burst/Timelapse fehlen |
-| Kamera Wide | Teilweise | Open/Close/Photo/Params da; Burst/Timelapse fehlen |
+| Kamera Tele | Weitgehend implementiert | Open/Close/Photo/Burst/Video/Timelapse/Params sind da |
+| Kamera Wide | Weitgehend implementiert | Open/Close/Photo/Burst/Timelapse/Params sind da |
 | Astro | Teilweise bis weitgehend | Kernfunktionen da; nicht alle dokumentierten Kommandos sind UI-seitig fertig |
 | Fokus | Weitgehend implementiert | Continuous Focus und Astro-AF sind ergänzt; Area-AF ist UI-seitig noch nicht genutzt |
-| Motor | Teilweise | Run/Stop/Joystick da; Dual-Camera-Linkage fehlt |
+| Motor | Weitgehend implementiert | Run/Stop/Joystick/Fixed-Angle/Dual-Linkage sind da |
 | Tracking (Modul 7) | Teilweise bis weitgehend | Controller, Notify-Handling und Livebild-UI sind da; einzelne Kommandos sind noch unvalidiert |
 | Panorama | Teilweise | Läuft, aber reverse-engineered und fragil |
 | System (Modul 4) | Weitgehend implementiert | Zeit, Zeitzone, MTP und CPU sind als Controller + UI verdrahtet |
@@ -58,11 +58,11 @@ Implementiert:
 - Dispatcher kennt alle relevanten Module 1-15 in [src/net/DwarfMessageDispatcher.h](/media/data/programming/zwergII/src/net/DwarfMessageDispatcher.h#L17).
 
 Teilweise:
-- Im `MainWindow` werden effektiv nur Kamera, Astro und Panorama verdrahtet; `systemMessage`, `rgbPowerMessage`, `trackMessage` und `focusMessage` bleiben ungenutzt, siehe [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp#L324).
+- Einige Pfade sind weiter firmwareabhängig oder noch nicht gegen reale Gerätevarianten validiert.
 
 Bewertung:
 - Technische Basis ist gut.
-- Abdeckung auf Modulebene ist deutlich breiter als die tatsächlich benutzte Laufzeitverdrahtung.
+- Die Laufzeitverdrahtung deckt jetzt Kamera, Fokus, System, Tracking, Astro, Panorama und HTTP-Device-Aufrufe ab.
 
 ### 2. HTTP Device API
 
@@ -75,17 +75,20 @@ Spezifikation:
 Implementiert:
 - Discovery nutzt jetzt primär den dokumentierten Endpoint `/deviceInfo` in [src/net/DwarfFinder.cpp](/media/data/programming/zwergII/src/net/DwarfFinder.cpp#L218).
 - Wenn in der Device-Info keine Version enthalten ist, wird zusätzlich `/firmwareVersion` abgefragt, siehe [src/net/DwarfFinder.cpp](/media/data/programming/zwergII/src/net/DwarfFinder.cpp#L292).
+- `POST /setDeviceNameAndPsd` ist im HTTP-Client umgesetzt und im Settings-Tab für Gerätename und Passwort verdrahtet, siehe [src/net/DwarfHttpClient.cpp](/media/data/programming/zwergII/src/net/DwarfHttpClient.cpp) und [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp).
+- `POST /uploadFirmware` ist als `multipart/form-data` mit MD5-Übertragung umgesetzt und im Settings-Tab verdrahtet, siehe [src/net/DwarfHttpClient.cpp](/media/data/programming/zwergII/src/net/DwarfHttpClient.cpp) und [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp).
 
 Fehlt:
-- Name/Passwort ändern
-- Firmware-Upload
+- `resetDeviceInfo` ist weiterhin nicht umgesetzt
+- Reale Gerätevalidierung für die neuen Schreibpfade fehlt weiterhin
 
 Teilweise / abweichend:
 - Für ältere/abweichende Firmwares bleibt `getdeviceInfo` als Fallback erhalten, siehe [src/net/DwarfFinder.cpp](/media/data/programming/zwergII/src/net/DwarfFinder.cpp#L257).
+- Beim Firmware-Upload wird zunächst der in der Doku genannte Formularfeldname `fiwmwareFileName` verwendet und bei `invalid parameter` auf `firmwareFileName` gefallbackt, weil die Spezifikation hier uneinheitlich wirkt, siehe [src/net/DwarfHttpClient.cpp](/media/data/programming/zwergII/src/net/DwarfHttpClient.cpp).
 
 Bewertung:
-- Discovery und Firmware-Ermittlung sind jetzt deutlich näher an der Spezifikation.
-- Vollständig offen bleibt der schreibende Teil der Device-HTTP-API.
+- Die dokumentierten Kernendpunkte der Device-HTTP-API sind jetzt praktisch abgedeckt.
+- Offen bleiben vor allem Validierung gegen echte Firmware und der nicht priorisierte Reset-Pfad.
 
 ### 3. HTTP Album API
 
@@ -129,14 +132,12 @@ Bewertung:
 
 Implementiert:
 - Open/Close/Photo für Tele und Wide, Video Start/Stop für Tele in [src/net/DwarfCameraController.h](/media/data/programming/zwergII/src/net/DwarfCameraController.h#L20).
+- Burst und Timelapse für Tele/Wide sowie zugehörige Notify-Verarbeitung sind jetzt ebenfalls im Controller vorhanden, siehe [src/net/DwarfCameraController.cpp](/media/data/programming/zwergII/src/net/DwarfCameraController.cpp#L250).
+- Capture-UI für Photo/Record/Burst/Timelapse ist im Panel verdrahtet, siehe [src/ui/CameraSettingsPanel.cpp](/media/data/programming/zwergII/src/ui/CameraSettingsPanel.cpp#L229).
 - Exposure/Gain/WB/IR-Cut sowie Bildparameter in [src/net/DwarfCameraController.cpp](/media/data/programming/zwergII/src/net/DwarfCameraController.cpp#L313).
 - `GET_ALL_PARAMS` und Response-Verarbeitung in [src/net/DwarfCameraController.cpp](/media/data/programming/zwergII/src/net/DwarfCameraController.cpp#L582).
 
 Fehlend:
-- Tele Burst `10003/10004`
-- Tele Timelapse `10033/10034`
-- Wide Burst `12023/12024`
-- Wide Timelapse `12025/12026`
 - dedizierte Nutzung von `GET_*`-Einzelparametern
 - `GET_SYSTEM_WORKING_STATE` Tele `10039`
 
@@ -149,7 +150,8 @@ Abweichend/Falsch:
 
 Bewertung:
 - Für normale Nutzung ist die Kameraanbindung stark.
-- Gegen die volle API fehlt aber ein relevanter Teil der Capture-Kommandos.
+- Die dokumentierten Standard-Capture-Kommandos sind jetzt weitgehend abgedeckt.
+- Offene Restlücken liegen primär bei Sonder-/Readback-Kommandos, nicht mehr bei Burst/Timelapse.
 
 ### 6. Fokus-API
 
@@ -203,15 +205,15 @@ Spezifikation:
 
 Implementiert:
 - Run/Stop/Joystick/Fixed-Angle/Stop in [src/net/DwarfMotorController.cpp](/media/data/programming/zwergII/src/net/DwarfMotorController.cpp#L25).
-- UI nutzt Joystick praktisch als Hauptsteuerung, siehe [src/ui/MotorControlPanel.cpp](/media/data/programming/zwergII/src/ui/MotorControlPanel.cpp#L259).
+- Dual-Camera-Linkage `14009` ist jetzt ebenfalls im Controller vorhanden, siehe [src/net/DwarfMotorController.cpp](/media/data/programming/zwergII/src/net/DwarfMotorController.cpp#L102).
+- UI bietet einen Linkage-Modus im Motor-Overlay; ein Klick auf den Wide-Stream sendet dann `14009`, siehe [src/ui/MotorControlPanel.cpp](/media/data/programming/zwergII/src/ui/MotorControlPanel.cpp#L165) und [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp#L2270).
 
-Fehlend:
-- Dual-Camera-Linkage `14009`
-- Response-/Statushandling des Motor-Moduls
+Offen:
+- Kein dediziertes Response-Parsing des Motor-Moduls; `14009` arbeitet aktuell wie mehrere andere Bewegungsbefehle fire-and-forget
 
 Bewertung:
 - Bewegungssteuerung ist nutzbar.
-- API-seitig fehlt der letzte dokumentierte Funktionsblock.
+- Die dokumentierten Motor-Kommandos sind jetzt praktisch vollständig abgedeckt.
 
 ### 9. Tracking-Modul 7
 
@@ -286,19 +288,19 @@ Bewertung:
 
 1. Tracking-Modul 7 gegen reale Firmware validieren, insbesondere `14809/14810`
 2. Fokus- und Tracking-Neuerungen gegen reale Firmware validieren
-3. Device-HTTP-API vervollständigen (Name/Passwort, Firmware-Upload)
+3. Device-HTTP-Schreibpfade gegen reale Firmware validieren
 
 ### Mittel
 
-1. Kamera-Burst/Timelapse für Tele und Wide ergänzen
-2. Astro-Controller-Funktionen, die schon vorhanden sind, UI-seitig fertig integrieren
-3. Panorama-Protokoll von heuristisch auf verifiziert umstellen
-4. Master-Lock aus Modul 4 optional ergänzen
+1. Astro-Controller-Funktionen, die schon vorhanden sind, UI-seitig fertig integrieren
+2. Panorama-Protokoll von heuristisch auf verifiziert umstellen
+3. Master-Lock aus Modul 4 optional ergänzen
+4. `resetDeviceInfo` aus der erweiterten Device-Doku optional ergänzen
 
 ### Niedrig
 
 1. RTSP-Unterstützung ergänzen oder bewusst als „nicht vorgesehen“ dokumentieren
-2. Device-HTTP-API vervollständigen (Firmware-Version, Name/Passwort, Upload)
+2. `mediaCounts` ergänzen, falls die Gallery künftig Counts vorab braucht
 
 ## Gesamturteil
 

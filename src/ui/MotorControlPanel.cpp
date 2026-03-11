@@ -61,6 +61,7 @@ void MotorControlPanel::setClientMode(bool enabled) {
     if (m_leftButton) m_leftButton->setEnabled(controlsEnabled);
     if (m_rightButton) m_rightButton->setEnabled(controlsEnabled);
     if (m_joystick) m_joystick->setEnabled(controlsEnabled);
+    if (m_linkageButton) m_linkageButton->setEnabled(controlsEnabled);
     if (m_focusFarButton) m_focusFarButton->setEnabled(controlsEnabled);
     if (m_focusNearButton) m_focusNearButton->setEnabled(controlsEnabled);
     if (m_autoFocusButton) m_autoFocusButton->setEnabled(controlsEnabled);
@@ -182,6 +183,12 @@ void MotorControlPanel::setupUi() {
 
     motorLayout->addLayout(speedLayout);
 
+    m_linkageButton = new QPushButton(tr("Dual Link"), m_motorGroup);
+    m_linkageButton->setObjectName("motorLinkageButton");
+    m_linkageButton->setCheckable(true);
+    m_linkageButton->setMinimumHeight(32);
+    motorLayout->addWidget(m_linkageButton);
+
     mainLayout->addWidget(m_motorGroup);
 
     // Focus controls (docked below Motor Control)
@@ -259,6 +266,7 @@ void MotorControlPanel::setupUi() {
 
     // Connect signals
     connect(m_speedSlider, &QSlider::valueChanged, this, &MotorControlPanel::onSpeedChanged);
+    connect(m_linkageButton, &QPushButton::toggled, this, &MotorControlPanel::onLinkageToggled);
     connect(m_joystick, &VirtualJoystick::joystickMoved, this, &MotorControlPanel::onJoystickMoved);
     connect(m_joystick, &VirtualJoystick::joystickReleased, this, &MotorControlPanel::onJoystickReleased);
 
@@ -402,6 +410,15 @@ void MotorControlPanel::onSpeedChanged(int value) {
         m_speedLabel->setText(QString("%1 deg/s").arg(speed));
         emit speedChanged(value);
     }
+}
+
+void MotorControlPanel::onLinkageToggled(bool checked) {
+    if (m_linkageButton) {
+        m_linkageButton->setStyleSheet(
+            checked ? QStringLiteral("background-color: #2980b9; color: white;")
+                    : QString());
+    }
+    emit linkageModeChanged(checked);
 }
 
 void MotorControlPanel::onJoystickMoved(double angle, double strength) {

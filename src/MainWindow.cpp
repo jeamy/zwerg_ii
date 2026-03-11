@@ -362,6 +362,15 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onPhotoCaptureFinished);
     connect(m_cameraController, &DwarfCameraController::recordFinished, this,
             &MainWindow::onRecordFinished);
+    connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage,
+            m_cameraController, &DwarfCameraController::handleNotification);
+  }
+
+  if (m_motorController) {
+    connect(m_motorController, &DwarfMotorController::statusMessage, this,
+            [this](const QString &message) {
+              statusBar()->showMessage(message, 3000);
+            });
   }
 
   if (m_panoramaController) {
@@ -564,6 +573,42 @@ void MainWindow::ensureHttpClientForCurrentIp() {
           &MainWindow::onMediaListReceived);
   connect(m_httpClient, &DwarfHttpClient::defaultParamsConfigReceived, this,
           &MainWindow::onDefaultParamsConfigReceived);
+  connect(m_httpClient, &DwarfHttpClient::deviceSettingChanged, this,
+          [this](int mode, const QString &appliedValue) {
+            if (mode == DwarfHttpClient::ChangeName) {
+              setCurrentDeviceName(appliedValue);
+              AppConfig *cfg = AppConfig::instance();
+              cfg->setValue("connection", "last_device_name", m_currentDeviceName);
+              cfg->save();
+              if (m_newDeviceNameEdit)
+                m_newDeviceNameEdit->clear();
+              setDeviceHttpStatus(
+                  tr("Device name updated to %1").arg(appliedValue));
+            } else {
+              if (m_oldDevicePasswordEdit)
+                m_oldDevicePasswordEdit->clear();
+              if (m_newDevicePasswordEdit)
+                m_newDevicePasswordEdit->clear();
+              setDeviceHttpStatus(tr("Device password updated"));
+            }
+          });
+  connect(m_httpClient, &DwarfHttpClient::deviceSettingError, this,
+          [this](int mode, const QString &error) {
+            const QString prefix = mode == DwarfHttpClient::ChangeName
+                                       ? tr("Device name")
+                                       : tr("Device password");
+            setDeviceHttpStatus(tr("%1 update failed: %2").arg(prefix, error));
+          });
+  connect(m_httpClient, &DwarfHttpClient::firmwareUploadFinished, this,
+          [this](const QString &, bool success, int code,
+                 const QString &message) {
+            const QString text =
+                success ? tr("Firmware upload accepted: %1").arg(message)
+                        : tr("Firmware upload failed (%1): %2")
+                              .arg(code)
+                              .arg(message);
+            setDeviceHttpStatus(text);
+          });
 
   if (m_mainVideoWidget && m_panoGridOverlay) {
     m_panoGridOverlay->setGeometry(m_mainVideoWidget->rect());
@@ -572,6 +617,25 @@ void MainWindow::ensureHttpClientForCurrentIp() {
   }
   connect(m_httpClient, &DwarfHttpClient::errorOccurred, this,
           &MainWindow::onMediaListError);
+}
+
+void MainWindow::setCurrentDeviceName(const QString &name) {
+  m_currentDeviceName = name.trimmed();
+  if (m_currentDeviceNameLabel) {
+    m_currentDeviceNameLabel->setText(m_currentDeviceName.isEmpty()
+                                          ? tr("Unknown")
+                                          : m_currentDeviceName);
+  }
+  if (m_newDeviceNameEdit) {
+    m_newDeviceNameEdit->setPlaceholderText(
+        m_currentDeviceName.isEmpty() ? tr("Enter new device name")
+                                      : m_currentDeviceName);
+  }
+}
+
+void MainWindow::setDeviceHttpStatus(const QString &text) {
+  if (m_deviceHttpStatusLabel)
+    m_deviceHttpStatusLabel->setText(text);
 }
 
 void MainWindow::setCaptureStatusTextAllPanels(const QString &text) {
@@ -1158,6 +1222,14 @@ void MainWindow::setupUi() {
   m_motorOverlay->setFixedSize(290, 430);
   m_motorOverlay->setCursor(Qt::OpenHandCursor);  // Show it's draggable
   m_motorOverlay->setMouseTracking(true);
+  connect(m_motorOverlay, &MotorControlPanel::linkageModeChanged, this,
+          [this](bool enabled) {
+            m_dualCameraLinkageMode = enabled;
+            statusBar()->showMessage(
+                enabled ? tr("Dual-camera linkage: click on WIDE view")
+                        : tr("Dual-camera linkage disabled"),
+                3000);
+          });
   // Initial position will be set by updateOverlayPositions
   m_motorOverlay->raise();
   m_motorOverlay->show();
@@ -1681,6 +1753,66 @@ void MainWindow::setupUi() {
   
   sl->addWidget(sysGroup);
 
+  m_deviceHttpGroup = new QGroupBox(tr("Device HTTP Configuration"), settingsTab);
+  auto *deviceHttpLayout = new QVBoxLayout(m_deviceHttpGroup);
+
+  auto *currentNameRow = new QWidget(m_deviceHttpGroup);
+  auto *currentNameLayout = new QHBoxLayout(currentNameRow);
+  currentNameLayout->setContentsMargins(0, 0, 0, 0);
+  currentNameLayout->addWidget(new QLabel(tr("Current name:"), currentNameRow));
+  m_currentDeviceNameLabel = new QLabel(tr("Unknown"), currentNameRow);
+  m_currentDeviceNameLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+  currentNameLayout->addWidget(m_currentDeviceNameLabel, 1);
+  deviceHttpLayout->addWidget(currentNameRow);
+
+  auto *nameRow = new QWidget(m_deviceHttpGroup);
+  auto *nameLayout = new QHBoxLayout(nameRow);
+  nameLayout->setContentsMargins(0, 0, 0, 0);
+  nameLayout->addWidget(new QLabel(tr("New name:"), nameRow));
+  m_newDeviceNameEdit = new QLineEdit(nameRow);
+  m_setDeviceNameButton = new QPushButton(tr("Apply Name"), nameRow);
+  nameLayout->addWidget(m_newDeviceNameEdit, 1);
+  nameLayout->addWidget(m_setDeviceNameButton);
+  deviceHttpLayout->addWidget(nameRow);
+
+  auto *passwordRow = new QWidget(m_deviceHttpGroup);
+  auto *passwordLayout = new QHBoxLayout(passwordRow);
+  passwordLayout->setContentsMargins(0, 0, 0, 0);
+  passwordLayout->addWidget(new QLabel(tr("Password:"), passwordRow));
+  m_oldDevicePasswordEdit = new QLineEdit(passwordRow);
+  m_oldDevicePasswordEdit->setEchoMode(QLineEdit::Password);
+  m_oldDevicePasswordEdit->setPlaceholderText(tr("Current password"));
+  m_newDevicePasswordEdit = new QLineEdit(passwordRow);
+  m_newDevicePasswordEdit->setEchoMode(QLineEdit::Password);
+  m_newDevicePasswordEdit->setPlaceholderText(tr("New password"));
+  m_setDevicePasswordButton = new QPushButton(tr("Apply Password"), passwordRow);
+  passwordLayout->addWidget(m_oldDevicePasswordEdit, 1);
+  passwordLayout->addWidget(m_newDevicePasswordEdit, 1);
+  passwordLayout->addWidget(m_setDevicePasswordButton);
+  deviceHttpLayout->addWidget(passwordRow);
+
+  auto *firmwareRow = new QWidget(m_deviceHttpGroup);
+  auto *firmwareLayout = new QHBoxLayout(firmwareRow);
+  firmwareLayout->setContentsMargins(0, 0, 0, 0);
+  firmwareLayout->addWidget(new QLabel(tr("Firmware:"), firmwareRow));
+  m_firmwareUploadPathEdit = new QLineEdit(firmwareRow);
+  m_firmwareUploadPathEdit->setReadOnly(true);
+  m_selectFirmwareButton = new QPushButton(tr("Browse..."), firmwareRow);
+  m_uploadFirmwareButton = new QPushButton(tr("Upload"), firmwareRow);
+  firmwareLayout->addWidget(m_firmwareUploadPathEdit, 1);
+  firmwareLayout->addWidget(m_selectFirmwareButton);
+  firmwareLayout->addWidget(m_uploadFirmwareButton);
+  deviceHttpLayout->addWidget(firmwareRow);
+
+  m_deviceHttpStatusLabel = new QLabel(tr("Not connected"), m_deviceHttpGroup);
+  m_deviceHttpStatusLabel->setWordWrap(true);
+  m_deviceHttpStatusLabel->setStyleSheet(
+      "color: rgba(255, 255, 255, 0.65);");
+  deviceHttpLayout->addWidget(m_deviceHttpStatusLabel);
+
+  m_deviceHttpGroup->setEnabled(false);
+  sl->addWidget(m_deviceHttpGroup);
+
   m_systemControlGroup = new QGroupBox(tr("System Control"), settingsTab);
   auto *ctrlLayout = new QVBoxLayout(m_systemControlGroup);
 
@@ -1797,6 +1929,81 @@ void MainWindow::setupUi() {
   if (m_changeDownloadDirButton)
     connect(m_changeDownloadDirButton, &QPushButton::clicked, this,
             &MainWindow::onChangeDownloadDirClicked);
+  if (m_setDeviceNameButton) {
+    connect(m_setDeviceNameButton, &QPushButton::clicked, this, [this]() {
+      if (!m_deviceHttpGroup || !m_deviceHttpGroup->isEnabled() ||
+          !m_newDeviceNameEdit)
+        return;
+      const QString newName = m_newDeviceNameEdit->text().trimmed();
+      if (newName.isEmpty()) {
+        setDeviceHttpStatus(tr("Enter a device name before applying"));
+        return;
+      }
+      ensureHttpClientForCurrentIp();
+      if (!m_httpClient)
+        return;
+      setDeviceHttpStatus(tr("Updating device name..."));
+      m_httpClient->setDeviceName(newName, m_currentDeviceName);
+    });
+  }
+  if (m_setDevicePasswordButton) {
+    connect(m_setDevicePasswordButton, &QPushButton::clicked, this, [this]() {
+      if (!m_deviceHttpGroup || !m_deviceHttpGroup->isEnabled() ||
+          !m_oldDevicePasswordEdit || !m_newDevicePasswordEdit)
+        return;
+      const QString oldPassword = m_oldDevicePasswordEdit->text();
+      const QString newPassword = m_newDevicePasswordEdit->text();
+      if (oldPassword.isEmpty() || newPassword.isEmpty()) {
+        setDeviceHttpStatus(
+            tr("Enter current and new password before applying"));
+        return;
+      }
+      ensureHttpClientForCurrentIp();
+      if (!m_httpClient)
+        return;
+      setDeviceHttpStatus(tr("Updating device password..."));
+      m_httpClient->setDevicePassword(oldPassword, newPassword);
+    });
+  }
+  if (m_selectFirmwareButton) {
+    connect(m_selectFirmwareButton, &QPushButton::clicked, this, [this]() {
+      QString startPath =
+          m_firmwareUploadPathEdit ? m_firmwareUploadPathEdit->text() : QString();
+      if (startPath.isEmpty())
+        startPath = QDir::homePath();
+      const QString filePath = QFileDialog::getOpenFileName(
+          this, tr("Select firmware package"), startPath,
+          tr("Firmware packages (*.bin *.img *.zip *.tar *.gz);;All files (*)"));
+      if (filePath.isEmpty())
+        return;
+      if (m_firmwareUploadPathEdit)
+        m_firmwareUploadPathEdit->setText(filePath);
+      saveSettings();
+    });
+  }
+  if (m_uploadFirmwareButton) {
+    connect(m_uploadFirmwareButton, &QPushButton::clicked, this, [this]() {
+      if (!m_deviceHttpGroup || !m_deviceHttpGroup->isEnabled() ||
+          !m_firmwareUploadPathEdit)
+        return;
+      const QString filePath = m_firmwareUploadPathEdit->text().trimmed();
+      if (filePath.isEmpty()) {
+        setDeviceHttpStatus(tr("Select a firmware package first"));
+        return;
+      }
+      if (QMessageBox::question(
+              this, tr("Upload firmware"),
+              tr("Upload the selected firmware package to the connected DWARF II?")) !=
+          QMessageBox::Yes) {
+        return;
+      }
+      ensureHttpClientForCurrentIp();
+      if (!m_httpClient)
+        return;
+      setDeviceHttpStatus(tr("Uploading firmware package..."));
+      m_httpClient->uploadFirmware(filePath);
+    });
+  }
 
   if (m_syncTimeButton)
     connect(m_syncTimeButton, &QPushButton::clicked, this,
@@ -2094,22 +2301,26 @@ void MainWindow::onDeviceFound(const DwarfDeviceInfo &info) {
   QListWidgetItem *item = new QListWidgetItem(label);
   item->setData(Qt::UserRole, info.ip);
   item->setData(Qt::UserRole + 1, info.version);
+  item->setData(Qt::UserRole + 2, info.name);
   m_deviceList->addItem(item);
 }
 
 void MainWindow::onDeviceSelected(QListWidgetItem *item) {
   QString ip = item->data(Qt::UserRole).toString();
   QString version = item->data(Qt::UserRole + 1).toString();
+  const QString name = item->data(Qt::UserRole + 2).toString();
   
   m_ipInput->setText(ip);
+  setCurrentDeviceName(name);
   if (m_firmwareLabel) {
     m_firmwareLabel->setText(version.isEmpty() ? "--" : version);
   }
 
   // Cache firmware so it is still displayed when connecting via manual IP.
-  if (!version.isEmpty()) {
+  if (!version.isEmpty() || !name.isEmpty()) {
     AppConfig *cfg = AppConfig::instance();
     cfg->setValue("connection", "last_firmware", version);
+    cfg->setValue("connection", "last_device_name", name);
     cfg->save();
   }
   
@@ -2248,6 +2459,10 @@ void MainWindow::onDisconnectClicked() {
 
   stopStreaming();
 
+  if (m_deviceHttpGroup)
+    m_deviceHttpGroup->setEnabled(false);
+  if (m_deviceHttpStatusLabel)
+    m_deviceHttpStatusLabel->setText(tr("Not connected"));
   if (m_systemControlGroup)
     m_systemControlGroup->setEnabled(false);
   if (m_systemControlStatusLabel)
@@ -2306,6 +2521,13 @@ void MainWindow::onWebSocketConnected() {
   // Sync time with DWARF device
   syncTimeWithDevice();
 
+  if (m_deviceHttpGroup)
+    m_deviceHttpGroup->setEnabled(!m_wsClient->isClientMode());
+  if (m_deviceHttpStatusLabel) {
+    m_deviceHttpStatusLabel->setText(
+        m_wsClient->isClientMode() ? tr("View-only connection")
+                                   : tr("Connected"));
+  }
   if (m_systemControlGroup)
     m_systemControlGroup->setEnabled(!m_wsClient->isClientMode());
   if (m_systemControlStatusLabel) {
@@ -2426,6 +2648,10 @@ void MainWindow::onWebSocketDisconnected() {
 
   updateSidebarForConnectionState(false);
 
+  if (m_deviceHttpGroup)
+    m_deviceHttpGroup->setEnabled(false);
+  if (m_deviceHttpStatusLabel)
+    m_deviceHttpStatusLabel->setText(tr("Not connected"));
   if (m_systemControlGroup)
     m_systemControlGroup->setEnabled(false);
   if (m_systemControlStatusLabel)
@@ -2572,6 +2798,24 @@ void MainWindow::onMainViewPointClicked(const QPointF &normalizedPos) {
   if (m_mainStream != CameraStream::Wide)
     return;
 
+  if (m_dualCameraLinkageMode && m_wideStream) {
+    const QSize imageSize = m_wideStream->currentFrame().size();
+    if (imageSize.isValid() && imageSize.width() > 0 && imageSize.height() > 0) {
+      const double u = qBound(0.0, (normalizedPos.x() + 1.0) * 0.5, 1.0);
+      const double v = qBound(0.0, (normalizedPos.y() + 1.0) * 0.5, 1.0);
+      const int x =
+          qBound(0, static_cast<int>(std::lround(u * (imageSize.width() - 1))),
+                 imageSize.width() - 1);
+      const int y =
+          qBound(0, static_cast<int>(std::lround(v * (imageSize.height() - 1))),
+                 imageSize.height() - 1);
+      m_motorController->dualCameraLinkage(x, y);
+      statusBar()->showMessage(
+          tr("Dual-camera linkage at %1, %2").arg(x).arg(y), 3000);
+    }
+    return;
+  }
+
   double nx = normalizedPos.x();
   double ny = normalizedPos.y();
 
@@ -2622,16 +2866,9 @@ void MainWindow::onOpenGalleryClicked() {
     m_currentLightbox = nullptr;
   }
 
-  if (m_httpClient) {
-    m_httpClient->deleteLater();
-    m_httpClient = nullptr;
-  }
-
-  m_httpClient = new DwarfHttpClient(ip, this);
-  connect(m_httpClient, &DwarfHttpClient::mediaListReceived, this,
-          &MainWindow::onMediaListReceived);
-  connect(m_httpClient, &DwarfHttpClient::errorOccurred, this,
-          &MainWindow::onMediaListError);
+  ensureHttpClientForCurrentIp();
+  if (!m_httpClient)
+    return;
 
   if (m_openGalleryButton)
     m_openGalleryButton->setEnabled(false);
@@ -3657,6 +3894,12 @@ void MainWindow::loadSettings() {
     QString fw = cfg->getValue("connection", "last_firmware", "").toString();
     m_firmwareLabel->setText(fw.isEmpty() ? "--" : fw);
   }
+  setCurrentDeviceName(
+      cfg->getValue("connection", "last_device_name", "").toString());
+  if (m_firmwareUploadPathEdit) {
+    m_firmwareUploadPathEdit->setText(
+        cfg->getValue("connection", "firmware_upload_path", "").toString());
+  }
 
   // Display / overlay settings
   // Always start on the first tab (Scan/Connect) to ensure clean UI state
@@ -3747,6 +3990,11 @@ void MainWindow::saveSettings() {
   // Download directory
   if (m_downloadDirEdit) {
     cfg->setValue("media", "download_dir", m_downloadDirEdit->text());
+  }
+  cfg->setValue("connection", "last_device_name", m_currentDeviceName);
+  if (m_firmwareUploadPathEdit) {
+    cfg->setValue("connection", "firmware_upload_path",
+                  m_firmwareUploadPathEdit->text());
   }
   
   // Save panel settings

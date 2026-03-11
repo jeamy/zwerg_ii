@@ -21,6 +21,10 @@ public:
   void openCamera(CameraKind kind, bool binning, int rtspEncodeType);
   void closeCamera(CameraKind kind);
   void takePhoto(CameraKind kind);
+  void startBurst(CameraKind kind);
+  void stopBurst(CameraKind kind);
+  void startTimelapse(CameraKind kind);
+  void stopTimelapse(CameraKind kind);
   void startRecord(CameraKind kind);
   void stopRecord(CameraKind kind);
 
@@ -59,6 +63,7 @@ public:
 
   // Handle incoming camera messages from WebSocket
   void handleCameraMessage(quint32 moduleId, quint32 cmd, const QByteArray &data);
+  void handleNotification(quint32 cmd, const QByteArray &data);
 
 signals:
   void errorOccurred(const QString &message);
@@ -67,7 +72,12 @@ signals:
 
   void photoCaptureFinished(CameraKind kind, bool success, int code,
                             const QString &fileName);
+  void burstFinished(CameraKind kind, bool running, bool success, int code);
+  void timelapseFinished(CameraKind kind, bool running, bool success, int code);
   void recordFinished(CameraKind kind, bool recording, bool success, int code);
+  void burstProgress(CameraKind kind, int totalCount, int completedCount);
+  void timelapseStatus(CameraKind kind, int intervalSec, int outTimeSec,
+                       int totalTimeSec);
 
 private:
   DwarfWebSocketClient *m_client;
@@ -96,6 +106,10 @@ private:
   quint32 cmdOpenCameraFor(CameraKind kind) const;
   quint32 cmdCloseCameraFor(CameraKind kind) const;
   quint32 cmdPhotoFor(CameraKind kind) const;
+  quint32 cmdStartBurstFor(CameraKind kind) const;
+  quint32 cmdStopBurstFor(CameraKind kind) const;
+  quint32 cmdStartTimelapseFor(CameraKind kind) const;
+  quint32 cmdStopTimelapseFor(CameraKind kind) const;
   quint32 cmdStartRecordFor(CameraKind kind) const;
   quint32 cmdStopRecordFor(CameraKind kind) const;
   // Individual parameter commands

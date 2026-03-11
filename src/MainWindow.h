@@ -161,6 +161,8 @@ private:
   void setItemThumbnail(QListWidgetItem *item, const QByteArray &data);
   void syncTimeWithDevice();
   void ensureHttpClientForCurrentIp();
+  void setCurrentDeviceName(const QString &name);
+  void setDeviceHttpStatus(const QString &text);
   void setCaptureStatusTextAllPanels(const QString &text);
   void persistParamsConfig(const QJsonDocument &document);
   void applyCachedParamsConfig();
@@ -223,6 +225,7 @@ private:
   enum class CameraStream { Tele, Wide };
 
   QWidget *m_mainStreamView;
+  bool m_dualCameraLinkageMode = false;
   TrackingOverlayWidget *m_trackingOverlay = nullptr;
   QWidget *m_trackingControlOverlay = nullptr;
   QPushButton *m_trackingSelectButton = nullptr;
@@ -287,6 +290,17 @@ private:
   QLabel *m_batteryLabel = nullptr;
   QLabel *m_firmwareLabel = nullptr;
   QLabel *m_sdSpaceLabel = nullptr;
+  QGroupBox *m_deviceHttpGroup = nullptr;
+  QLabel *m_currentDeviceNameLabel = nullptr;
+  QLineEdit *m_newDeviceNameEdit = nullptr;
+  QPushButton *m_setDeviceNameButton = nullptr;
+  QLineEdit *m_oldDevicePasswordEdit = nullptr;
+  QLineEdit *m_newDevicePasswordEdit = nullptr;
+  QPushButton *m_setDevicePasswordButton = nullptr;
+  QLineEdit *m_firmwareUploadPathEdit = nullptr;
+  QPushButton *m_selectFirmwareButton = nullptr;
+  QPushButton *m_uploadFirmwareButton = nullptr;
+  QLabel *m_deviceHttpStatusLabel = nullptr;
   QGroupBox *m_systemControlGroup = nullptr;
   QLineEdit *m_timezoneEdit = nullptr;
   QPushButton *m_syncTimeButton = nullptr;
@@ -298,6 +312,7 @@ private:
   QPushButton *m_powerDownButton = nullptr;
   QPushButton *m_rebootButton = nullptr;
   QLabel *m_systemControlStatusLabel = nullptr;
+  QString m_currentDeviceName;
   QString m_downloadDir;
   DwarfFtpDownloader *m_ftpDownloader;
   DwarfMtpClient *m_mtpClient;

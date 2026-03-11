@@ -24,6 +24,7 @@ public:
 
 signals:
     void speedChanged(int speedIndex);
+    void linkageModeChanged(bool enabled);
 
 private:
     void setupUi();
@@ -38,6 +39,7 @@ private:
     QPushButton *m_rightButton = nullptr;
     QSlider *m_speedSlider = nullptr;
     QLabel *m_speedLabel = nullptr;
+    QPushButton *m_linkageButton = nullptr;
 
     QGroupBox *m_motorGroup = nullptr;
     QGroupBox *m_focusGroup = nullptr;
@@ -70,6 +72,7 @@ private slots:
     void onRightPressed();
     void onRightReleased();
     void onSpeedChanged(int value);
+    void onLinkageToggled(bool checked);
 
     void onFocusFarClicked();
     void onFocusNearClicked();

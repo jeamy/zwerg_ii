@@ -23,9 +23,11 @@ public:
   void startJoystick(double angle, double length, double speed);
   void startJoystickFixedAngle(double angle, double length, double speed);
   void stopJoystick();
+  void dualCameraLinkage(int x, int y);
 
 signals:
   void errorOccurred(const QString &message);
+  void statusMessage(const QString &message);
 
 private:
   DwarfWebSocketClient *m_client;
@@ -37,4 +39,5 @@ private:
   quint32 cmdJoystickStart() const;
   quint32 cmdJoystickFixedAngle() const;
   quint32 cmdJoystickStop() const;
+  quint32 cmdDualCameraLinkage() const;
 };
