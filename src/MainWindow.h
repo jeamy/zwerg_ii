@@ -30,6 +30,7 @@ class DwarfCameraController;
 class DwarfMotorController;
 class DwarfFocusController;
 class DwarfSystemController;
+class DwarfTrackingController;
 class DwarfAstroController;
 class DwarfPanoramaController;
 class DwarfMjpegStream;
@@ -46,6 +47,7 @@ class VirtualJoystick;
 class MotorControlPanel;
 class StarMapWidget;
 class ParametersOverlayPanel;
+class TrackingOverlayWidget;
 class QSpinBox;
 
 class DraggablePiP : public QWidget {
@@ -214,12 +216,25 @@ private:
   DwarfMotorController *m_motorController;
   DwarfFocusController *m_focusController;
   DwarfSystemController *m_systemController;
+  DwarfTrackingController *m_trackingController;
   DwarfAstroController *m_astroController;
   DwarfPanoramaController *m_panoramaController;
 
   enum class CameraStream { Tele, Wide };
 
   QWidget *m_mainStreamView;
+  TrackingOverlayWidget *m_trackingOverlay = nullptr;
+  QWidget *m_trackingControlOverlay = nullptr;
+  QPushButton *m_trackingSelectButton = nullptr;
+  QPushButton *m_trackingStopButton = nullptr;
+  QPushButton *m_trackingSentryButton = nullptr;
+  QPushButton *m_trackingUfoButton = nullptr;
+  QPushButton *m_trackingMotStartButton = nullptr;
+  QPushButton *m_trackingMotTrackButton = nullptr;
+  QComboBox *m_trackingSourceCombo = nullptr;
+  QComboBox *m_trackingUfoModeCombo = nullptr;
+  QSpinBox *m_trackingTargetIdSpin = nullptr;
+  QLabel *m_trackingStatusLabel = nullptr;
   QLabel *m_streamNameOverlay;
   DraggablePiP *m_pipContainer;
   DwarfMjpegView *m_mainVideoWidget;

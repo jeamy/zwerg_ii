@@ -45,6 +45,10 @@ private:
     QPushButton *m_focusFarButton = nullptr;
     QPushButton *m_focusNearButton = nullptr;
     QPushButton *m_autoFocusButton = nullptr;
+    QPushButton *m_focusFarHoldButton = nullptr;
+    QPushButton *m_focusStopButton = nullptr;
+    QPushButton *m_focusNearHoldButton = nullptr;
+    QPushButton *m_astroFocusButton = nullptr;
 
     VirtualJoystick *m_joystick = nullptr;
     QTimer *m_joystickSendTimer = nullptr;
@@ -70,6 +74,11 @@ private slots:
     void onFocusFarClicked();
     void onFocusNearClicked();
     void onAutoFocusClicked();
+    void onFocusFarHoldPressed();
+    void onFocusNearHoldPressed();
+    void onFocusHoldReleased();
+    void onFocusStopClicked();
+    void onAstroFocusToggled(bool checked);
 
     void onJoystickMoved(double angle, double strength);
     void onJoystickReleased();

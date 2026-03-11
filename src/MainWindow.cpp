@@ -6,6 +6,7 @@
 #include "net/DwarfFinder.h"
 #include "net/DwarfMessageDispatcher.h"
 #include "net/DwarfSystemController.h"
+#include "net/DwarfTrackingController.h"
 #include "net/DwarfWebSocketClient.h"
 #include "net/DwarfPanoramaController.h"
 #include "net/DwarfHttpClient.h"
@@ -21,6 +22,7 @@
 #include "ui/ParametersOverlayPanel.h"
 #include "ui/MediaLightbox.h"
 #include "ui/StarMapWidget.h"
+#include "ui/TrackingOverlayWidget.h"
 #include <QButtonGroup>
 #include <QDateTime>
 #include <QDebug>
@@ -332,6 +334,7 @@ MainWindow::MainWindow(QWidget *parent)
   m_motorController = new DwarfMotorController(this);
   m_focusController = new DwarfFocusController(this);
   m_systemController = new DwarfSystemController(this);
+  m_trackingController = new DwarfTrackingController(this);
 
   if (m_astroController) {
     connect(m_dispatcher, &DwarfMessageDispatcher::astroMessage, m_astroController,
@@ -368,6 +371,21 @@ MainWindow::MainWindow(QWidget *parent)
             &DwarfPanoramaController::handleNotification);
     connect(m_dispatcher, &DwarfMessageDispatcher::panoramaUiMessage, m_panoramaController,
             &DwarfPanoramaController::handlePanoramaUiMessage);
+  }
+
+  if (m_focusController) {
+    connect(m_dispatcher, &DwarfMessageDispatcher::focusMessage,
+            m_focusController, &DwarfFocusController::handleFocusMessage);
+    connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage,
+            m_focusController, &DwarfFocusController::handleNotification);
+    connect(m_focusController, &DwarfFocusController::statusMessage, this,
+            [this](const QString &message) {
+              statusBar()->showMessage(message, 3000);
+            });
+    connect(m_focusController, &DwarfFocusController::errorOccurred, this,
+            [this](const QString &message) {
+              statusBar()->showMessage(message, 5000);
+            });
   }
 
   if (m_systemController) {
@@ -441,6 +459,74 @@ MainWindow::MainWindow(QWidget *parent)
               if (m_systemControlStatusLabel)
                 m_systemControlStatusLabel->setText(tr("Device powered off"));
               statusBar()->showMessage(tr("DWARF II powered off"), 5000);
+            });
+  }
+
+  if (m_trackingController) {
+    connect(m_dispatcher, &DwarfMessageDispatcher::trackMessage,
+            m_trackingController, &DwarfTrackingController::handleTrackMessage);
+    connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage,
+            m_trackingController, &DwarfTrackingController::handleNotification);
+
+    connect(m_trackingController, &DwarfTrackingController::statusMessage, this,
+            [this](const QString &message) {
+              if (m_trackingStatusLabel)
+                m_trackingStatusLabel->setText(message);
+              statusBar()->showMessage(message, 4000);
+            });
+    connect(m_trackingController, &DwarfTrackingController::errorOccurred, this,
+            [this](const QString &message) {
+              if (m_trackingStatusLabel)
+                m_trackingStatusLabel->setText(message);
+              statusBar()->showMessage(message, 5000);
+            });
+
+    auto syncTrackingBoxes = [this]() {
+      if (!m_trackingOverlay || !m_trackingController)
+        return;
+
+      QVector<TrackingOverlayWidget::TrackBox> boxes;
+      const QRect currentRect = m_trackingController->currentTrackRect();
+      if (currentRect.isValid()) {
+        TrackingOverlayWidget::TrackBox box;
+        box.rect = currentRect;
+        box.id = m_trackingController->currentTrackId();
+        boxes.push_back(box);
+      }
+
+      const auto multi = m_trackingController->multiTrackResults();
+      for (const auto &result : multi) {
+        TrackingOverlayWidget::TrackBox box;
+        box.rect = result.rect;
+        box.id = result.id;
+        boxes.push_back(box);
+      }
+      m_trackingOverlay->setTrackBoxes(boxes);
+    };
+
+    connect(m_trackingController, &DwarfTrackingController::trackResultChanged,
+            this, syncTrackingBoxes);
+    connect(m_trackingController,
+            &DwarfTrackingController::multiTrackResultsChanged, this,
+            syncTrackingBoxes);
+    connect(m_trackingController, &DwarfTrackingController::trackStopped, this,
+            [this]() {
+              if (m_trackingOverlay)
+                m_trackingOverlay->setTrackBoxes({});
+            });
+    connect(m_trackingController, &DwarfTrackingController::sentryStateChanged,
+            this, [this](int state) {
+              if (!m_trackingSentryButton)
+                return;
+              const QSignalBlocker blocker(m_trackingSentryButton);
+              m_trackingSentryButton->setChecked(state != 0 && state != 4);
+            });
+    connect(m_trackingController, &DwarfTrackingController::ufoStateChanged,
+            this, [this](int state) {
+              if (!m_trackingUfoButton)
+                return;
+              const QSignalBlocker blocker(m_trackingUfoButton);
+              m_trackingUfoButton->setChecked(state != 0 && state != 4);
             });
   }
 
@@ -968,6 +1054,10 @@ void MainWindow::setupUi() {
   m_streamNameOverlay->setObjectName("streamNameOverlay");
   m_streamNameOverlay->move(10, 10);
 
+  m_trackingOverlay = new TrackingOverlayWidget(m_mainVideoWidget);
+  m_trackingOverlay->setGeometry(m_mainVideoWidget->rect());
+  m_trackingOverlay->raise();
+
   m_pipContainer = new DraggablePiP(m_mainVideoWidget);
   m_pipContainer->setFixedSize(240, 135);
   m_pipContainer->move(10, 50);
@@ -980,12 +1070,92 @@ void MainWindow::setupUi() {
   connect(m_pipContainer, &DraggablePiP::doubleClicked, this,
           &MainWindow::onPipStreamClicked);
 
+  if (m_trackingOverlay) {
+    connect(m_trackingOverlay, &TrackingOverlayWidget::selectionFinished, this,
+            [this](const QRect &box) {
+              if (!m_trackingController)
+                return;
+              if (m_trackingStatusLabel)
+                m_trackingStatusLabel->setText(tr("Starting tracking..."));
+              m_trackingController->startTrack(box);
+            });
+  }
+
+  m_trackingControlOverlay = new QGroupBox(tr("Tracking"), centralWidget);
+  m_trackingControlOverlay->setObjectName("trackingControlOverlay");
+  m_trackingControlOverlay->setFixedSize(290, 250);
+  auto *trackingLayout = new QVBoxLayout(m_trackingControlOverlay);
+  trackingLayout->setContentsMargins(10, 8, 10, 10);
+  trackingLayout->setSpacing(8);
+
+  auto *trackingRow1 = new QWidget(m_trackingControlOverlay);
+  auto *trackingRow1Layout = new QHBoxLayout(trackingRow1);
+  trackingRow1Layout->setContentsMargins(0, 0, 0, 0);
+  trackingRow1Layout->setSpacing(8);
+  m_trackingSelectButton = new QPushButton(tr("Select Box"), trackingRow1);
+  m_trackingStopButton = new QPushButton(tr("Stop"), trackingRow1);
+  trackingRow1Layout->addWidget(m_trackingSelectButton, 1);
+  trackingRow1Layout->addWidget(m_trackingStopButton, 1);
+  trackingLayout->addWidget(trackingRow1);
+
+  auto *trackingRow2 = new QWidget(m_trackingControlOverlay);
+  auto *trackingRow2Layout = new QHBoxLayout(trackingRow2);
+  trackingRow2Layout->setContentsMargins(0, 0, 0, 0);
+  trackingRow2Layout->setSpacing(8);
+  m_trackingSentryButton = new QPushButton(tr("Sentry"), trackingRow2);
+  m_trackingUfoButton = new QPushButton(tr("UFO"), trackingRow2);
+  m_trackingSentryButton->setCheckable(true);
+  m_trackingUfoButton->setCheckable(true);
+  trackingRow2Layout->addWidget(m_trackingSentryButton, 1);
+  trackingRow2Layout->addWidget(m_trackingUfoButton, 1);
+  trackingLayout->addWidget(trackingRow2);
+
+  auto *sourceRow = new QWidget(m_trackingControlOverlay);
+  auto *sourceLayout = new QHBoxLayout(sourceRow);
+  sourceLayout->setContentsMargins(0, 0, 0, 0);
+  sourceLayout->addWidget(new QLabel(tr("Source:"), sourceRow));
+  m_trackingSourceCombo = new QComboBox(sourceRow);
+  m_trackingSourceCombo->addItem(tr("Tele"), 0);
+  m_trackingSourceCombo->addItem(tr("Wide"), 1);
+  sourceLayout->addWidget(m_trackingSourceCombo, 1);
+  trackingLayout->addWidget(sourceRow);
+
+  auto *ufoModeRow = new QWidget(m_trackingControlOverlay);
+  auto *ufoModeLayout = new QHBoxLayout(ufoModeRow);
+  ufoModeLayout->setContentsMargins(0, 0, 0, 0);
+  ufoModeLayout->addWidget(new QLabel(tr("UFO mode:"), ufoModeRow));
+  m_trackingUfoModeCombo = new QComboBox(ufoModeRow);
+  m_trackingUfoModeCombo->addItem(tr("Manual"), 0);
+  m_trackingUfoModeCombo->addItem(tr("Auto"), 1);
+  ufoModeLayout->addWidget(m_trackingUfoModeCombo, 1);
+  trackingLayout->addWidget(ufoModeRow);
+
+  auto *motRow = new QWidget(m_trackingControlOverlay);
+  auto *motLayout = new QHBoxLayout(motRow);
+  motLayout->setContentsMargins(0, 0, 0, 0);
+  motLayout->setSpacing(8);
+  m_trackingMotStartButton = new QPushButton(tr("Start MOT"), motRow);
+  m_trackingTargetIdSpin = new QSpinBox(motRow);
+  m_trackingTargetIdSpin->setRange(0, 99);
+  m_trackingMotTrackButton = new QPushButton(tr("Track ID"), motRow);
+  motLayout->addWidget(m_trackingMotStartButton);
+  motLayout->addWidget(m_trackingTargetIdSpin);
+  motLayout->addWidget(m_trackingMotTrackButton);
+  trackingLayout->addWidget(motRow);
+
+  m_trackingStatusLabel = new QLabel(tr("Idle"), m_trackingControlOverlay);
+  m_trackingStatusLabel->setWordWrap(true);
+  trackingLayout->addWidget(m_trackingStatusLabel);
+
+  m_trackingControlOverlay->hide();
+  m_trackingControlOverlay->raise();
+
   // Motor Control Overlay (draggable, top layer)
   // Parent is centralWidget so it can be dragged over other panels
   m_motorOverlay = new MotorControlPanel(centralWidget);
   m_motorOverlay->setMotorController(m_motorController);
   m_motorOverlay->setFocusController(m_focusController);
-  m_motorOverlay->setFixedSize(290, 380);
+  m_motorOverlay->setFixedSize(290, 430);
   m_motorOverlay->setCursor(Qt::OpenHandCursor);  // Show it's draggable
   m_motorOverlay->setMouseTracking(true);
   // Initial position will be set by updateOverlayPositions
@@ -1701,6 +1871,87 @@ void MainWindow::setupUi() {
       m_systemController->reboot();
     });
   }
+  if (m_trackingSelectButton) {
+    connect(m_trackingSelectButton, &QPushButton::clicked, this, [this]() {
+      if (!m_trackingOverlay || !m_trackingControlOverlay)
+        return;
+      m_trackingOverlay->setSelectionEnabled(true);
+      m_trackingControlOverlay->raise();
+      if (m_trackingStatusLabel)
+        m_trackingStatusLabel->setText(tr("Draw a tracking box on the live view"));
+    });
+  }
+  if (m_trackingStopButton) {
+    connect(m_trackingStopButton, &QPushButton::clicked, this, [this]() {
+      if (m_trackingController)
+        m_trackingController->stopTrack();
+    });
+  }
+  if (m_trackingSentryButton) {
+    connect(m_trackingSentryButton, &QPushButton::toggled, this,
+            [this](bool checked) {
+              if (!m_trackingController)
+                return;
+              if (checked)
+                m_trackingController->startSentryMode(0);
+              else
+                m_trackingController->stopSentryMode();
+            });
+  }
+  if (m_trackingUfoButton) {
+    connect(m_trackingUfoButton, &QPushButton::toggled, this,
+            [this](bool checked) {
+              if (!m_trackingController)
+                return;
+              const int mode =
+                  m_trackingUfoModeCombo
+                      ? m_trackingUfoModeCombo->currentData().toInt()
+                      : 1;
+              if (checked)
+                m_trackingController->startUfoMode(mode);
+              else
+                m_trackingController->stopUfoMode();
+            });
+  }
+  if (m_trackingSourceCombo) {
+    connect(m_trackingSourceCombo,
+            QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            [this](int index) {
+              if (!m_trackingController || !m_trackingSourceCombo)
+                return;
+              m_trackingController->setWideTeleTrackSwitch(
+                  m_trackingSourceCombo->itemData(index).toInt());
+            });
+  }
+  if (m_trackingUfoModeCombo) {
+    connect(m_trackingUfoModeCombo,
+            QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            [this](int index) {
+              if (!m_trackingController || !m_trackingUfoModeCombo)
+                return;
+              m_trackingController->setUfoHandAutoMode(
+                  m_trackingUfoModeCombo->itemData(index).toInt());
+            });
+  }
+  if (m_trackingMotStartButton) {
+    connect(m_trackingMotStartButton, &QPushButton::clicked, this, [this]() {
+      if (m_trackingController)
+        m_trackingController->startMot();
+    });
+  }
+  if (m_trackingMotTrackButton) {
+    connect(m_trackingMotTrackButton, &QPushButton::clicked, this, [this]() {
+      if (!m_trackingController || !m_trackingTargetIdSpin)
+        return;
+      const int id = m_trackingTargetIdSpin->value();
+      const bool wide = m_trackingSourceCombo &&
+                        m_trackingSourceCombo->currentData().toInt() == 1;
+      if (wide)
+        m_trackingController->wideMotTrackOne(id);
+      else
+        m_trackingController->motTrackOne(id);
+    });
+  }
 
   connect(m_deviceList, &QListWidget::itemDoubleClicked, this,
           &MainWindow::onDeviceSelected);
@@ -1786,11 +2037,17 @@ void MainWindow::updateOverlayVisibility() {
 
   const bool motorVisible = connected && allowOverlays && !blockedByFullscreenOverlay && m_motorOverlayUserVisible;
   const bool paramsVisible = connected && allowOverlays && !blockedByFullscreenOverlay && m_paramsOverlayUserVisible;
+  const bool trackingVisible =
+      connected && camSelected && !blockedByFullscreenOverlay;
 
   if (m_motorOverlay)
     m_motorOverlay->setVisible(motorVisible);
   if (m_paramsOverlay)
     m_paramsOverlay->setVisible(paramsVisible);
+  if (m_trackingOverlay)
+    m_trackingOverlay->setVisible(trackingVisible);
+  if (m_trackingControlOverlay)
+    m_trackingControlOverlay->setVisible(trackingVisible);
 
   // Panorama grid overlay is only relevant in PANO tab and when connected.
   if (m_panoGridOverlay) {
@@ -1923,6 +2180,8 @@ void MainWindow::onConnectClicked() {
     m_focusController->setClient(m_wsClient);
   if (m_systemController)
     m_systemController->setClient(m_wsClient);
+  if (m_trackingController)
+    m_trackingController->setClient(m_wsClient);
   if (m_astroController)
     m_astroController->setClient(m_wsClient);
   if (m_panoramaController)
@@ -1978,6 +2237,8 @@ void MainWindow::onDisconnectClicked() {
     m_focusController->setClient(nullptr);
   if (m_systemController)
     m_systemController->setClient(nullptr);
+  if (m_trackingController)
+    m_trackingController->setClient(nullptr);
   if (m_astroController)
     m_astroController->setClient(nullptr);
   if (m_panoramaController)
@@ -1991,6 +2252,14 @@ void MainWindow::onDisconnectClicked() {
     m_systemControlGroup->setEnabled(false);
   if (m_systemControlStatusLabel)
     m_systemControlStatusLabel->setText(tr("Not connected"));
+  if (m_trackingControlOverlay)
+    m_trackingControlOverlay->setEnabled(false);
+  if (m_trackingStatusLabel)
+    m_trackingStatusLabel->setText(tr("Not connected"));
+  if (m_trackingOverlay) {
+    m_trackingOverlay->setSelectionEnabled(false);
+    m_trackingOverlay->setTrackBoxes({});
+  }
 }
 
 void MainWindow::onCancelConnectClicked() {
@@ -2043,6 +2312,13 @@ void MainWindow::onWebSocketConnected() {
     m_systemControlStatusLabel->setText(
         m_wsClient->isClientMode() ? tr("View-only connection")
                                    : tr("Connected"));
+  }
+  if (m_trackingControlOverlay) {
+    m_trackingControlOverlay->setEnabled(!m_wsClient->isClientMode());
+    if (m_trackingStatusLabel) {
+      m_trackingStatusLabel->setText(
+          m_wsClient->isClientMode() ? tr("View-only connection") : tr("Idle"));
+    }
   }
 
   if (m_cameraSettingsPanel) {
@@ -2154,6 +2430,10 @@ void MainWindow::onWebSocketDisconnected() {
     m_systemControlGroup->setEnabled(false);
   if (m_systemControlStatusLabel)
     m_systemControlStatusLabel->setText(tr("Not connected"));
+  if (m_trackingControlOverlay)
+    m_trackingControlOverlay->setEnabled(false);
+  if (m_trackingStatusLabel)
+    m_trackingStatusLabel->setText(tr("Not connected"));
 }
 
 void MainWindow::onWebSocketError(const QString &error) {
@@ -3065,6 +3345,16 @@ void MainWindow::onPipStreamClicked() {
 }
 
 void MainWindow::updateOverlayPositions() {
+  if (m_mainVideoWidget && m_trackingOverlay) {
+    m_trackingOverlay->setGeometry(m_mainVideoWidget->rect());
+    if (m_trackingOverlay->isVisible())
+      m_trackingOverlay->raise();
+    if (m_streamNameOverlay)
+      m_streamNameOverlay->raise();
+    if (m_pipContainer)
+      m_pipContainer->raise();
+  }
+
   if (m_mainVideoWidget && m_motorOverlay && m_mainStreamView) {
     // Calculate position relative to central widget (including sidebar offset)
     QPoint videoPos = m_mainStreamView->mapTo(centralWidget(), QPoint(0, 0));
@@ -3114,6 +3404,15 @@ void MainWindow::updateOverlayPositions() {
 
     m_paramsOverlay->move(overlayX, overlayY);
     m_paramsOverlay->raise();
+  }
+
+  if (m_mainVideoWidget && m_trackingControlOverlay && m_mainStreamView) {
+    const QPoint videoPos = m_mainStreamView->mapTo(centralWidget(), QPoint(0, 0));
+    const int overlayX = videoPos.x() + 20;
+    const int overlayY = videoPos.y() + 20;
+    m_trackingControlOverlay->move(overlayX, overlayY);
+    if (m_trackingControlOverlay->isVisible())
+      m_trackingControlOverlay->raise();
   }
 
   if (m_starMapOverlayContainer && m_mainStreamView) {

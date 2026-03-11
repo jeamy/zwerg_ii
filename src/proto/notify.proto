@@ -126,3 +126,22 @@ message ResNotifyCPUMode {
 // 15229 - Power off notification
 message ResNotifyPowerOff {
 }
+
+// 15225 / 15232 / 15238 - Tracking result notifications
+message ResNotifyTrackResult {
+  int32 x = 1;
+  int32 y = 2;
+  int32 w = 3;
+  int32 h = 4;
+  int32 id = 5;
+}
+
+// 15231 / 15240 - Sentry/UFO mode state
+message ResNotifyStateSentryMode {
+  int32 state = 1;  // 0=idle, 1=init, 2=detect, 3=track, 4=finished, 5=stopping
+}
+
+// 15238 - Multi-object tracking result
+message ResNotifyMultiTrackResult {
+  repeated ResNotifyTrackResult results = 1;
+}

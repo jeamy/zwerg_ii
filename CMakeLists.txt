@@ -82,6 +82,8 @@ set(SOURCES
     src/net/DwarfFocusController.h
     src/net/DwarfSystemController.cpp
     src/net/DwarfSystemController.h
+    src/net/DwarfTrackingController.cpp
+    src/net/DwarfTrackingController.h
     src/net/DwarfAstroController.cpp
     src/net/DwarfAstroController.h
     src/net/DwarfPanoramaController.cpp
@@ -114,6 +116,8 @@ set(SOURCES
     src/ui/MotorControlPanel.h
     src/ui/ParametersOverlayPanel.cpp
     src/ui/ParametersOverlayPanel.h
+    src/ui/TrackingOverlayWidget.cpp
+    src/ui/TrackingOverlayWidget.h
     src/ui/HelpWindow.cpp
     src/ui/HelpWindow.h
     ${PROTO_SRCS}

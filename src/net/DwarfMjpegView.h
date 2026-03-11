@@ -15,6 +15,7 @@ public:
 
   void setSourceImage(const QImage *image);
   QRect imageRect() const;
+  QSize sourceImageSize() const;
 
 signals:
   void pointClicked(const QPointF &normalizedPos);

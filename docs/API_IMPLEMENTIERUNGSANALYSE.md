@@ -18,8 +18,8 @@ Quellenbasis:
 
 Nicht vollständig umgesetzt ist die API aber klar in den Bereichen:
 - Device-/HTTP-Management
-- Tracking-Modul 7
-- vollständige Fokus-API
+- Tracking-Modul 7 ist erst teilweise verifiziert
+- Fokus-API ist weitgehend, aber nicht vollständig verifiziert
 - dokumentierte Album-Delete-API
 - dokumentierte RTSP-Nutzung
 
@@ -43,9 +43,9 @@ Zusätzlich gibt es mehrere Stellen, an denen `zwergII` nicht der dokumentierten
 | Kamera Tele | Teilweise bis weitgehend | Open/Close/Photo/Video/Params da; Burst/Timelapse fehlen |
 | Kamera Wide | Teilweise | Open/Close/Photo/Params da; Burst/Timelapse fehlen |
 | Astro | Teilweise bis weitgehend | Kernfunktionen da; nicht alle dokumentierten Kommandos sind UI-seitig fertig |
-| Fokus | Teilweise | Nur Normal-AF und Single-Step manuell |
+| Fokus | Weitgehend implementiert | Continuous Focus und Astro-AF sind ergänzt; Area-AF ist UI-seitig noch nicht genutzt |
 | Motor | Teilweise | Run/Stop/Joystick da; Dual-Camera-Linkage fehlt |
-| Tracking (Modul 7) | Fehlend | Proto vorhanden, aber keine Controller-/UI-Umsetzung |
+| Tracking (Modul 7) | Teilweise bis weitgehend | Controller, Notify-Handling und Livebild-UI sind da; einzelne Kommandos sind noch unvalidiert |
 | Panorama | Teilweise | Läuft, aber reverse-engineered und fragil |
 | System (Modul 4) | Weitgehend implementiert | Zeit, Zeitzone, MTP und CPU sind als Controller + UI verdrahtet |
 | RGB/Power (Modul 5) | Implementiert | RGB-Ring, Power-Indikator, Shutdown und Reboot sind umgesetzt |
@@ -163,17 +163,18 @@ Spezifikation:
 - `15004/15005` Astro AF Start/Stop
 
 Implementiert:
-- Nur `autoFocusNormal`, `manualStepNear`, `manualStepFar` in [src/net/DwarfFocusController.h](/media/data/programming/zwergII/src/net/DwarfFocusController.h#L12) und [src/net/DwarfFocusController.cpp](/media/data/programming/zwergII/src/net/DwarfFocusController.cpp#L18).
-- UI nutzt genau nur diese drei Funktionen, siehe [src/ui/MotorControlPanel.cpp](/media/data/programming/zwergII/src/ui/MotorControlPanel.cpp#L244).
+- `15000`/`15001` Normal-AF und Single-Step sind weiter vorhanden in [src/net/DwarfFocusController.cpp](/media/data/programming/zwergII/src/net/DwarfFocusController.cpp#L18).
+- `15002/15003` Continuous Focus und `15004/15005` Astro AF Start/Stop sind jetzt ebenfalls im Controller umgesetzt, siehe [src/net/DwarfFocusController.cpp](/media/data/programming/zwergII/src/net/DwarfFocusController.cpp#L64).
+- Response- und Notify-Handling für Fokus sind ergänzt, inklusive Positions-Notify `15257`, siehe [src/net/DwarfFocusController.cpp](/media/data/programming/zwergII/src/net/DwarfFocusController.cpp#L99).
+- Das Motor-/Fokus-Overlay bietet jetzt Single-Step, Hold-Focus und Astro-AF, siehe [src/ui/MotorControlPanel.cpp](/media/data/programming/zwergII/src/ui/MotorControlPanel.cpp#L196).
 
-Fehlend:
-- Continuous manual focus
-- Astro autofocus
-- Response-/Statushandling des Fokusmoduls
+Offen:
+- Area-AF-Variante von `15000` mit expliziten Koordinaten ist UI-seitig noch nicht exponiert
+- Keine Gerätevalidierung der neuen Fokusmodi erfolgt
 
 Bewertung:
-- Basis-Fokus vorhanden.
-- Gegenüber der dokumentierten Fokus-API klar nur ein Subset.
+- Die dokumentierten Fokus-Kommandos `15000-15005` sind jetzt im Client abgedeckt.
+- Restoffen ist vor allem die tiefergehende Bedienung/Validierung, nicht mehr die reine API-Abwesenheit.
 
 ### 7. Astro-API
 
@@ -225,20 +226,23 @@ Spezifikation:
 - weitere dokumentierte Tracking-Kommandos bis `14810`
 
 Implementiert:
-- Nur Proto-Definitionen vorhanden, siehe [src/proto/tracking.proto](/media/data/programming/zwergII/src/proto/tracking.proto#L1).
-- Dispatcher kennt Modul 7, siehe [src/net/DwarfMessageDispatcher.h](/media/data/programming/zwergII/src/net/DwarfMessageDispatcher.h#L17).
+- Vollständiger Tracking-Controller für `14800-14810` in [src/net/DwarfTrackingController.cpp](/media/data/programming/zwergII/src/net/DwarfTrackingController.cpp).
+- Erweiterte Tracking-Protos für `14809/14810` in [src/proto/tracking.proto](/media/data/programming/zwergII/src/proto/tracking.proto#L1).
+- Notify-Handling für Track-Result, Sentry/UFO-State und Multi-Track-Result in [src/proto/notify.proto](/media/data/programming/zwergII/src/proto/notify.proto#L126).
+- Livebild-Box-Auswahl und Ergebnis-Overlay in [src/ui/TrackingOverlayWidget.cpp](/media/data/programming/zwergII/src/ui/TrackingOverlayWidget.cpp).
+- Bedien-Overlay im Hauptfenster für Objekttracking, Sentry, UFO, MOT, Source-Switch und UFO-Hand/Auto in [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp#L1010).
 
-Fehlend:
-- kein `DwarfTrackingController`
-- keine Sends auf Modul 7
-- keine UI für Objekttracking/Sentry/MOT
-- keine Response-/Notify-Verarbeitung für Tracking
+Offen / unsicher:
+- `14809` Wide/Tele-Switch und `14810` UFO hand/auto basieren auf der Doku-Inferenz `int32 mode`, sind aber noch nicht gegen reale Firmware validiert
+- Es gibt noch keine separate Verifikation, welche Tracking-Modi auf Tele bzw. Wide in allen Firmware-Versionen tatsächlich akzeptiert werden
+- Keine Laufzeitverifikation gegen ein echtes Gerät durchgeführt
 
 Wichtig:
 - Das in der Astro-UI vorhandene Sun/Moon-Tracking ist nicht das Tracking-Modul 7, sondern Astro-Cmd `11011/11012`.
 
 Bewertung:
-- Das Tracking-Modul der offiziellen API ist aktuell faktisch nicht implementiert.
+- Modul 7 ist jetzt funktional im Client vertreten und bedienbar.
+- Vollständig belastbar ist die Umsetzung erst nach Gerätevalidierung der letzten Randkommandos.
 
 ### 10. Panorama
 
@@ -283,9 +287,9 @@ Bewertung:
 
 ### Hoch
 
-1. Tracking-Modul 7 komplett implementieren
-2. Album-Delete auf dokumentierten API-Pfad prüfen und sauber abbilden
-3. Fokus-API auf `15002-15005` erweitern
+1. Album-Delete auf dokumentierten API-Pfad prüfen und sauber abbilden
+2. Tracking-Modul 7 gegen reale Firmware validieren, insbesondere `14809/14810`
+3. Fokus- und Tracking-Neuerungen gegen reale Firmware validieren
 
 ### Mittel
 
@@ -309,7 +313,5 @@ Bewertung:
 - und mit mehreren bewusst pragmatischen Reverse-Engineering-Workarounds.
 
 Für einen „API komplett implementiert“-Status fehlen vor allem:
-- Tracking Modul 7
-- vollständige Fokus-API
 - saubere Device-/Album-HTTP-Abdeckung
 - dokumentenkonforme Panorama-/Delete-Pfade
