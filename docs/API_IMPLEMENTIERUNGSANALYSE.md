@@ -18,7 +18,6 @@ Quellenbasis:
 
 Nicht vollständig umgesetzt ist die API aber klar in den Bereichen:
 - Device-/HTTP-Management
-- System/RGB/Power
 - Tracking-Modul 7
 - vollständige Fokus-API
 - dokumentierte Album-Delete-API
@@ -48,8 +47,8 @@ Zusätzlich gibt es mehrere Stellen, an denen `zwergII` nicht der dokumentierten
 | Motor | Teilweise | Run/Stop/Joystick da; Dual-Camera-Linkage fehlt |
 | Tracking (Modul 7) | Fehlend | Proto vorhanden, aber keine Controller-/UI-Umsetzung |
 | Panorama | Teilweise | Läuft, aber reverse-engineered und fragil |
-| System (Modul 4) | Teilweise | Nur Zeitsetzen aktiv verwendet |
-| RGB/Power (Modul 5) | Fehlend | Keine Umsetzung |
+| System (Modul 4) | Weitgehend implementiert | Zeit, Zeitzone, MTP und CPU sind als Controller + UI verdrahtet |
+| RGB/Power (Modul 5) | Implementiert | RGB-Ring, Power-Indikator, Shutdown und Reboot sind umgesetzt |
 
 ## Detaillierte Analyse
 
@@ -266,39 +265,34 @@ Spezifikation:
 - RGB/Power: `13500`-`13505`
 
 Implementiert:
-- Aktiv genutzt wird nur `13000 Set Time` in [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp#L1906).
-- Die Protobuf-Messages für den Rest existieren, siehe [src/proto/system.proto](/media/data/programming/zwergII/src/proto/system.proto#L1).
+- Neuer Controller für Modul 4/5 mit Request-/Response-Handling in [src/net/DwarfSystemController.cpp](/media/data/programming/zwergII/src/net/DwarfSystemController.cpp).
+- `13000` Zeit setzen wird jetzt über den Controller verwendet, siehe [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp#L2135).
+- `13001` Zeitzone, `13002` MTP und `13003` CPU sind in der Settings-UI verdrahtet, siehe [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp#L1514).
+- `13500`/`13501` RGB-Ring, `13503`/`13504` Power-Indikator sowie `13502` Shutdown und `13505` Reboot sind in derselben UI verdrahtet, siehe [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp#L1514).
+- Notifications für RGB-, Power-Indikator-, MTP-, CPU- und Power-Off-Status sind als Proto + Handler ergänzt, siehe [src/proto/notify.proto](/media/data/programming/zwergII/src/proto/notify.proto#L104) und [src/net/DwarfSystemController.cpp](/media/data/programming/zwergII/src/net/DwarfSystemController.cpp#L121).
 
-Fehlend:
-- Zeitzone setzen
-- MTP-Modus setzen
-- CPU-Modus setzen
-- Master-Lock
-- Ringlicht an/aus
-- Batterieanzeige an/aus
-- Shutdown
-- Reboot
-
-Zusätzlich:
-- Obwohl Dispatcher Signale für `systemMessage` und `rgbPowerMessage` besitzt, werden sie im MainWindow nicht an Controller/Handler gebunden, siehe [src/MainWindow.cpp](/media/data/programming/zwergII/src/MainWindow.cpp#L324).
+Fehlend / offen:
+- Master-Lock ist weiterhin nicht in die UI eingebunden
+- Es gibt keine dedizierte Readback-/Query-Funktion für den initialen Zustand; die UI arbeitet mit Responses und Notifications
 
 Bewertung:
-- Dieser API-Bereich ist im aktuellen Stand praktisch nicht umgesetzt.
+- Modul 4/5 ist für die dokumentierten Kernfunktionen jetzt praktisch abgedeckt.
+- Offene Restlücke ist nur noch der nicht priorisierte Master-Lock-/Host-Lock-Pfad.
 
 ## Priorisierte Lücken
 
 ### Hoch
 
 1. Tracking-Modul 7 komplett implementieren
-2. System/RGB/Power-Modul 4/5 implementieren
-3. Album-Delete auf dokumentierten API-Pfad prüfen und sauber abbilden
-4. Fokus-API auf `15002-15005` erweitern
+2. Album-Delete auf dokumentierten API-Pfad prüfen und sauber abbilden
+3. Fokus-API auf `15002-15005` erweitern
 
 ### Mittel
 
 1. Kamera-Burst/Timelapse für Tele und Wide ergänzen
 2. Astro-Controller-Funktionen, die schon vorhanden sind, UI-seitig fertig integrieren
 3. Panorama-Protokoll von heuristisch auf verifiziert umstellen
+4. Master-Lock aus Modul 4 optional ergänzen
 
 ### Niedrig
 
@@ -316,7 +310,6 @@ Bewertung:
 
 Für einen „API komplett implementiert“-Status fehlen vor allem:
 - Tracking Modul 7
-- System/RGB/Power
 - vollständige Fokus-API
 - saubere Device-/Album-HTTP-Abdeckung
 - dokumentenkonforme Panorama-/Delete-Pfade

@@ -102,3 +102,27 @@ message ResNotifyTemperature {
 message ResNotifyFocus {
   int32 position = 1;
 }
+
+// 15221 - RGB ring light state
+message ResNotifyRgbState {
+  int32 state = 1;  // 0=off, 1=on
+}
+
+// 15222 - Power indicator state
+message ResNotifyPowerIndState {
+  int32 state = 1;  // 0=off, 1=on
+}
+
+// 15224 - MTP mode state
+message ResNotifyMTPState {
+  int32 mode = 1;  // 0=off, 1=on
+}
+
+// 15227 - CPU mode
+message ResNotifyCPUMode {
+  int32 mode = 1;  // 0=normal, 1=performance
+}
+
+// 15229 - Power off notification
+message ResNotifyPowerOff {
+}

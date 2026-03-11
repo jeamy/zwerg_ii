@@ -80,6 +80,8 @@ set(SOURCES
     src/net/DwarfMotorController.h
     src/net/DwarfFocusController.cpp
     src/net/DwarfFocusController.h
+    src/net/DwarfSystemController.cpp
+    src/net/DwarfSystemController.h
     src/net/DwarfAstroController.cpp
     src/net/DwarfAstroController.h
     src/net/DwarfPanoramaController.cpp

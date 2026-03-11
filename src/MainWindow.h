@@ -29,6 +29,7 @@
 class DwarfCameraController;
 class DwarfMotorController;
 class DwarfFocusController;
+class DwarfSystemController;
 class DwarfAstroController;
 class DwarfPanoramaController;
 class DwarfMjpegStream;
@@ -212,6 +213,7 @@ private:
   DwarfCameraController *m_cameraController;
   DwarfMotorController *m_motorController;
   DwarfFocusController *m_focusController;
+  DwarfSystemController *m_systemController;
   DwarfAstroController *m_astroController;
   DwarfPanoramaController *m_panoramaController;
 
@@ -270,6 +272,17 @@ private:
   QLabel *m_batteryLabel = nullptr;
   QLabel *m_firmwareLabel = nullptr;
   QLabel *m_sdSpaceLabel = nullptr;
+  QGroupBox *m_systemControlGroup = nullptr;
+  QLineEdit *m_timezoneEdit = nullptr;
+  QPushButton *m_syncTimeButton = nullptr;
+  QPushButton *m_setTimezoneButton = nullptr;
+  QCheckBox *m_mtpModeCheck = nullptr;
+  QComboBox *m_cpuModeCombo = nullptr;
+  QCheckBox *m_rgbLightCheck = nullptr;
+  QCheckBox *m_powerIndicatorCheck = nullptr;
+  QPushButton *m_powerDownButton = nullptr;
+  QPushButton *m_rebootButton = nullptr;
+  QLabel *m_systemControlStatusLabel = nullptr;
   QString m_downloadDir;
   DwarfFtpDownloader *m_ftpDownloader;
   DwarfMtpClient *m_mtpClient;

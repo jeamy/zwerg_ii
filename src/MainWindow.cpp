@@ -5,6 +5,7 @@
 #include "net/DwarfFocusController.h"
 #include "net/DwarfFinder.h"
 #include "net/DwarfMessageDispatcher.h"
+#include "net/DwarfSystemController.h"
 #include "net/DwarfWebSocketClient.h"
 #include "net/DwarfPanoramaController.h"
 #include "net/DwarfHttpClient.h"
@@ -46,11 +47,10 @@
 #include <QStatusBar>
 #include <QStyle>
 #include <QTimer>
+#include <QTimeZone>
 #include <QVBoxLayout>
 #include <QVector>
 #include <cmath>
-
-#include "system.pb.h"
 
 namespace {
 class PanoramaGridOverlayWidget : public QWidget {
@@ -331,6 +331,7 @@ MainWindow::MainWindow(QWidget *parent)
   m_cameraController = new DwarfCameraController(this);
   m_motorController = new DwarfMotorController(this);
   m_focusController = new DwarfFocusController(this);
+  m_systemController = new DwarfSystemController(this);
 
   if (m_astroController) {
     connect(m_dispatcher, &DwarfMessageDispatcher::astroMessage, m_astroController,
@@ -367,6 +368,80 @@ MainWindow::MainWindow(QWidget *parent)
             &DwarfPanoramaController::handleNotification);
     connect(m_dispatcher, &DwarfMessageDispatcher::panoramaUiMessage, m_panoramaController,
             &DwarfPanoramaController::handlePanoramaUiMessage);
+  }
+
+  if (m_systemController) {
+    connect(m_dispatcher, &DwarfMessageDispatcher::systemMessage,
+            m_systemController, &DwarfSystemController::handleSystemMessage);
+    connect(m_dispatcher, &DwarfMessageDispatcher::rgbPowerMessage,
+            m_systemController, &DwarfSystemController::handleRgbPowerMessage);
+    connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage,
+            m_systemController, &DwarfSystemController::handleNotification);
+
+    connect(m_systemController, &DwarfSystemController::statusMessage, this,
+            [this](const QString &message) {
+              if (m_systemControlStatusLabel)
+                m_systemControlStatusLabel->setText(message);
+              statusBar()->showMessage(message, 4000);
+            });
+    connect(m_systemController, &DwarfSystemController::errorOccurred, this,
+            [this](const QString &message) {
+              if (m_systemControlStatusLabel)
+                m_systemControlStatusLabel->setText(message);
+              statusBar()->showMessage(message, 5000);
+            });
+    connect(m_systemController, &DwarfSystemController::timezoneChanged, this,
+            [this](const QString &timezone) {
+              if (m_timezoneEdit)
+                m_timezoneEdit->setText(timezone);
+            });
+    connect(m_systemController, &DwarfSystemController::mtpModeChanged, this,
+            [this](bool enabled) {
+              if (!m_mtpModeCheck)
+                return;
+              const QSignalBlocker blocker(m_mtpModeCheck);
+              m_mtpModeCheck->setChecked(enabled);
+            });
+    connect(m_systemController, &DwarfSystemController::cpuModeChanged, this,
+            [this](int mode) {
+              if (!m_cpuModeCombo)
+                return;
+              const QSignalBlocker blocker(m_cpuModeCombo);
+              m_cpuModeCombo->setCurrentIndex(qBound(0, mode, 1));
+            });
+    connect(m_systemController, &DwarfSystemController::rgbStateChanged, this,
+            [this](bool enabled) {
+              if (!m_rgbLightCheck)
+                return;
+              const QSignalBlocker blocker(m_rgbLightCheck);
+              m_rgbLightCheck->setChecked(enabled);
+            });
+    connect(m_systemController,
+            &DwarfSystemController::powerIndicatorStateChanged, this,
+            [this](bool enabled) {
+              if (!m_powerIndicatorCheck)
+                return;
+              const QSignalBlocker blocker(m_powerIndicatorCheck);
+              m_powerIndicatorCheck->setChecked(enabled);
+            });
+    connect(m_systemController, &DwarfSystemController::poweringOff, this,
+            [this]() {
+              if (m_systemControlStatusLabel)
+                m_systemControlStatusLabel->setText(
+                    tr("Shutdown in progress..."));
+            });
+    connect(m_systemController, &DwarfSystemController::rebooting, this,
+            [this]() {
+              if (m_systemControlStatusLabel)
+                m_systemControlStatusLabel->setText(
+                    tr("Reboot in progress..."));
+            });
+    connect(m_systemController, &DwarfSystemController::poweredOff, this,
+            [this]() {
+              if (m_systemControlStatusLabel)
+                m_systemControlStatusLabel->setText(tr("Device powered off"));
+              statusBar()->showMessage(tr("DWARF II powered off"), 5000);
+            });
   }
 
   // Load application configuration BEFORE building UI panels, because setupUi()
@@ -1436,6 +1511,69 @@ void MainWindow::setupUi() {
   
   sl->addWidget(sysGroup);
 
+  m_systemControlGroup = new QGroupBox(tr("System Control"), settingsTab);
+  auto *ctrlLayout = new QVBoxLayout(m_systemControlGroup);
+
+  auto *timeRow = new QWidget(m_systemControlGroup);
+  auto *timeLayout = new QHBoxLayout(timeRow);
+  timeLayout->setContentsMargins(0, 0, 0, 0);
+  timeLayout->addWidget(new QLabel(tr("Clock:"), timeRow));
+  m_syncTimeButton = new QPushButton(tr("Sync Time Now"), timeRow);
+  timeLayout->addWidget(m_syncTimeButton);
+  timeLayout->addStretch(1);
+  ctrlLayout->addWidget(timeRow);
+
+  auto *timezoneRow = new QWidget(m_systemControlGroup);
+  auto *timezoneLayout = new QHBoxLayout(timezoneRow);
+  timezoneLayout->setContentsMargins(0, 0, 0, 0);
+  timezoneLayout->addWidget(new QLabel(tr("Timezone:"), timezoneRow));
+  m_timezoneEdit = new QLineEdit(timezoneRow);
+  m_timezoneEdit->setText(QString::fromUtf8(QTimeZone::systemTimeZoneId()));
+  m_setTimezoneButton = new QPushButton(tr("Apply"), timezoneRow);
+  timezoneLayout->addWidget(m_timezoneEdit, 1);
+  timezoneLayout->addWidget(m_setTimezoneButton);
+  ctrlLayout->addWidget(timezoneRow);
+
+  m_mtpModeCheck = new QCheckBox(tr("Enable MTP mode"), m_systemControlGroup);
+  ctrlLayout->addWidget(m_mtpModeCheck);
+
+  auto *cpuRow = new QWidget(m_systemControlGroup);
+  auto *cpuLayout = new QHBoxLayout(cpuRow);
+  cpuLayout->setContentsMargins(0, 0, 0, 0);
+  cpuLayout->addWidget(new QLabel(tr("CPU mode:"), cpuRow));
+  m_cpuModeCombo = new QComboBox(cpuRow);
+  m_cpuModeCombo->addItem(tr("Normal"), 0);
+  m_cpuModeCombo->addItem(tr("Performance"), 1);
+  cpuLayout->addWidget(m_cpuModeCombo);
+  cpuLayout->addStretch(1);
+  ctrlLayout->addWidget(cpuRow);
+
+  m_rgbLightCheck = new QCheckBox(tr("RGB ring light"), m_systemControlGroup);
+  m_powerIndicatorCheck =
+      new QCheckBox(tr("Power indicator"), m_systemControlGroup);
+  ctrlLayout->addWidget(m_rgbLightCheck);
+  ctrlLayout->addWidget(m_powerIndicatorCheck);
+
+  auto *powerRow = new QWidget(m_systemControlGroup);
+  auto *powerLayout = new QHBoxLayout(powerRow);
+  powerLayout->setContentsMargins(0, 0, 0, 0);
+  m_powerDownButton = new QPushButton(tr("Shutdown"), powerRow);
+  m_rebootButton = new QPushButton(tr("Reboot"), powerRow);
+  powerLayout->addWidget(m_powerDownButton);
+  powerLayout->addWidget(m_rebootButton);
+  powerLayout->addStretch(1);
+  ctrlLayout->addWidget(powerRow);
+
+  m_systemControlStatusLabel =
+      new QLabel(tr("Not connected"), m_systemControlGroup);
+  m_systemControlStatusLabel->setWordWrap(true);
+  m_systemControlStatusLabel->setStyleSheet(
+      "color: rgba(255, 255, 255, 0.65);");
+  ctrlLayout->addWidget(m_systemControlStatusLabel);
+
+  m_systemControlGroup->setEnabled(false);
+  sl->addWidget(m_systemControlGroup);
+
   sl->addStretch();
   m_contentStack->addWidget(settingsTab);
 
@@ -1489,6 +1627,80 @@ void MainWindow::setupUi() {
   if (m_changeDownloadDirButton)
     connect(m_changeDownloadDirButton, &QPushButton::clicked, this,
             &MainWindow::onChangeDownloadDirClicked);
+
+  if (m_syncTimeButton)
+    connect(m_syncTimeButton, &QPushButton::clicked, this,
+            &MainWindow::syncTimeWithDevice);
+  if (m_setTimezoneButton) {
+    connect(m_setTimezoneButton, &QPushButton::clicked, this, [this]() {
+      if (!m_systemController || !m_timezoneEdit)
+        return;
+      const QString timezone = m_timezoneEdit->text().trimmed();
+      if (timezone.isEmpty())
+        return;
+      m_systemController->setTimezone(timezone);
+    });
+  }
+  if (m_mtpModeCheck) {
+    connect(m_mtpModeCheck, &QCheckBox::toggled, this, [this](bool checked) {
+      if (m_systemController)
+        m_systemController->setMtpMode(checked);
+    });
+  }
+  if (m_cpuModeCombo) {
+    connect(m_cpuModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [this](int index) {
+              if (!m_systemController || !m_cpuModeCombo)
+                return;
+              m_systemController->setCpuMode(
+                  m_cpuModeCombo->itemData(index).toInt());
+            });
+  }
+  if (m_rgbLightCheck) {
+    connect(m_rgbLightCheck, &QCheckBox::toggled, this, [this](bool checked) {
+      if (!m_systemController)
+        return;
+      if (checked)
+        m_systemController->openRgb();
+      else
+        m_systemController->closeRgb();
+    });
+  }
+  if (m_powerIndicatorCheck) {
+    connect(m_powerIndicatorCheck, &QCheckBox::toggled, this,
+            [this](bool checked) {
+              if (!m_systemController)
+                return;
+              if (checked)
+                m_systemController->openPowerIndicator();
+              else
+                m_systemController->closePowerIndicator();
+            });
+  }
+  if (m_powerDownButton) {
+    connect(m_powerDownButton, &QPushButton::clicked, this, [this]() {
+      if (!m_systemController)
+        return;
+      if (QMessageBox::question(this, tr("Shutdown DWARF II"),
+                                tr("Power off the connected DWARF II now?")) !=
+          QMessageBox::Yes) {
+        return;
+      }
+      m_systemController->powerDown();
+    });
+  }
+  if (m_rebootButton) {
+    connect(m_rebootButton, &QPushButton::clicked, this, [this]() {
+      if (!m_systemController)
+        return;
+      if (QMessageBox::question(this, tr("Reboot DWARF II"),
+                                tr("Reboot the connected DWARF II now?")) !=
+          QMessageBox::Yes) {
+        return;
+      }
+      m_systemController->reboot();
+    });
+  }
 
   connect(m_deviceList, &QListWidget::itemDoubleClicked, this,
           &MainWindow::onDeviceSelected);
@@ -1709,6 +1921,8 @@ void MainWindow::onConnectClicked() {
     m_motorController->setClient(m_wsClient);
   if (m_focusController)
     m_focusController->setClient(m_wsClient);
+  if (m_systemController)
+    m_systemController->setClient(m_wsClient);
   if (m_astroController)
     m_astroController->setClient(m_wsClient);
   if (m_panoramaController)
@@ -1762,6 +1976,8 @@ void MainWindow::onDisconnectClicked() {
     m_motorController->setClient(nullptr);
   if (m_focusController)
     m_focusController->setClient(nullptr);
+  if (m_systemController)
+    m_systemController->setClient(nullptr);
   if (m_astroController)
     m_astroController->setClient(nullptr);
   if (m_panoramaController)
@@ -1770,6 +1986,11 @@ void MainWindow::onDisconnectClicked() {
     m_astroPanel->setWebSocketClient(nullptr);
 
   stopStreaming();
+
+  if (m_systemControlGroup)
+    m_systemControlGroup->setEnabled(false);
+  if (m_systemControlStatusLabel)
+    m_systemControlStatusLabel->setText(tr("Not connected"));
 }
 
 void MainWindow::onCancelConnectClicked() {
@@ -1815,6 +2036,14 @@ void MainWindow::onWebSocketConnected() {
 
   // Sync time with DWARF device
   syncTimeWithDevice();
+
+  if (m_systemControlGroup)
+    m_systemControlGroup->setEnabled(!m_wsClient->isClientMode());
+  if (m_systemControlStatusLabel) {
+    m_systemControlStatusLabel->setText(
+        m_wsClient->isClientMode() ? tr("View-only connection")
+                                   : tr("Connected"));
+  }
 
   if (m_cameraSettingsPanel) {
     m_cameraSettingsPanel->setClientMode(m_wsClient->isClientMode());
@@ -1904,23 +2133,11 @@ void MainWindow::onDefaultParamsConfigReceived(const QJsonDocument &document) {
 }
 
 void MainWindow::syncTimeWithDevice() {
-  if (!m_wsClient || !m_wsClient->isConnected()) {
+  if (!m_systemController || !m_wsClient || !m_wsClient->isConnected()) {
     return;
   }
 
-  // CMD_SYSTEM_SET_TIME = 13000, MODULE_SYSTEM = 4
-  // Send current Unix timestamp
-  qint64 timestamp = QDateTime::currentSecsSinceEpoch();
-  qWarning() << "[MainWindow] Syncing time with DWARF, timestamp:" << timestamp;
-
-  // Create ReqSetTime protobuf message
-  dwarf::ReqSetTime req;
-  req.set_timestamp(static_cast<uint64_t>(timestamp));
-  QByteArray data(req.ByteSizeLong(), '\0');
-  req.SerializeToArray(data.data(), data.size());
-
-  m_wsClient->sendCommand(4, 13000,
-                          data); // MODULE_SYSTEM=4, CMD_SYSTEM_SET_TIME=13000
+  m_systemController->setTime(QDateTime::currentSecsSinceEpoch());
 }
 
 void MainWindow::onWebSocketDisconnected() {
@@ -1932,6 +2149,11 @@ void MainWindow::onWebSocketDisconnected() {
   statusBar()->showMessage(tr("Disconnected from DWARF II"));
 
   updateSidebarForConnectionState(false);
+
+  if (m_systemControlGroup)
+    m_systemControlGroup->setEnabled(false);
+  if (m_systemControlStatusLabel)
+    m_systemControlStatusLabel->setText(tr("Not connected"));
 }
 
 void MainWindow::onWebSocketError(const QString &error) {
