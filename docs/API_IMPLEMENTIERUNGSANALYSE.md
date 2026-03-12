@@ -41,11 +41,11 @@ Zusätzlich gibt es mehrere Stellen, an denen `zwergII` nicht der dokumentierten
 | RTSP Stream | Fehlend | In Doku vorhanden, im Qt-Client nicht verwendet |
 | Kamera Tele | Weitgehend implementiert | Open/Close/Photo/Burst/Video/Timelapse/Params sind da |
 | Kamera Wide | Weitgehend implementiert | Open/Close/Photo/Burst/Timelapse/Params sind da |
-| Astro | Teilweise bis weitgehend | Kernfunktionen da; nicht alle dokumentierten Kommandos sind UI-seitig fertig |
+| Astro | Weitgehend implementiert | Kernfunktionen, Dark-Frame-Capture, Wide-Stacking und EQ-Solving sind UI-seitig da; einzelne Randkommandos bleiben offen |
 | Fokus | Weitgehend implementiert | Continuous Focus und Astro-AF sind ergänzt; Area-AF ist UI-seitig noch nicht genutzt |
 | Motor | Weitgehend implementiert | Run/Stop/Joystick/Fixed-Angle/Dual-Linkage sind da |
 | Tracking (Modul 7) | Teilweise bis weitgehend | Controller, Notify-Handling und Livebild-UI sind da; einzelne Kommandos sind noch unvalidiert |
-| Panorama | Teilweise | Läuft, aber reverse-engineered und fragil |
+| Panorama | Teilweise | Läuft mit robusterer Zustandsführung, bleibt aber reverse-engineered |
 | System (Modul 4) | Weitgehend implementiert | Zeit, Zeitzone, MTP und CPU sind als Controller + UI verdrahtet |
 | RGB/Power (Modul 5) | Implementiert | RGB-Ring, Power-Indikator, Shutdown und Reboot sind umgesetzt |
 
@@ -181,9 +181,12 @@ Implementiert:
 - Controller deckt große Teile des Astro-Moduls ab: Kalibrierung, GOTO/One-Click-GOTO, `Go Live`, Stacking, Wide-Stacking, Darkframes, EQ-Solving, Special-Target-Tracking, siehe [src/net/DwarfAstroController.h](/media/data/programming/zwergII/src/net/DwarfAstroController.h#L18) und [src/net/DwarfAstroController.cpp](/media/data/programming/zwergII/src/net/DwarfAstroController.cpp#L18).
 - Notifications für Akku, SD, Stacking, Kalibrierung, GOTO, Temperatur werden verarbeitet in [src/net/DwarfAstroController.cpp](/media/data/programming/zwergII/src/net/DwarfAstroController.cpp#L518).
 - UI nutzt GoLive + Kalibrierung + One-Click-GOTO + Live-Stacking aktiv, siehe [src/ui/AstroNavigationPanel.cpp](/media/data/programming/zwergII/src/ui/AstroNavigationPanel.cpp#L1345) und [src/ui/AstroNavigationPanel.cpp](/media/data/programming/zwergII/src/ui/AstroNavigationPanel.cpp#L1462).
+- Dark-Frame-Capture ist jetzt auch im Astro-Panel verdrahtet, inklusive Fortschritt und gespeicherter Profilanzeige, siehe [src/ui/AstroNavigationPanel.cpp](/media/data/programming/zwergII/src/ui/AstroNavigationPanel.cpp).
+- Wide-vs.-Tele-Stacking ist jetzt in der Astro-UI auswählbar und nutzt die passenden Kamera-Parameter sowie den passenden Astro-Command, siehe [src/ui/AstroNavigationPanel.cpp](/media/data/programming/zwergII/src/ui/AstroNavigationPanel.cpp).
+- EQ-Solving ist jetzt im Settings-Tab mit Start/Stop und Fehleranzeige verdrahtet, siehe [src/ui/AstroNavigationPanel.cpp](/media/data/programming/zwergII/src/ui/AstroNavigationPanel.cpp).
 
 Teilweise:
-- Wide-Stacking, Darkframe-Management und EQ-Solving sind controllerseitig vorhanden, aber im sichtbaren UI nicht fertig integriert.
+- Flat-/Bias-Frame-Bedienelemente waren vorhanden, werden jetzt aber bewusst als nicht unterstützt behandelt, solange es dafür keinen sauberen Controller/API-Pfad gibt.
 - `DEL_DARK_FRAME_LIST` ist im Controller gar nicht umgesetzt, obwohl der Cmd-Block definiert ist, siehe [src/net/DwarfAstroController.cpp](/media/data/programming/zwergII/src/net/DwarfAstroController.cpp#L40).
 
 Abweichend:
@@ -191,6 +194,7 @@ Abweichend:
 
 Bewertung:
 - Astro ist eines der stärksten Module im Projekt.
+- Die wesentliche Tele-Astro-Bedienung ist jetzt weitgehend UI-seitig abgedeckt.
 - Vollständige API-Abdeckung ist aber noch nicht erreicht.
 
 ### 8. Motor-API
@@ -248,18 +252,20 @@ Bewertung:
 Implementiert:
 - Start/Stop/Progress/State sind vorhanden in [src/net/DwarfPanoramaController.cpp](/media/data/programming/zwergII/src/net/DwarfPanoramaController.cpp#L12).
 - UI ist integriert.
+- Grid-Updates laufen jetzt entblockt und koalesziert per Timer statt mit blockierendem `msleep`, siehe [src/net/DwarfPanoramaController.cpp](/media/data/programming/zwergII/src/net/DwarfPanoramaController.cpp).
+- Start-/Stop-Acks werden jetzt mit Pending-State robuster unterschieden, sodass Completion nicht mehr nur an einem nackten Wiederauftreten von `15500` hängt, siehe [src/net/DwarfPanoramaController.cpp](/media/data/programming/zwergII/src/net/DwarfPanoramaController.cpp).
 
 Teilweise / fragil:
 - Controller basiert explizit auf PCAP-Reverse-Engineering.
 - Zeilen-/Spaltenmapping ist laut TODO nicht verifiziert, siehe [src/net/DwarfPanoramaController.cpp](/media/data/programming/zwergII/src/net/DwarfPanoramaController.cpp#L48).
-- Start/Completion werden heuristisch interpretiert, weil `WsPacket.type` im Handler nicht ausgewertet wird, siehe [src/net/DwarfPanoramaController.cpp](/media/data/programming/zwergII/src/net/DwarfPanoramaController.cpp#L246).
-- `QThread::msleep` im Ablauf ist ein technisches Warnsignal für UI-/Timing-Festigkeit, siehe [src/net/DwarfPanoramaController.cpp](/media/data/programming/zwergII/src/net/DwarfPanoramaController.cpp#L130).
+- Die Auswertung bleibt weiterhin ohne direkten `WsPacket.type`-Kontext und ist daher noch nicht vollständig protokollsauber.
 
 Abweichend:
 - Neben den dokumentierten Panorama-Kommandos werden undokumentierte/inoffizielle Modul-14/15-Kommandos `16402` und `16703` benutzt, siehe [src/net/DwarfPanoramaController.cpp](/media/data/programming/zwergII/src/net/DwarfPanoramaController.cpp#L17).
 
 Bewertung:
-- Funktional vorhanden, aber noch nicht sauber „gegen die offizielle API abgesichert“.
+- Funktional vorhanden und deutlich robuster als zuvor.
+- Vollständig gegen die offizielle API abgesichert ist der Ablauf wegen des reverse-engineerten Grid-Protokolls aber weiter nicht.
 
 ### 11. System / RGB / Power
 
@@ -292,8 +298,8 @@ Bewertung:
 
 ### Mittel
 
-1. Astro-Controller-Funktionen, die schon vorhanden sind, UI-seitig fertig integrieren
-2. Panorama-Protokoll von heuristisch auf verifiziert umstellen
+1. `DEL_DARK_FRAME_LIST` und weitere Astro-Randkommandos ergänzen
+2. Panorama-Row/Col-Mapping gegen reale Firmware verifizieren
 3. Master-Lock aus Modul 4 optional ergänzen
 4. `resetDeviceInfo` aus der erweiterten Device-Doku optional ergänzen
 

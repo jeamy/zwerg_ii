@@ -6,7 +6,7 @@
 #include "panorama.pb.h"
 
 #include <QDebug>
-#include <QThread>
+#include <QTimer>
 #include <cmath>
 
 namespace PanoramaCmd {
@@ -42,7 +42,10 @@ namespace PanoramaUiCmd {
 }
 
 DwarfPanoramaController::DwarfPanoramaController(QObject *parent)
-    : QObject(parent) {
+    : QObject(parent), m_gridUpdateTimer(new QTimer(this)) {
+    m_gridUpdateTimer->setSingleShot(true);
+    connect(m_gridUpdateTimer, &QTimer::timeout, this,
+            &DwarfPanoramaController::flushPendingGridSequence);
 }
 
 static int toGridIndexValue(int count) {
@@ -128,41 +131,22 @@ QByteArray DwarfPanoramaController::buildGridCommand(quint8 selector, int value)
 }
 
 void DwarfPanoramaController::setPanoramaGrid(int rows, int cols) {
-    // Set panorama grid parameters using reverse-engineered Android protocol
-    // Based on PCAP analysis from ctrl_20251226_113958.pcapng
-    
     qWarning() << "[DwarfPanoramaController] setPanoramaGrid rows=" << rows << "cols=" << cols;
-    
-    // Step 1: Send Panorama UI Open (Module 14, CMD 16402)
-    // Android sends this before setting grid parameters and waits for 4 responses
-    qWarning() << "[DwarfPanoramaController] Sending Panorama UI Open...";
-    QByteArray uiOpenPayload = QByteArray::fromHex("0807");
-    sendCommandModule(14, PanoramaCmd::UI_OPEN, uiOpenPayload);
-    
-    // Android waits for 4 responses here - we use longer delay
-    QThread::msleep(200);
-    
-    // Step 2: Set ROW parameter (Module 15, CMD 16703)
-    // Selector: 0x9c (row selector from PCAP)
-    // Android waits for 2 responses after this
-    qWarning() << "[DwarfPanoramaController] Setting ROW=" << rows;
-    QByteArray rowPayload = buildGridCommand(0x9c, rows);
-    sendCommandModule(15, PanoramaCmd::GRID_PARAM, rowPayload);
-    
-    // Android waits for 2 responses here
-    QThread::msleep(200);
-    
-    // Step 3: Set COL parameter (Module 15, CMD 16703)
-    // Selector: 0x9d (col selector from PCAP)
-    // Android waits for 2 responses after this
-    qWarning() << "[DwarfPanoramaController] Setting COL=" << cols;
-    QByteArray colPayload = buildGridCommand(0x9d, cols);
-    sendCommandModule(15, PanoramaCmd::GRID_PARAM, colPayload);
-    
-    // Final delay to let DWARF process the COL setting
-    QThread::msleep(200);
-    
-    qWarning() << "[DwarfPanoramaController] Grid parameters set successfully";
+
+    m_pendingGridRows = rows;
+    m_pendingGridCols = cols;
+
+    if (m_gridSequenceInFlight) {
+        qWarning() << "[DwarfPanoramaController] Grid sequence already in flight, coalescing update";
+        return;
+    }
+
+    if (m_lastRows == rows && m_lastCols == cols) {
+        qWarning() << "[DwarfPanoramaController] Grid already applied, skipping duplicate update";
+        return;
+    }
+
+    m_gridUpdateTimer->start(120);
 }
 
 void DwarfPanoramaController::startPanoramaGrid(int rows, int cols) {
@@ -180,6 +164,8 @@ void DwarfPanoramaController::startPanoramaGrid(int rows, int cols) {
     m_justCompleted = false;
     m_lastProgressCompleted = 0;
     m_loggedProgressHexThisRun = false;
+    m_startCommandPending = true;
+    m_stopCommandPending = false;
 
     // Based on PCAP: Android sends empty START command
     // Grid params were already sent when user changed spinners
@@ -208,14 +194,19 @@ void DwarfPanoramaController::stopPanorama() {
     
     // Don't reset pano_running here - let it be cleared when STOP response arrives
     // Otherwise we ignore progress updates after sending stop
+    m_stopCommandPending = true;
+    m_startCommandPending = false;
     sendCommand(PanoramaCmd::STOP, emptyPayload);
     
     qWarning() << "[DwarfPanoramaController] STOP command sent";
 }
 
 void DwarfPanoramaController::handleNotificationProgress(int total_count, int completed_count) {
-    if (!pano_running)
+    if (!pano_running && !m_isRunning && !m_startCommandPending)
         return;
+
+    if (!m_isRunning && completed_count > 0)
+        m_isRunning = true;
 
     // Report RAW firmware counters. On some firmwares total_count reflects the real
     // number of photos (e.g. 30 when the preset is 6x5). Do not remap.
@@ -227,10 +218,7 @@ void DwarfPanoramaController::handleNotificationProgress(int total_count, int co
 
     if (total_count > 0 && completed_count >= total_count) {
         qWarning() << "[PanoramaController] Panorama completed (raw progress reached total_count)";
-        pano_running = false;
-        m_isRunning = false;
-        m_justCompleted = true;
-        emit panoramaStopped();
+        finishPanoramaRun(true);
     }
 }
 
@@ -245,20 +233,20 @@ void DwarfPanoramaController::handlePanoramaMessage(quint32 cmd, const QByteArra
 
     switch (cmd) {
         case PanoramaCmd::START_GRID:
-            // DWARF sends cmd 15500 again (Type:3) when panorama finishes.
-            // We don't get the WsPacket type here, so we use robust heuristics:
-            // - if we're running, it's completion
-            // - if we have seen any progress notifications, it's completion
-            if (m_isRunning || m_lastProgressCompleted > 0) {
-                qWarning() << "[PanoramaController] Received START_GRID while running - treating as completion";
-                m_isRunning = false;
-                m_justCompleted = true;
-                m_lastProgressCompleted = 0;
-                emit panoramaStopped();
-            } else if (!m_justCompleted) {
-                // Normal start: only emit if not just completed
+            if (m_startCommandPending) {
+                m_startCommandPending = false;
+                m_stopCommandPending = false;
                 m_isRunning = true;
+                pano_running = true;
                 qWarning() << "[PanoramaController] Starting panorama" << m_lastRows << "x" << m_lastCols;
+                emit panoramaStarted(m_lastRows, m_lastCols);
+            } else if (m_isRunning || pano_running || m_lastProgressCompleted > 0) {
+                qWarning() << "[PanoramaController] Received START_GRID while running - treating as completion";
+                finishPanoramaRun(true);
+            } else if (!m_justCompleted) {
+                m_isRunning = true;
+                pano_running = true;
+                qWarning() << "[PanoramaController] START_GRID without pending start, treating as late start ack";
                 emit panoramaStarted(m_lastRows, m_lastCols);
             } else {
                 qWarning() << "[PanoramaController] Ignoring late START_GRID response (just completed)";
@@ -266,14 +254,71 @@ void DwarfPanoramaController::handlePanoramaMessage(quint32 cmd, const QByteArra
             }
             break;
         case PanoramaCmd::STOP:
+            m_stopCommandPending = false;
+            m_startCommandPending = false;
             m_isRunning = false;
             pano_running = false;
+            m_lastProgressCompleted = 0;
             qWarning() << "[PanoramaController] Received STOP response - panorama stopped";
             emit panoramaStopped();
             break;
         default:
             break;
     }
+}
+
+void DwarfPanoramaController::flushPendingGridSequence() {
+    if (m_gridSequenceInFlight)
+        return;
+    if (m_pendingGridRows <= 0 || m_pendingGridCols <= 0)
+        return;
+
+    const int rows = m_pendingGridRows;
+    const int cols = m_pendingGridCols;
+    m_gridSequenceRows = rows;
+    m_gridSequenceCols = cols;
+    m_gridSequenceInFlight = true;
+
+    qWarning() << "[DwarfPanoramaController] Flushing panorama grid sequence rows="
+               << rows << "cols=" << cols;
+    sendPanoramaUiOpen();
+
+    QTimer::singleShot(180, this, [this, rows, cols]() {
+        qWarning() << "[DwarfPanoramaController] Setting ROW=" << rows;
+        sendCommandModule(PanoramaFeatureCmd::MODULE_ID, PanoramaCmd::GRID_PARAM,
+                          buildGridCommand(0x9c, rows));
+
+        QTimer::singleShot(180, this, [this, rows, cols]() {
+            qWarning() << "[DwarfPanoramaController] Setting COL=" << cols;
+            sendCommandModule(PanoramaFeatureCmd::MODULE_ID, PanoramaCmd::GRID_PARAM,
+                              buildGridCommand(0x9d, cols));
+
+            QTimer::singleShot(120, this, [this, rows, cols]() {
+                m_lastRows = rows;
+                m_lastCols = cols;
+                m_gridSequenceInFlight = false;
+                qWarning() << "[DwarfPanoramaController] Grid parameters set successfully";
+
+                if (m_pendingGridRows != rows || m_pendingGridCols != cols) {
+                    qWarning() << "[DwarfPanoramaController] Pending panorama grid changed during sequence, scheduling next update";
+                    m_gridUpdateTimer->start(80);
+                }
+            });
+        });
+    });
+}
+
+void DwarfPanoramaController::finishPanoramaRun(bool completed) {
+    m_startCommandPending = false;
+    m_stopCommandPending = false;
+    pano_running = false;
+    m_isRunning = false;
+    m_justCompleted = completed;
+    m_lastProgressCompleted = 0;
+
+    if (completed)
+        emit panoramaFinished();
+    emit panoramaStopped();
 }
 
 void DwarfPanoramaController::handleNotification(quint32 cmd, const QByteArray &data) {
