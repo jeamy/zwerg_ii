@@ -70,7 +70,7 @@ This project implements communication with the device via **WebSocket (Protobuf)
   - Widgets, Network, Multimedia, MultimediaWidgets, WebSockets, Sql, Svg
 - **Protocol Buffers** (Compiler + C++ libs)
 
-Note: System-specific installation instructions can be found in `DEVELOPMENT.md`.
+Note: System-specific installation instructions can be found in [`DEVELOPMENT.md`](DEVELOPMENT.md).
 
 ## Build
 
@@ -266,23 +266,21 @@ After the build (in the `build/` directory), run the generated binary:
 
 ## Documentation
 
-- **API/Protocol (DWARF II)**: `docs/DWARF_II_API_COMPLETE.md`
-- **Qt Roadmap**: `QT_ROADMAP.md`
-- **GUI/UX Roadmap**: `GUI_ROADMAP.md`
-- **Development setup**: `DEVELOPMENT.md`
+- **API/Protocol (DWARF II)**: [`docs/DWARF_II_API_COMPLETE.md`](docs/DWARF_II_API_COMPLETE.md)
+- **Development setup**: [`DEVELOPMENT.md`](DEVELOPMENT.md)
 
 ## Notes
 
-- Depending on the mode, the device uses different stream and API URLs. Details: `docs/DWARF_II_API_COMPLETE.md`.
+- Depending on the mode, the device uses different stream and API URLs. Details: [`docs/DWARF_II_API_COMPLETE.md`](docs/DWARF_II_API_COMPLETE.md).
 - This repository contains a `legacy/` folder with an earlier web/backend implementation; the current codebase is the Qt/C++ application.
 
 ## License
 
-MIT License. See `LICENSE`.
+MIT License. See [`LICENSE`](LICENSE).
 
 ## Release Build Scripts
 
-This repository includes cross-platform release build scripts (adapted from the `astrouni` workflow):
+This repository includes cross-platform release build scripts
 
 - `build_linux_release.sh`
   - Builds a Linux Release binary via CMake
