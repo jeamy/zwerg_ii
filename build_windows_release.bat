@@ -123,67 +123,71 @@ echo.
 
 rem Auto-build Protobuf if not found and source is available
 if not defined Protobuf_DIR (
-  set "PROTOBUF_SRC_DIR=G:\Download\protobuf"
-  set "PROTOBUF_INSTALL_DIR=G:\Download\protobuf-install"
-  
-  rem Check if already built
-  if exist "!PROTOBUF_INSTALL_DIR!\lib\cmake\protobuf" (
-    set "Protobuf_DIR=!PROTOBUF_INSTALL_DIR!\lib\cmake\protobuf"
-    echo Found existing Protobuf installation: !Protobuf_DIR!
-  ) else if exist "!PROTOBUF_SRC_DIR!\CMakeLists.txt" (
-    rem Try to build from source
-    echo.
-    echo ========================================================================
-    echo Protobuf libraries not found, attempting auto-build from source...
-    echo Source: !PROTOBUF_SRC_DIR!
-    echo Install: !PROTOBUF_INSTALL_DIR!
-    echo ========================================================================
-    echo.
-    
-    mkdir "!PROTOBUF_SRC_DIR!\build-mingw" 2>NUL
-    pushd "!PROTOBUF_SRC_DIR!\build-mingw"
-    
-    cmake .. -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX="!PROTOBUF_INSTALL_DIR!" -DCMAKE_BUILD_TYPE=Release -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
-    if not errorlevel 1 (
-      cmake --build . --config Release -j4
+  if defined CMAKE_TOOLCHAIN_FILE (
+    echo Using Protobuf via CMake toolchain: %CMAKE_TOOLCHAIN_FILE%
+  ) else (
+    set "PROTOBUF_SRC_DIR=G:\Download\protobuf"
+    set "PROTOBUF_INSTALL_DIR=G:\Download\protobuf-install"
+
+    rem Check if already built
+    if exist "!PROTOBUF_INSTALL_DIR!\lib\cmake\protobuf" (
+      set "Protobuf_DIR=!PROTOBUF_INSTALL_DIR!\lib\cmake\protobuf"
+      echo Found existing Protobuf installation: !Protobuf_DIR!
+    ) else if exist "!PROTOBUF_SRC_DIR!\CMakeLists.txt" (
+      rem Try to build from source
+      echo.
+      echo ========================================================================
+      echo Protobuf libraries not found, attempting auto-build from source...
+      echo Source: !PROTOBUF_SRC_DIR!
+      echo Install: !PROTOBUF_INSTALL_DIR!
+      echo ========================================================================
+      echo.
+
+      mkdir "!PROTOBUF_SRC_DIR!\build-mingw" 2>NUL
+      pushd "!PROTOBUF_SRC_DIR!\build-mingw"
+
+      cmake .. -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX="!PROTOBUF_INSTALL_DIR!" -DCMAKE_BUILD_TYPE=Release -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
       if not errorlevel 1 (
-        cmake --install . --config Release
+        cmake --build . --config Release -j4
         if not errorlevel 1 (
-          echo.
-          echo Protobuf built and installed successfully
-          set "Protobuf_DIR=!PROTOBUF_INSTALL_DIR!\lib\cmake\protobuf"
+          cmake --install . --config Release
+          if not errorlevel 1 (
+            echo.
+            echo Protobuf built and installed successfully
+            set "Protobuf_DIR=!PROTOBUF_INSTALL_DIR!\lib\cmake\protobuf"
+          )
         )
       )
-    )
-    
-    popd
-    
-    if not defined Protobuf_DIR (
+
+      popd
+
+      if not defined Protobuf_DIR (
+        echo.
+        echo WARNING: Protobuf auto-build failed
+        echo Please install protobuf manually or via vcpkg
+        echo.
+        pause
+      )
+    ) else (
       echo.
-      echo WARNING: Protobuf auto-build failed
-      echo Please install protobuf manually or via vcpkg
+      echo ========================================================================
+      echo ERROR: Protobuf libraries not found and source not available
+      echo ========================================================================
       echo.
-      pause
+      echo Protobuf is required to build this project.
+      echo.
+      echo Please clone the Protobuf source code:
+      echo   git clone https://github.com/protocolbuffers/protobuf.git G:\Download\protobuf
+      echo   cd G:\Download\protobuf
+      echo   git checkout v21.12
+      echo.
+      echo Then run this build script again. It will automatically build and install Protobuf.
+      echo.
+      echo Alternative: Install via vcpkg:
+      echo   G:\programming\vcpkg\vcpkg.exe install protobuf:x64-mingw-static
+      echo.
+      goto error
     )
-  ) else (
-    echo.
-    echo ========================================================================
-    echo ERROR: Protobuf libraries not found and source not available
-    echo ========================================================================
-    echo.
-    echo Protobuf is required to build this project.
-    echo.
-    echo Please clone the Protobuf source code:
-    echo   git clone https://github.com/protocolbuffers/protobuf.git G:\Download\protobuf
-    echo   cd G:\Download\protobuf
-    echo   git checkout v21.12
-    echo.
-    echo Then run this build script again. It will automatically build and install Protobuf.
-    echo.
-    echo Alternative: Install via vcpkg:
-    echo   G:\programming\vcpkg\vcpkg.exe install protobuf:x64-mingw-static
-    echo.
-    goto error
   )
 )
 
