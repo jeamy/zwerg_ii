@@ -14,10 +14,16 @@ DwarfWebSocketClient::DwarfWebSocketClient(const QString &ip, bool clientMode, Q
           &DwarfWebSocketClient::onBinaryMessageReceived);
   connect(&m_webSocket, &QWebSocket::textMessageReceived, this,
           &DwarfWebSocketClient::onTextMessageReceived);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
   connect(
       &m_webSocket,
       QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::errorOccurred),
       this, &DwarfWebSocketClient::onError);
+#else
+  connect(&m_webSocket,
+          QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
+          this, &DwarfWebSocketClient::onError);
+#endif
 
   connect(&m_pingTimer, &QTimer::timeout, this,
           &DwarfWebSocketClient::sendPing);
