@@ -1,138 +1,215 @@
 # Development Environment Setup
 
-> **Note:** This project is fully functional and in beta testing phase. All major features are implemented.
+`zwergII` is a Qt/C++ desktop application for controlling the DWARF II telescope via WebSocket (Protobuf) and HTTP.
 
-To compile and develop the DWARF II Qt application, the following dependencies must be installed on your system.
+This document describes the current development setup and build expectations.
 
-## 1. System Requirements
-*   **Operating System:** Linux (Ubuntu 20.04+, Debian 11+, Fedora 35+), Windows 10/11, or macOS 10.15+
-*   **Compiler:** C++17 compatible compiler (GCC 9+, Clang 10+, MSVC 2019+, MinGW-w64)
-*   **Build System:** CMake 3.16 or newer
+## 1. Supported Development Platforms
 
-## 2. Required Libraries
+- Linux: Ubuntu 22.04+ or similar modern Debian/Fedora systems
+- Windows: Windows 10/11 with MSVC
+- macOS: current Qt 6-capable macOS setups
 
-### Qt 6
-We use **Qt 6** (minimum 6.2 LTS, recommended 6.5+).
-Required modules:
-*   `qt6-base` (Core, Gui, Widgets, Network, Sql)
-*   `qt6-multimedia` (Video streaming, QMediaPlayer, QVideoWidget)
-*   `qt6-websockets` (WebSocket communication with DWARF II)
+CI/release targets currently used in the repository:
 
-### Protocol Buffers
-For communication with the telescope.
-*   `protobuf-compiler` (protoc)
-*   `libprotobuf-dev` (C++ bindings)
-*   Version 3.x or 21.x recommended
+- Linux: Ubuntu 22.04
+- macOS: macOS 15 Intel and macOS 15 Apple Silicon
+- Windows: `windows-latest`
 
-## 3. Installation Instructions
+## 2. Toolchain Requirements
 
-### Fedora Linux
+- CMake 3.16+
+- C++17 compiler
+- Qt 6
+- Protocol Buffers compiler and C++ runtime
 
-Many Qt libraries are already present on Fedora (especially with KDE Plasma). For development, we need the header files (`-devel`).
+Qt modules required by `CMakeLists.txt`:
 
-```bash
-sudo dnf install -y \
-    cmake \
-    gcc-c++ \
-    qt6-qtbase-devel \
-    qt6-qtmultimedia-devel \
-    qt6-qtwebsockets-devel \
-    protobuf-devel \
-    protobuf-compiler
-```
+- Widgets
+- Network
+- Multimedia
+- MultimediaWidgets
+- WebSockets
+- Sql
+- Svg
 
-### Debian / Ubuntu
+## 3. Linux Setup
+
+Recommended for current local development:
 
 ```bash
 sudo apt-get install -y \
-    build-essential cmake git \
-    qt6-base-dev qt6-multimedia-dev qt6-websockets-dev \
-    protobuf-compiler libprotobuf-dev \
-    libgl1-mesa-dev libdbus-1-dev libfreetype6-dev \
-    libfontconfig1-dev libxkbcommon-dev libvulkan-dev
+  build-essential cmake git pkg-config \
+  protobuf-compiler libprotobuf-dev \
+  patchelf zip \
+  qt6-base-dev qt6-base-dev-tools qt6-tools-dev qt6-tools-dev-tools \
+  qt6-multimedia-dev libqt6websockets6-dev libqt6svg6-dev \
+  libqt6sql6-sqlite \
+  libgl1-mesa-dev libdbus-1-dev libfreetype6-dev \
+  libfontconfig1-dev libxkbcommon-dev libvulkan-dev \
+  libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+  libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 \
+  libxcb-cursor0 libxcb-xkb1
 ```
 
-### Windows
-
-**Option 1: Qt Online Installer (Recommended)**
-1.  Install the [Qt Online Installer](https://www.qt.io/download-qt-installer)
-2.  Select **Qt 6.5+** with **MinGW** or **MSVC** compiler
-3.  Ensure these components are selected:
-    *   Qt Multimedia
-    *   Qt WebSockets
-4.  Install CMake from https://cmake.org/download/
-
-**Option 2: Protobuf Setup**
-*   Clone and build from source (see `README.md` Windows build section)
-*   Or use vcpkg: `vcpkg install protobuf:x64-mingw-static`
-
-**Build:**
-```bat
-build_windows_release.bat
-```
-
-### macOS
-
-**Install dependencies:**
-```bash
-brew install cmake protobuf
-```
-
-**Install Qt6:**
-*   Via Qt Online Installer to `~/Qt/` (recommended)
-*   Or via Homebrew: `brew install qt@6`
-
-**Build:**
-```bash
-./build_macos_release.sh
-```
-
-## 4. Build Instructions
-
-### Quick Development Build (Linux)
+Development build:
 
 ```bash
 ./build.sh
 ```
 
-Or manually:
+Plain CMake build:
+
 ```bash
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Debug
-make -j$(nproc)
-./DwarfController
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
 ```
 
-### Release Builds
+Native Linux release build:
 
-See `README.md` for detailed release build instructions for each platform:
-*   **Linux**: `./build_linux_release_docker_ubuntu2004.sh` (Docker-based for maximum compatibility)
-*   **macOS**: `./build_macos_release.sh` (creates app bundle and DMG)
-*   **Windows**: `build_windows_release.bat` (creates distributable ZIP)
-
-## 5. Project Structure
-
+```bash
+./build_linux_release.sh
 ```
+
+Compatibility-focused Docker release build:
+
+```bash
+./build_linux_release_docker_ubuntu2004.sh
+```
+
+Notes:
+
+- `build_linux_release.sh` is the current native release path
+- the Docker script still targets Ubuntu 20.04 for older glibc compatibility
+
+## 4. macOS Setup
+
+Install base tools:
+
+```bash
+brew install cmake protobuf
+```
+
+Install Qt 6:
+
+- recommended: Qt Online Installer into `~/Qt/`
+- alternative: `brew install qt@6`
+
+Release-style local build:
+
+```bash
+./build_macos_release.sh
+```
+
+Optional environment overrides:
+
+```bash
+export CMAKE_PREFIX_PATH=/path/to/Qt/6.x.x/macos
+export Qt6_DIR=/path/to/Qt/6.x.x/macos/lib/cmake/Qt6
+export PROTOC_PREFIX_PATH=/usr/local
+export Protobuf_DIR=/usr/local/lib/cmake/protobuf
+```
+
+Notes:
+
+- the script auto-detects Qt via `CMAKE_PREFIX_PATH`, `Qt6_DIR`, `qtpaths6`, or `~/Qt/...`
+- `macdeployqt` is used when available
+
+## 5. Windows Setup
+
+Recommended local setup:
+
+- Visual Studio 2022 with C++ toolchain
+- Developer Command Prompt for VS 2022
+- Qt 6 `msvc2022_64`
+- Ninja
+- vcpkg for Protobuf
+
+Recommended Protobuf install:
+
+```bat
+vcpkg install protobuf:x64-windows
+```
+
+Recommended environment variables:
+
+```bat
+set Qt6_DIR=C:\Qt\6.10.1\msvc2022_64\lib\cmake\Qt6
+set CMAKE_PREFIX_PATH=C:\Qt\6.10.1\msvc2022_64
+set Qt6WebSockets_DIR=C:\Qt\6.10.1\msvc2022_64\lib\cmake\Qt6WebSockets
+set PROTOC_PREFIX_PATH=C:\path\to\protoc
+set CMAKE_TOOLCHAIN_FILE=C:\path\to\vcpkg\scripts\buildsystems\vcpkg.cmake
+set Protobuf_DIR=C:\path\to\vcpkg\installed\x64-windows\share\protobuf
+set VCPKG_TARGET_TRIPLET=x64-windows
+```
+
+Build:
+
+```bat
+build_windows_release.bat
+```
+
+Current behavior of the script:
+
+- prefers `MSVC + Ninja`
+- falls back to MinGW only when MSVC is not available
+- supports `vcpkg`-based Protobuf/toolchain setups
+- uses `windeployqt` when available
+
+Legacy source-build fallback for Protobuf still exists in the script, but it is no longer the recommended path.
+
+## 6. GitHub Release Workflow
+
+The repository includes a manual multi-platform release workflow:
+
+- file: `.github/workflows/manual-release.yml`
+- trigger: manual only
+- inputs:
+  - `tag`
+  - `ref` with default `master`
+
+Behavior:
+
+- creates or reuses the selected tag
+- retags automatically when the tag exists but is not yet bound to a GitHub Release
+- builds release ZIPs for:
+  - Linux
+  - macOS Intel
+  - macOS Apple Silicon
+  - Windows
+- uploads all generated ZIPs to the GitHub Release
+
+## 7. Project Structure
+
+```text
 zwergII/
 ├── src/
-│   ├── net/              # Network layer (WebSocket, HTTP, Controllers)
-│   ├── ui/               # UI panels (Camera, Astro, Panorama, etc.)
+│   ├── net/              # WebSocket, HTTP, controller layer
+│   ├── ui/               # Panels, overlays, widgets
 │   ├── proto/            # Protobuf definitions
 │   ├── MainWindow.cpp    # Main application window
 │   └── main.cpp
-├── data/                 # Star catalog, constellation data
-├── styles/               # Qt stylesheets (dark theme)
-├── i18n/                 # Translations (German, English)
-├── resources/            # Icons (SVG)
-├── docs/                 # API documentation
-└── CMakeLists.txt
+├── data/                 # Star catalog and helper data
+├── styles/               # Qt stylesheet
+├── i18n/                 # Translations
+├── resources/            # Icons and bundled assets
+├── docs/                 # API and implementation documentation
+├── build.sh              # Simple development build helper
+├── build_linux_release.sh
+├── build_linux_release_docker_ubuntu2004.sh
+├── build_macos_release.sh
+└── build_windows_release.bat
 ```
 
-## 6. Development Notes
+## 8. Development Notes
 
-*   **Internationalization**: All UI strings use `tr()` for translation support
-*   **Dark Theme**: Application uses custom QSS stylesheet (`styles/app.qss`)
-*   **Protocol**: WebSocket communication via Protobuf on port 9900
-*   **Streaming**: MJPEG streams via HTTP on port 8092
-*   **Architecture**: Signal/Slot based with separate controller classes for each module
+- Internationalization uses `tr()` and `.qm` translation files
+- Runtime configuration is stored in `config.json` next to the executable
+- Live view currently uses MJPEG/JPG streams; RTSP is documented but not used by the Qt client
+- The codebase uses module-specific controller classes for camera, astro, motor, focus, tracking, system, panorama, and HTTP access
+
+## 9. Related Documents
+
+- `README.md`
+- `CONFIG_SYSTEM.md`
+- `docs/API_IMPLEMENTIERUNGSANALYSE.md`

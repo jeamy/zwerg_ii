@@ -1,193 +1,277 @@
-# How to Use Stacking in DWARF II Controller
+# Stacking How-To
 
-## ⚠️ CRITICAL: GOTO MUST BE DONE FIRST!
+This document describes the current stacking workflow in `zwergII`.
 
-**Stacking will NOT work without first performing a GOTO!**
+The implementation now supports:
 
-Error code `-11513` means: "You must GOTO a target before stacking."
+- Tele live stacking
+- Wide live stacking
+- dark-frame capture
+- EQ solving
 
-**⚠️ WARNING: Once you start stacking, GOTO will fail!**
+Important limitations still apply and are listed below.
 
-Error code `-10501` means: "Camera is closed" - This happens because:
-- Stacking switches the camera to RAW mode (preview stops)
-- GOTO needs the camera open for plate solving
-- **Solution: Do GOTO BEFORE starting any stacking!**
-- If you already started stacking: Stop it and restart the app
+## Critical Rule
 
-## Why?
+**Do GOTO before starting stacking.**
 
-Stacking requires the telescope to **track** an object continuously. GOTO:
-1. Calibrates the telescope's position
-2. Slews to the target object
-3. **Starts tracking** - keeps the object centered
-4. Enables stacking to work
+If stacking is started without a valid target/GOTO state, the device can reject the request.
 
-Without tracking, each frame would show a different position → stacking fails.
+Known error:
 
-## Correct Workflow
+- `-11513`: GOTO required before stacking
 
-### 1. Connect to DWARF II
-- Enter IP address (e.g. 192.168.8.30)
-- Click "Connect"
-- Wait for video stream
+## What the App Currently Does
 
-### 2. Find a Target (Optional but Recommended: Calibrate First)
-**For best results, calibrate before GOTO:**
-- Click "Astro" tab
-- Click "Start Calibration"
-- Wait ~2-3 minutes for calibration
-- Status will show "Calibration Complete"
+When you start stacking from the Astro panel, the app:
 
-### 3. Search for an Object
-- In the Astro tab, use the search box
-- Type object name (e.g. "M42", "Andromeda", "Orion")
-- Click on the result
-- The star map will center on the object
+1. switches the selected stacking camera to manual exposure and gain
+2. activates Astro mode via `Go Live`
+3. starts Tele or Wide stacking depending on the selected source
+4. tracks progress through Astro notifications
 
-### 4. GOTO the Object
-- Click "GOTO" button (or double-click the object on the map)
-- Wait for GOTO sequence:
-  - Step 1: Calibrating (if not done)
-  - Step 2: Slewing (moving to target)
-  - Step 3: Centering (fine adjustment)
-  - Step 4: Tracking (following the object)
-- Status will show "GOTO Complete" when ready
+This is why stacking temporarily interrupts the normal preview workflow.
 
-### 5. Configure Stacking Settings
-- **Number of Frames**: How many images to stack (e.g. 10, 50, 100)
-- **Exposure**: Slide to set exposure time per frame
-  - Short exposure (1-5s): Brighter objects, less noise
-  - Long exposure (10-30s): Fainter objects, more detail
-- **Gain**: Higher gain = more sensitivity, but more noise
+## Supported Stacking Modes
 
-### 6. Start Stacking
-- Click "Start Stacking"
-- You will see:
-  - "Preparing camera..." (setting parameters)
-  - "Activating Astro mode..." (switching to RAW capture)
-  - "Starting stacking..." (beginning capture)
-  - Preview stream will turn black (normal!)
-  
-### 7. Monitor Progress
-- Frame counter: "Frame X / Y"
-- Stacked frames: Successfully processed
-- Rejected frames: Too blurry or misaligned
-- Progress bar shows completion
+### Tele Stacking
 
-### 8. Stop or Wait for Completion
-- Click "Stop Stacking" anytime to abort
-- Or wait for all frames to complete
-- Preview stream will return
+- uses the Tele camera
+- supports optional dark-frame usage
+- is the main deep-sky stacking mode
 
-### 9. Download Results
-- Click "System" tab → "Open Gallery"
-- Find your stacked image
-- Click to preview
-- Right-click → Download
+### Wide Stacking
+
+- uses the Wide camera
+- is selectable in the Astro UI via the stacking source selector
+- currently starts without dark-frame usage
+
+Important:
+
+- dark-frame capture remains Tele-only
+- flat and bias UI fields exist, but are currently not active capture workflows
+
+## Recommended Workflow
+
+### 1. Connect to the Device
+
+- connect to the DWARF II Wi-Fi or reachable network
+- open `zwergII`
+- connect to the telescope
+- wait until the live stream is available
+
+### 2. Calibrate
+
+Recommended before serious astro use:
+
+- open the Astro tab
+- start calibration
+- wait until calibration completes
+
+Calibration is especially important after moving the telescope.
+
+### 3. Select a Target
+
+- search for an object in the Astro tab
+- select it in the star map or search results
+- verify that it is above the horizon
+
+### 4. Run GOTO
+
+- start GOTO
+- wait until the movement/centering process is finished
+- do not start stacking before GOTO has settled
+
+### 5. Choose Stacking Source
+
+In the Astro settings area:
+
+- select `Tele` for normal astro stacking
+- select `Wide` for wide-angle stacking
+
+### 6. Set Exposure / Gain / Frame Count
+
+Current configurable values:
+
+- number of frames
+- exposure index
+- gain index
+- optional dark-frame usage for Tele stacking
+
+Practical guidance:
+
+- start with moderate exposure and gain
+- use brighter targets first
+- increase frame count after the basic workflow is stable
+
+### 7. Start Stacking
+
+Expected UI sequence:
+
+- `Starting...`
+- `Preparing camera...` or `Preparing wide camera...`
+- `Activating Astro mode...`
+- `Starting stacking...`
+- then `Capturing...` / `Stacking...`
+
+During stacking:
+
+- the preview can go dark or stop updating normally
+- this is expected because the device switches into astro/raw capture behavior
+
+### 8. Monitor Progress
+
+The Astro panel shows:
+
+- progress bar
+- elapsed time
+- current frame count
+- stacked frame count
+- rejected frame count
+
+### 9. Stop or Wait for Completion
+
+- use `Stop Stacking` to abort manually
+- or wait until the requested frame count completes
+
+After stacking stops:
+
+- the UI returns to idle state
+- the preview path may need a moment to recover
+
+### 10. Capture Dark Frames
+
+Dark-frame capture is available from the Astro panel.
+
+Current behavior:
+
+- Tele only
+- uses the current astro exposure/gain values
+- activates Astro mode first
+- stores dark-frame profiles on the device
+
+Recommended workflow:
+
+1. set dark-frame count above zero
+2. set Tele stacking exposure/gain
+3. start dark capture
+4. wait until the profile list is reported as available
+5. start Tele stacking with dark frames enabled
+
+### 11. EQ Solving
+
+EQ solving is separate from stacking, but related to astro setup quality.
+
+Current UI support:
+
+- start EQ solve
+- stop EQ solve
+- show azimuth and altitude error output
+
+This is useful for alignment refinement, not as a replacement for the normal stacking workflow.
 
 ## Troubleshooting
 
-### ⚠️ Error: "Camera is closed! GOTO requires an open camera"
-**This is error code `-10501`**
+### Error: GOTO required
 
-**Cause:** You tried to GOTO after starting stacking.
+Code:
 
-**Why it happens:**
-- Stacking switches camera to RAW mode (preview stops)
-- GOTO needs camera open to see stars (plate solving)
-- Once in RAW mode, camera can't be used for GOTO
+- `-11513`
 
-**Solution:**
-1. Stop stacking (click "Stop Stacking")
-2. Disconnect and reconnect (to reset camera)
-3. Do GOTO FIRST
-4. THEN start stacking
+Meaning:
 
-**Prevention:** Always follow the correct order:
-```
-✓ CORRECT:   Connect → GOTO → Stacking
-✗ WRONG:     Connect → Stacking → GOTO (will fail!)
-```
+- stacking was started without a valid GOTO/target state
 
-### Error: "GOTO required! Please use GOTO to a target first"
-**This is error code `-11513`**
+Fix:
 
-**Solution:** You skipped GOTO step. Do GOTO before stacking.
+- stop stacking
+- perform GOTO first
+- then start stacking again
 
-### Error: "Parameters not suitable"
-**Solution:** Your exposure/gain settings are invalid. Try:
-- Lower exposure (< 30s)
-- Gain in range 0-150
+### Error: Dark frame not found
 
-### Error: "Dark frame not found"
-**Solution:** Some advanced stacking modes need dark frames:
-- Go to Astro tab → Dark Frames
-- Click "Capture Dark Frame"
-- Wait for completion
-- Try stacking again
+Typical meaning:
 
-### Stream stays black after stacking
-**Solution:** This is normal during stacking (RAW mode). 
-- Click "Stop Stacking" to return to preview
-- Or wait for completion
+- Tele stacking was started with dark-frame usage enabled, but no matching dark profile exists
 
-### Frames rejected (high rejected count)
-**Possible causes:**
-- Target is too dim (increase exposure or gain)
-- Poor tracking (recalibrate)
-- Clouds/fog
-- Wind (telescope shaking)
+Fix:
 
-### GOTO fails
-**Solutions:**
-- Ensure device is level and stable
-- Calibrate first (improves accuracy)
-- Check target is above horizon
-- For planets/moon: Enter correct GPS coordinates
+- capture dark frames first
+- then retry stacking
 
-## Tips for Best Results
+### GOTO fails after stacking was already started
 
-1. **Calibrate regularly** - especially after moving the telescope
-2. **Start with bright targets** - M42, M31, M45 are good for beginners
-3. **Use moderate settings** - 10-15s exposure, gain ~80, 20-50 frames
-4. **Check weather** - clear, stable nights give best results
-5. **Let GOTO finish** - don't rush, wait for "Tracking" status
-6. **Monitor rejected frames** - if > 30% rejected, improve conditions
+Cause:
 
-## Recommended First Target: M42 (Orion Nebula)
+- stacking switches the device into astro/raw capture flow
+- GOTO and plate-solving related actions are safer before stacking starts
 
-Easy to find, bright, great for stacking practice:
+Fix:
 
-```
-Settings:
-- Object: M42 (Orion Nebula)
-- Frames: 20
-- Exposure: 10s
-- Gain: 80
-```
+- stop stacking
+- wait for the app/device preview path to recover
+- reconnect only if the device does not return to a usable state
 
-1. Search "M42"
-2. GOTO → Wait for tracking
-3. Set settings above
-4. Start Stacking
-5. Wait ~4 minutes (20 × 10s + processing)
-6. Enjoy your first stacked image!
+### Preview turns black during stacking
 
-## Advanced: Unlimited Stacking
+This is expected.
 
-Set frames to 0 or very high number:
-- Telescope will stack continuously
-- Stop manually when satisfied
-- Good for faint objects (stack for hours!)
+The current client relies on MJPEG for preview, while stacking runs through astro/raw commands. A dark or paused preview during stacking does not automatically mean failure.
 
-## Error Code Reference
+### Many frames are rejected
 
-| Code | Meaning | Solution |
-|------|---------|----------|
-| -11513 | GOTO required | Do GOTO first |
-| -11514 | Bad parameters | Adjust exposure/gain |
-| -11503 | No dark frame | Capture dark frames |
+Possible reasons:
 
----
+- weak target
+- poor tracking
+- bad seeing
+- wind or vibration
+- too aggressive exposure/gain settings
 
-**Have fun stacking! Clear skies! 🌠**
+Try:
+
+- recalibration
+- a brighter target
+- lower gain
+- shorter exposures
+
+### Wide stacking does not behave like Tele stacking
+
+This can be normal.
+
+Wide stacking is supported in the UI, but the overall astro workflow is still more mature on the Tele side.
+
+## Current Practical Limitations
+
+- GOTO should be completed before stacking
+- Tele and Wide stacking share UI concepts, but not all behavior is identical
+- dark-frame capture is Tele-only
+- flat/bias capture is not currently active
+- stacking flow still contains firmware-oriented delays and heuristics
+- RTSP is not used; preview is MJPEG-based
+
+## Suggested First Test
+
+For a safe first test:
+
+- calibrate
+- GOTO a bright target
+- choose `Tele`
+- use a moderate frame count
+- keep exposure and gain conservative
+- run one short stacking session first
+
+After that:
+
+- try Tele stacking with dark frames
+- then try Wide stacking separately
+
+## Summary
+
+Current best practice:
+
+`Connect -> Calibrate -> GOTO -> Select Tele/Wide -> Set exposure/gain -> Start stacking`
+
+For Tele stacking with darks:
+
+`Capture dark frames first -> enable dark-frame usage -> start Tele stacking`

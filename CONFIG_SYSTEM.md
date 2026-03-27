@@ -1,152 +1,301 @@
-# Configuration System Documentation
+# Configuration System
 
 ## Overview
-A centralized JSON-based configuration system has been implemented to persist all GUI settings across application restarts and tab switches.
 
-## Configuration File
-- **Location**: `config.json` in the application directory (same folder as the executable)
-- **Format**: Human-readable JSON with indentation
-- **Auto-save**: Settings are automatically saved when the application closes
+`zwergII` uses a centralized JSON-based configuration system for persistent UI and runtime settings.
 
-## Implementation
+- File format: JSON
+- File name: `config.json`
+- File location: next to the executable via `QCoreApplication::applicationDirPath()`
+- Core implementation: `src/AppConfig.h`, `src/AppConfig.cpp`
 
-### Core Components
+The configuration is loaded during application startup and written back when panels or the main window save their state.
 
-#### AppConfig Class (`src/AppConfig.h`, `src/AppConfig.cpp`)
-- Singleton pattern for global access via `AppConfig::instance()`
-- Methods:
-  - `load()`: Load configuration from `config.json`
-  - `save()`: Save configuration to `config.json`
-  - `getValue(section, key, defaultValue)`: Get a setting value
-  - `setValue(section, key, value)`: Set a setting value
-  - `getSection(section)`: Get all settings in a section
-  - `setSection(section, data)`: Set all settings in a section
+## Core Behavior
 
-### Settings Sections
+`AppConfig` is a process-wide singleton with a thread-safe in-memory `QJsonObject`.
 
-#### Connection Settings (`connection`)
-- `last_ip`: Last connected IP address
-- `subnet`: Network subnet for device scanning
-- `client_mode`: View-only mode flag
+Main API:
 
-#### Camera Settings (`camera_tele`, `camera_wide`)
-Separate sections for Tele and Wide cameras:
-- `exposure_mode`: Auto (0) or Manual (1)
-- `exposure_index`: Exposure slider position
-- `gain_mode`: Auto (0) or Manual (1)
-- `gain_index`: Gain slider position
-- `brightness`: Brightness value (-100 to 100)
-- `contrast`: Contrast value (-100 to 100)
-- `saturation`: Saturation value (-100 to 100)
-- `sharpness`: Sharpness value (0 to 100)
-- `hue`: Hue value (-180 to 180)
-- `ir_cut`: IR-Cut filter enabled (Tele only)
-- `wb_mode`: White balance mode (Auto/Manual)
-- `wb_temperature`: White balance temperature index
+- `load()`: loads `config.json`
+- `save()`: writes `config.json`
+- `getValue(section, key, defaultValue)`: reads a single value
+- `setValue(section, key, value)`: writes a single value in memory
+- `getSection(section)`: returns a whole JSON object section
+- `setSection(section, data)`: replaces a whole section
+- `configFilePath()`: returns the resolved path to `config.json`
 
-#### Panorama Settings (`panorama`)
-- `rows`: Grid rows (3-30)
-- `cols`: Grid columns (3-60)
+Important detail:
 
-#### Media Settings (`media`)
-- `download_dir`: Download directory path
+- Missing config file is treated as valid empty state
+- Invalid JSON resets the in-memory config to an empty object and `load()` returns `false`
+- `setValue()` does not auto-save by itself; save happens when callers explicitly call `save()`
 
-#### Astro Settings (`astro_settings`)
-- Location (latitude, longitude)
-- Stacking parameters (frames, exposure, gain)
-- Dark frame usage
-- Calibration frame counts
+## Load and Save Flow
 
-## Usage
+Main startup:
 
-### Loading Settings
-Settings are automatically loaded at application startup in `MainWindow::loadSettings()`.
+- `src/main.cpp`: loads the config before the main window is shown
+- `src/MainWindow.cpp`: loads persisted UI state into widgets and overlays
 
-Each panel can load its specific settings:
-```cpp
-CameraSettingsPanel::loadSettings()
-AstroNavigationPanel::loadSettings()
-```
+Panel-specific persistence:
 
-### Saving Settings
-Settings are automatically saved when:
-- Application closes (`MainWindow::~MainWindow()`)
-- User changes a setting (auto-save on value change)
+- `src/ui/CameraSettingsPanel.cpp`: loads and saves camera settings
+- `src/ui/AstroNavigationPanel.cpp`: loads and saves astro settings
 
-Manual save:
-```cpp
-AppConfig::instance()->save();
-```
+Main window persistence:
 
-### Accessing Settings
-```cpp
-AppConfig *cfg = AppConfig::instance();
+- connection state
+- panorama settings
+- media download directory
+- display/overlay state
+- selected language
+- last known device metadata
 
-// Get a value
-QString ip = cfg->getValue("connection", "last_ip", "").toString();
+## Active Sections and Keys
 
-// Set a value
-cfg->setValue("connection", "last_ip", "192.168.88.1");
+The following sections are currently used in the codebase.
 
-// Save to disk
-cfg->save();
-```
+### `connection`
 
-## Persistence Across Tab Switches
-Settings are stored in memory and persist when switching between tabs. The configuration is only written to disk when:
-1. Application closes
-2. Explicit save is called
+Used by `MainWindow`.
 
-This ensures settings remain consistent across the entire session.
+Keys:
 
-## Example config.json
+- `last_ip`
+- `subnet`
+- `client_mode`
+- `last_device_name`
+- `last_firmware`
+- `firmware_upload_path`
+
+Purpose:
+
+- reconnect convenience
+- scan subnet persistence
+- view-only mode persistence
+- remember last detected device metadata
+- remember last selected firmware package for upload
+
+### `camera_tele`
+
+Used by `CameraSettingsPanel` when Tele is active.
+
+Keys:
+
+- `exposure_mode`
+- `exposure_index`
+- `gain_mode`
+- `gain_index`
+- `brightness`
+- `contrast`
+- `saturation`
+- `sharpness`
+- `hue`
+- `ir_cut`
+- `wb_mode`
+- `wb_temperature`
+
+### `camera_wide`
+
+Used by `CameraSettingsPanel` when Wide is active.
+
+Keys:
+
+- `exposure_mode`
+- `exposure_index`
+- `gain_mode`
+- `gain_index`
+- `brightness`
+- `contrast`
+- `saturation`
+- `sharpness`
+- `hue`
+- `wb_mode`
+- `wb_temperature`
+
+Notes:
+
+- `ir_cut` is only used on Tele
+- both camera sections are saved independently
+
+### `astro`
+
+Used by `AstroNavigationPanel`.
+
+Keys:
+
+- `magnitude_limit`
+- `show_constellations`
+- `show_grid`
+- `show_labels`
+- `latitude`
+- `longitude`
+- `altitude`
+- `stacking_source`
+- `num_frames`
+- `exposure_index`
+- `gain_index`
+- `use_dark_frames`
+- `dark_frames_count`
+- `flat_frames_count`
+- `bias_frames_count`
+- `lx200_enabled`
+- `lx200_port`
+
+Purpose:
+
+- star map display preferences
+- observing site
+- stacking defaults
+- dark/flat/bias counters
+- LX200 server settings
+
+### `panorama`
+
+Used by `MainWindow`.
+
+Keys:
+
+- `rows`
+- `cols`
+
+### `media`
+
+Used by `MainWindow`.
+
+Keys:
+
+- `download_dir`
+
+### `display`
+
+Used by `MainWindow`.
+
+Keys:
+
+- `last_tab`
+- `motor_overlay_visible`
+- `params_overlay_visible`
+- `starmap_overlay_enabled`
+- `gallery_overlay_enabled`
+- `main_stream`
+- `pip_stream`
+- `pip_x`
+- `pip_y`
+
+Purpose:
+
+- restore selected tab
+- restore overlay visibility
+- restore Tele/Wide stream layout
+- restore PiP position
+
+### `ui`
+
+Used by `main.cpp` and `MainWindow`.
+
+Keys:
+
+- `language`
+
+Purpose:
+
+- persist selected UI language (`de` / `en`)
+
+## Legacy / Compatibility Notes
+
+There are still compatibility reads for whole-section access in `MainWindow`:
+
+- `camera_settings`
+- `astro_settings`
+
+These sections are not the primary live storage anymore. Current code persists camera settings in `camera_tele` and `camera_wide`, and astro settings in `astro`.
+
+## Example `config.json`
+
 ```json
 {
-    "connection": {
-        "last_ip": "192.168.88.1",
-        "subnet": "192.168.88",
-        "client_mode": false
-    },
-    "camera_tele": {
-        "exposure_mode": 1,
-        "exposure_index": 10,
-        "gain_mode": 1,
-        "gain_index": 15,
-        "brightness": 0,
-        "contrast": 0,
-        "saturation": 0,
-        "sharpness": 50,
-        "hue": 0,
-        "ir_cut": false,
-        "wb_mode": 0,
-        "wb_temperature": 5
-    },
-    "camera_wide": {
-        "exposure_mode": 0,
-        "exposure_index": 8,
-        "gain_mode": 0,
-        "gain_index": 5,
-        "brightness": 0,
-        "contrast": 0,
-        "saturation": 0,
-        "sharpness": 50,
-        "hue": 0,
-        "wb_mode": 0,
-        "wb_temperature": 5
-    },
-    "panorama": {
-        "rows": 3,
-        "cols": 3
-    },
-    "media": {
-        "download_dir": "/home/user/Downloads"
-    }
+  "connection": {
+    "last_ip": "192.168.88.1",
+    "subnet": "192.168.88",
+    "client_mode": false,
+    "last_device_name": "DWARF-II",
+    "last_firmware": "2.4.1",
+    "firmware_upload_path": "/home/user/Downloads/dwarf_firmware.zip"
+  },
+  "camera_tele": {
+    "exposure_mode": 1,
+    "exposure_index": 10,
+    "gain_mode": 1,
+    "gain_index": 15,
+    "brightness": 0,
+    "contrast": 0,
+    "saturation": 0,
+    "sharpness": 50,
+    "hue": 0,
+    "ir_cut": false,
+    "wb_mode": 0,
+    "wb_temperature": 5
+  },
+  "camera_wide": {
+    "exposure_mode": 0,
+    "exposure_index": 8,
+    "gain_mode": 0,
+    "gain_index": 5,
+    "brightness": 0,
+    "contrast": 0,
+    "saturation": 0,
+    "sharpness": 50,
+    "hue": 0,
+    "wb_mode": 0,
+    "wb_temperature": 5
+  },
+  "astro": {
+    "magnitude_limit": 6.0,
+    "show_constellations": true,
+    "show_grid": false,
+    "show_labels": true,
+    "latitude": 52.52,
+    "longitude": 13.405,
+    "altitude": 0.0,
+    "stacking_source": "tele",
+    "num_frames": 100,
+    "exposure_index": 10,
+    "gain_index": 60,
+    "use_dark_frames": true,
+    "dark_frames_count": 20,
+    "flat_frames_count": 20,
+    "bias_frames_count": 20,
+    "lx200_enabled": false,
+    "lx200_port": 4030
+  },
+  "panorama": {
+    "rows": 3,
+    "cols": 3
+  },
+  "media": {
+    "download_dir": "/home/user/Downloads"
+  },
+  "display": {
+    "last_tab": 0,
+    "motor_overlay_visible": true,
+    "params_overlay_visible": true,
+    "starmap_overlay_enabled": false,
+    "gallery_overlay_enabled": false,
+    "main_stream": 0,
+    "pip_stream": 1,
+    "pip_x": 120,
+    "pip_y": 120
+  },
+  "ui": {
+    "language": "en"
+  }
 }
 ```
 
-## Benefits
-1. **Human-readable**: JSON format is easy to edit manually if needed
-2. **Portable**: Config file is in the app directory, easy to backup/share
-3. **Persistent**: All settings survive app restarts
-4. **Tab-independent**: Settings persist when switching between tabs
-5. **No Qt dependencies**: Uses standard JSON, not QSettings internal format
+## Practical Notes
+
+- This is a portable config model: moving the application directory also moves the config if `config.json` stays beside the executable
+- Release build scripts copy `config.json` into the distribution when present
+- Settings persistence is intentionally simple and transparent; there is no platform-specific registry or `QSettings` backend involved
