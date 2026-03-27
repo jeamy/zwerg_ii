@@ -1,6 +1,6 @@
 # zwergII: Analyse der DWARF-II-API-Implementierung
 
-Stand: 2026-03-11
+Stand: 2026-03-26
 
 Quellenbasis:
 - Offizielle/halb-offizielle Spezifikation aus [docs/dwarf_api_extracted.txt](/media/data/programming/zwergII/docs/dwarf_api_extracted.txt) und [docs/DWARF API2.0 - Feishu Docs.pdf](/media/data/programming/zwergII/docs/DWARF%20API2.0%20-%20Feishu%20Docs.pdf)
@@ -194,7 +194,7 @@ Abweichend:
 
 Bewertung:
 - Astro ist eines der stärksten Module im Projekt.
-- Die wesentliche Tele-Astro-Bedienung ist jetzt weitgehend UI-seitig abgedeckt.
+- Die wesentliche Tele-/Wide-Astro-Bedienung ist jetzt weitgehend UI-seitig abgedeckt.
 - Vollständige API-Abdeckung ist aber noch nicht erreicht.
 
 ### 8. Motor-API
@@ -318,5 +318,6 @@ Bewertung:
 - und mit mehreren bewusst pragmatischen Reverse-Engineering-Workarounds.
 
 Für einen „API komplett implementiert“-Status fehlen vor allem:
-- saubere Device-/Album-HTTP-Abdeckung
-- dokumentenkonforme Panorama-/Delete-Pfade
+- reale Firmware-Validierung für Tracking, Fokus und Device-HTTP
+- vollständige Album-HTTP-Abdeckung (`mediaCounts`) und einzelne Astro-Randkommandos
+- verifiziertes Panorama-Mapping ohne reverse-engineerte Sonderpfade
