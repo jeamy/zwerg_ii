@@ -120,6 +120,12 @@ private:
     void loadCatalog();
     void updateVisibleObjectsList();
     void gotoObject(const CelestialObject &obj);
+    void startDarkFrameCapture();
+    void stopDarkFrameCapture();
+    void updateStackingSourceUi();
+    void startEqSolving();
+    void stopEqSolving();
+    bool useWideStacking() const;
 
     void startPendingGoto(int delayMs);
     void sendPendingGotoNow();
@@ -161,6 +167,7 @@ private:
     QPushButton *m_stopSpecialTrackingButton = nullptr;
     
     // Stacking Tab - Capture Settings
+    QComboBox *m_stackingSourceCombo = nullptr;
     QSpinBox *m_numFramesSpin;
     QSlider *m_astroExposureSlider;
     QLabel *m_astroExposureValueLabel;
@@ -207,6 +214,11 @@ private:
     QDoubleSpinBox *m_altitudeSpin;
     QPushButton *m_autoLocationButton;
     QLabel *m_locationStatusLabel;
+    QPushButton *m_eqStartButton = nullptr;
+    QPushButton *m_eqStopButton = nullptr;
+    QLabel *m_eqStatusLabel = nullptr;
+    QLabel *m_eqAziErrorLabel = nullptr;
+    QLabel *m_eqAltErrorLabel = nullptr;
 
     QCheckBox *m_lx200EnableCheck;
     QSpinBox *m_lx200PortSpin;
@@ -232,4 +244,7 @@ private:
     bool m_pendingGotoIsSolarSystem = false;
     int m_pendingGotoSolarSystemIndex = -1;
     QString m_pendingGotoDisplayName;
+    bool m_isCapturingDarkFrames = false;
+    int m_requestedDarkFrameCount = 0;
+    bool m_isEqSolving = false;
 };

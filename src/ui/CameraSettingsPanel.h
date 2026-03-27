@@ -84,6 +84,8 @@ private slots:
   void onTeleClicked();
   void onWideClicked();
   void onPhotoClicked();
+  void onBurstClicked();
+  void onTimelapseClicked();
   void onRecordClicked();
   void onExposureModeChanged(int index);
   void onExposureSliderChanged(int value);
@@ -101,9 +103,17 @@ private slots:
   void onPhotoCaptureFinished(DwarfCameraController::CameraKind kind,
                               bool success, int code,
                               const QString &fileName);
+  void onBurstFinished(DwarfCameraController::CameraKind kind, bool running,
+                       bool success, int code);
+  void onTimelapseFinished(DwarfCameraController::CameraKind kind, bool running,
+                           bool success, int code);
   void onRecordFinished(DwarfCameraController::CameraKind kind, bool recording,
                         bool success, int code);
   void onRecordTimerTick();
+  void onBurstProgress(DwarfCameraController::CameraKind kind, int totalCount,
+                       int completedCount);
+  void onTimelapseStatus(DwarfCameraController::CameraKind kind, int intervalSec,
+                         int outTimeSec, int totalTimeSec);
 
 private:
   void setupUi();
@@ -128,6 +138,8 @@ private:
 
   // Capture buttons
   QPushButton *m_photoButton;
+  QPushButton *m_burstButton = nullptr;
+  QPushButton *m_timelapseButton = nullptr;
   QPushButton *m_recButton;
   QLabel *m_captureStatusLabel = nullptr;
   QLabel *m_capturePreviewLabel = nullptr;
@@ -135,6 +147,10 @@ private:
   QTimer *m_recordTimer = nullptr;
   QElapsedTimer m_recordElapsed;
   bool m_photoPending = false;
+  bool m_burstPending = false;
+  bool m_burstRunning = false;
+  bool m_timelapsePending = false;
+  bool m_timelapseRunning = false;
   bool m_recordPending = false;
   bool m_recordStartRetryPending = false;
 

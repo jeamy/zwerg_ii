@@ -6,6 +6,7 @@
 
 using dwarf::ReqMotorRun;
 using dwarf::ReqMotorStop;
+using dwarf::ReqDualCameraLinkage;
 
 namespace {
 inline double clampDouble(double value, double minV, double maxV) {
@@ -122,3 +123,20 @@ void DwarfMotorController::stopJoystick() {
   const QByteArray data = ProtobufHelper::serialize(req);
   m_client->sendCommand(moduleId(), cmdJoystickStop(), data);
 }
+
+void DwarfMotorController::dualCameraLinkage(int x, int y) {
+  if (!m_client || !m_client->isConnected()) {
+    emit errorOccurred("Motor client not connected");
+    return;
+  }
+
+  ReqDualCameraLinkage req;
+  req.set_x(x);
+  req.set_y(y);
+
+  const QByteArray data = ProtobufHelper::serialize(req);
+  m_client->sendCommand(moduleId(), cmdDualCameraLinkage(), data);
+  emit statusMessage(QObject::tr("Dual-camera linkage sent"));
+}
+
+quint32 DwarfMotorController::cmdDualCameraLinkage() const { return 14009u; }

@@ -5,6 +5,46 @@
 #include <QNetworkInterface>
 #include <QTimer>
 
+namespace {
+QString pickString(const QJsonObject &obj, const QStringList &keys) {
+  for (const QString &k : keys) {
+    const QJsonValue v = obj.value(k);
+    if (v.isString()) {
+      const QString s = v.toString().trimmed();
+      if (!s.isEmpty())
+        return s;
+    }
+  }
+  return QString();
+}
+
+QString parseFirmwareVersion(const QJsonObject &root) {
+  const QJsonObject dataObj = root.value(QStringLiteral("data")).toObject();
+  if (!dataObj.isEmpty()) {
+    const int major = dataObj.value(QStringLiteral("majorVersion")).toInt(-1);
+    const int minor = dataObj.value(QStringLiteral("minorVersion")).toInt(-1);
+    const int patch = dataObj.value(QStringLiteral("patchVersion")).toInt(-1);
+    if (major >= 0 && minor >= 0 && patch >= 0)
+      return QStringLiteral("%1.%2.%3").arg(major).arg(minor).arg(patch);
+  }
+
+  QString ver = pickString(root, {QStringLiteral("version"),
+                                  QStringLiteral("fwVersion"),
+                                  QStringLiteral("firmware"),
+                                  QStringLiteral("firmwareVersion"),
+                                  QStringLiteral("deviceVersion"),
+                                  QStringLiteral("romVersion")});
+  if (ver.isEmpty())
+    ver = pickString(dataObj, {QStringLiteral("version"),
+                               QStringLiteral("fwVersion"),
+                               QStringLiteral("firmware"),
+                               QStringLiteral("firmwareVersion"),
+                               QStringLiteral("deviceVersion"),
+                               QStringLiteral("romVersion")});
+  return ver;
+}
+} // namespace
+
 DwarfFinder::DwarfFinder(QObject *parent)
     : QObject(parent), m_isScanning(false),
       m_maxConcurrentScans(40) { // Initialize m_maxConcurrentScans
@@ -197,12 +237,13 @@ void DwarfFinder::checkNextIp() {
 }
 
 void DwarfFinder::getDeviceInfo(const QString &ip) {
-  QUrl url(QString("http://%1:8082/getdeviceInfo").arg(ip));
+  QUrl url(QString("http://%1:8082/deviceInfo").arg(ip));
   QNetworkRequest request(url);
   request.setTransferTimeout(1000); // 1s timeout for HTTP
 
   QNetworkReply *reply = m_nam->get(request);
   reply->setProperty("ip", ip);
+  reply->setProperty("deviceInfoFallbackAllowed", true);
 
   // Create a timeout timer for this request
   QTimer *timer = new QTimer(reply);
@@ -231,25 +272,11 @@ void DwarfFinder::onDeviceInfoReceived(QNetworkReply *reply) {
   info.version.clear();
 
   if (reply->error() == QNetworkReply::NoError) {
-    QByteArray data = reply->readAll();
-
-    QJsonDocument doc = QJsonDocument::fromJson(data);
+    const QByteArray data = reply->readAll();
+    const QJsonDocument doc = QJsonDocument::fromJson(data);
     if (!doc.isNull() && doc.isObject()) {
       const QJsonObject root = doc.object();
       const QJsonObject dataObj = root.value(QStringLiteral("data")).toObject();
-
-      auto pickString = [&](const QJsonObject &obj,
-                            const QStringList &keys) -> QString {
-        for (const QString &k : keys) {
-          const QJsonValue v = obj.value(k);
-          if (v.isString()) {
-            const QString s = v.toString().trimmed();
-            if (!s.isEmpty())
-              return s;
-          }
-        }
-        return QString();
-      };
 
       // Device name
       QString name = pickString(root,
@@ -262,26 +289,86 @@ void DwarfFinder::onDeviceInfoReceived(QNetworkReply *reply) {
       if (!name.isEmpty())
         info.name = name;
 
-      // Firmware / version
-      QString ver = pickString(root,
-                               {QStringLiteral("version"), QStringLiteral("fwVersion"),
-                                QStringLiteral("firmware"), QStringLiteral("firmwareVersion"),
-                                QStringLiteral("deviceVersion"), QStringLiteral("romVersion")});
-      if (ver.isEmpty())
-        ver = pickString(dataObj,
-                         {QStringLiteral("version"), QStringLiteral("fwVersion"),
-                          QStringLiteral("firmware"), QStringLiteral("firmwareVersion"),
-                          QStringLiteral("deviceVersion"), QStringLiteral("romVersion")});
-      info.version = ver;
+      info.version = parseFirmwareVersion(root);
     }
+  } else if (reply->property("deviceInfoFallbackAllowed").toBool()) {
+    QUrl fallbackUrl(QString("http://%1:8082/getdeviceInfo").arg(ip));
+    QNetworkRequest fallbackRequest(fallbackUrl);
+    fallbackRequest.setTransferTimeout(1000);
 
-    emit deviceFound(info);
+    QNetworkReply *fallbackReply = m_nam->get(fallbackRequest);
+    fallbackReply->setProperty("ip", ip);
+    fallbackReply->setProperty("deviceInfoFallbackAllowed", false);
+
+    QTimer *timer = new QTimer(fallbackReply);
+    timer->setSingleShot(true);
+    timer->setInterval(1500);
+
+    connect(timer, &QTimer::timeout, this, [fallbackReply]() {
+      if (fallbackReply->isRunning())
+        fallbackReply->abort();
+    });
+    connect(fallbackReply, &QNetworkReply::finished, this,
+            [this, fallbackReply, timer]() {
+              timer->stop();
+              onDeviceInfoReceived(fallbackReply);
+            });
+    timer->start();
+
+    reply->deleteLater();
+    return;
   } else {
-    // Even if getdeviceinfo fails, the port 8082 was open, so it's likely a
-    // DWARF.
     info.name = "DWARF II (Unverified)";
+  }
+
+  if (info.version.isEmpty()) {
+    requestFirmwareVersion(ip, info.name);
+  } else {
     emit deviceFound(info);
   }
 
+  reply->deleteLater();
+}
+
+void DwarfFinder::requestFirmwareVersion(const QString &ip, const QString &name) {
+  QUrl url(QString("http://%1:8082/firmwareVersion").arg(ip));
+  QNetworkRequest request(url);
+  request.setHeader(QNetworkRequest::ContentTypeHeader,
+                    QStringLiteral("application/json"));
+  request.setTransferTimeout(1000);
+
+  QNetworkReply *reply = m_nam->post(request, QByteArray("{}"));
+  reply->setProperty("ip", ip);
+  reply->setProperty("name", name);
+
+  QTimer *timer = new QTimer(reply);
+  timer->setSingleShot(true);
+  timer->setInterval(1500);
+
+  connect(timer, &QTimer::timeout, this, [reply]() {
+    if (reply->isRunning())
+      reply->abort();
+  });
+  connect(reply, &QNetworkReply::finished, this, [this, reply, timer]() {
+    timer->stop();
+    onFirmwareVersionReceived(reply);
+  });
+  timer->start();
+}
+
+void DwarfFinder::onFirmwareVersionReceived(QNetworkReply *reply) {
+  DwarfDeviceInfo info;
+  info.ip = reply->property("ip").toString();
+  info.name = reply->property("name").toString();
+  if (info.name.isEmpty())
+    info.name = QStringLiteral("DWARF II");
+
+  if (reply->error() == QNetworkReply::NoError) {
+    const QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+    if (!doc.isNull() && doc.isObject())
+      info.version = parseFirmwareVersion(doc.object());
+  }
+
+  emit deviceFound(info);
   reply->deleteLater();
 }

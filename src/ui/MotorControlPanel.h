@@ -24,6 +24,7 @@ public:
 
 signals:
     void speedChanged(int speedIndex);
+    void linkageModeChanged(bool enabled);
 
 private:
     void setupUi();
@@ -38,6 +39,7 @@ private:
     QPushButton *m_rightButton = nullptr;
     QSlider *m_speedSlider = nullptr;
     QLabel *m_speedLabel = nullptr;
+    QPushButton *m_linkageButton = nullptr;
 
     QGroupBox *m_motorGroup = nullptr;
     QGroupBox *m_focusGroup = nullptr;
@@ -45,6 +47,10 @@ private:
     QPushButton *m_focusFarButton = nullptr;
     QPushButton *m_focusNearButton = nullptr;
     QPushButton *m_autoFocusButton = nullptr;
+    QPushButton *m_focusFarHoldButton = nullptr;
+    QPushButton *m_focusStopButton = nullptr;
+    QPushButton *m_focusNearHoldButton = nullptr;
+    QPushButton *m_astroFocusButton = nullptr;
 
     VirtualJoystick *m_joystick = nullptr;
     QTimer *m_joystickSendTimer = nullptr;
@@ -66,10 +72,16 @@ private slots:
     void onRightPressed();
     void onRightReleased();
     void onSpeedChanged(int value);
+    void onLinkageToggled(bool checked);
 
     void onFocusFarClicked();
     void onFocusNearClicked();
     void onAutoFocusClicked();
+    void onFocusFarHoldPressed();
+    void onFocusNearHoldPressed();
+    void onFocusHoldReleased();
+    void onFocusStopClicked();
+    void onAstroFocusToggled(bool checked);
 
     void onJoystickMoved(double angle, double strength);
     void onJoystickReleased();

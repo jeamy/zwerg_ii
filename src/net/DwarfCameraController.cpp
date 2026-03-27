@@ -1,5 +1,6 @@
 #include "DwarfCameraController.h"
 
+#include "notify.pb.h"
 #include "ProtobufHelper.h"
 
 #include <QTimer>
@@ -7,7 +8,9 @@
 
 using dwarf::ReqOpenCamera;
 using dwarf::ReqPhoto;
+using dwarf::ReqBurst;
 using dwarf::ReqSetAllParams;
+using dwarf::ReqStartTimelapsePhoto;
 using dwarf::ReqStartRecord;
 using dwarf::ReqStopRecord;
 using dwarf::ResGetAllParams;
@@ -248,6 +251,47 @@ void DwarfCameraController::takePhoto(CameraKind kind) {
   ReqPhoto req;
   const QByteArray data = ProtobufHelper::serialize(req);
   m_client->sendCommand(moduleIdFor(kind), cmdPhotoFor(kind), data);
+}
+
+void DwarfCameraController::startBurst(CameraKind kind) {
+  if (!m_client || !m_client->isConnected()) {
+    emit errorOccurred("Camera client not connected");
+    return;
+  }
+
+  ReqBurst req;
+  const QByteArray data = ProtobufHelper::serialize(req);
+  m_client->sendCommand(moduleIdFor(kind), cmdStartBurstFor(kind), data);
+}
+
+void DwarfCameraController::stopBurst(CameraKind kind) {
+  if (!m_client || !m_client->isConnected()) {
+    emit errorOccurred("Camera client not connected");
+    return;
+  }
+
+  m_client->sendCommand(moduleIdFor(kind), cmdStopBurstFor(kind), QByteArray());
+}
+
+void DwarfCameraController::startTimelapse(CameraKind kind) {
+  if (!m_client || !m_client->isConnected()) {
+    emit errorOccurred("Camera client not connected");
+    return;
+  }
+
+  ReqStartTimelapsePhoto req;
+  const QByteArray data = ProtobufHelper::serialize(req);
+  m_client->sendCommand(moduleIdFor(kind), cmdStartTimelapseFor(kind), data);
+}
+
+void DwarfCameraController::stopTimelapse(CameraKind kind) {
+  if (!m_client || !m_client->isConnected()) {
+    emit errorOccurred("Camera client not connected");
+    return;
+  }
+
+  m_client->sendCommand(moduleIdFor(kind), cmdStopTimelapseFor(kind),
+                        QByteArray());
 }
 
 void DwarfCameraController::startRecord(CameraKind kind) {
@@ -680,6 +724,44 @@ void DwarfCameraController::handleCameraMessage(quint32 moduleId, quint32 cmd,
     return;
   }
 
+  // Handle BURST response
+  if ((moduleId == 1 && cmd == 10003) || (moduleId == 2 && cmd == 12023)) {
+    dwarf::ComResponse res;
+    const bool ok = res.ParseFromArray(data.data(), data.size());
+    const int code = ok ? res.code() : -1;
+    const bool success = ok && (code == 0);
+    emit burstFinished(kind, true, success, code);
+    return;
+  }
+
+  if ((moduleId == 1 && cmd == 10004) || (moduleId == 2 && cmd == 12024)) {
+    dwarf::ComResponse res;
+    const bool ok = res.ParseFromArray(data.data(), data.size());
+    const int code = ok ? res.code() : -1;
+    const bool success = ok && (code == 0);
+    emit burstFinished(kind, false, success, code);
+    return;
+  }
+
+  // Handle TIMELAPSE response
+  if ((moduleId == 1 && cmd == 10033) || (moduleId == 2 && cmd == 12025)) {
+    dwarf::ComResponse res;
+    const bool ok = res.ParseFromArray(data.data(), data.size());
+    const int code = ok ? res.code() : -1;
+    const bool success = ok && (code == 0);
+    emit timelapseFinished(kind, true, success, code);
+    return;
+  }
+
+  if ((moduleId == 1 && cmd == 10034) || (moduleId == 2 && cmd == 12026)) {
+    dwarf::ComResponse res;
+    const bool ok = res.ParseFromArray(data.data(), data.size());
+    const int code = ok ? res.code() : -1;
+    const bool success = ok && (code == 0);
+    emit timelapseFinished(kind, false, success, code);
+    return;
+  }
+
   // Handle START_RECORD response (Tele only: 10005)
   if (moduleId == 1 && cmd == 10005) {
     dwarf::ComResponse res;
@@ -785,6 +867,28 @@ void DwarfCameraController::handleCameraMessage(quint32 moduleId, quint32 cmd,
   }
 }
 
+void DwarfCameraController::handleNotification(quint32 cmd,
+                                               const QByteArray &data) {
+  if (cmd == 15218u || cmd == 15220u) {
+    dwarf::ResNotifyBurstProgress progress;
+    if (!progress.ParseFromArray(data.data(), data.size()))
+      return;
+    const CameraKind kind = (cmd == 15218u) ? CameraKind::Tele : CameraKind::Wide;
+    emit burstProgress(kind, static_cast<int>(progress.total_count()),
+                       static_cast<int>(progress.completed_count()));
+    return;
+  }
+
+  if (cmd == 15205u || cmd == 15226u) {
+    dwarf::ResNotifyTimeLapseOutTime status;
+    if (!status.ParseFromArray(data.data(), data.size()))
+      return;
+    const CameraKind kind = (cmd == 15205u) ? CameraKind::Tele : CameraKind::Wide;
+    emit timelapseStatus(kind, status.interval(), status.out_time(),
+                         status.total_time());
+  }
+}
+
 void DwarfCameraController::sendSetAllParams(CameraKind kind) {
   qWarning() << "[DwarfCameraController] sendSetAllParams called for"
              << (kind == CameraKind::Tele ? "Tele" : "Wide")
@@ -825,6 +929,22 @@ quint32 DwarfCameraController::cmdCloseCameraFor(CameraKind kind) const {
 
 quint32 DwarfCameraController::cmdPhotoFor(CameraKind kind) const {
   return (kind == CameraKind::Tele) ? 10002u : 12022u;
+}
+
+quint32 DwarfCameraController::cmdStartBurstFor(CameraKind kind) const {
+  return (kind == CameraKind::Tele) ? 10003u : 12023u;
+}
+
+quint32 DwarfCameraController::cmdStopBurstFor(CameraKind kind) const {
+  return (kind == CameraKind::Tele) ? 10004u : 12024u;
+}
+
+quint32 DwarfCameraController::cmdStartTimelapseFor(CameraKind kind) const {
+  return (kind == CameraKind::Tele) ? 10033u : 12025u;
+}
+
+quint32 DwarfCameraController::cmdStopTimelapseFor(CameraKind kind) const {
+  return (kind == CameraKind::Tele) ? 10034u : 12026u;
 }
 
 quint32 DwarfCameraController::cmdStartRecordFor(CameraKind kind) const {

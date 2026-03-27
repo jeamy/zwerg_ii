@@ -316,18 +316,24 @@ void AstroNavigationPanel::setupSearchTab() {
     m_tabWidget->addTab(tab, tr("Search"));
 }
 
-// Astro exposure values in microseconds (same as Tele camera for astro mode)
-static const QVector<QPair<int, QString>> &astroExposureValues() {
-    return CameraSettingsPanel::s_teleExposureValues;
+// Astro exposure values in microseconds (same as the selected camera mode)
+static const QVector<QPair<int, QString>> &astroExposureOptions(bool wide) {
+    return wide ? CameraSettingsPanel::s_wideExposureValues
+                : CameraSettingsPanel::s_teleExposureValues;
 }
 
 // Astro gain values (0-120)
-static const QVector<QPair<int, int>> &astroGainValues() {
-    return CameraSettingsPanel::s_teleGainValues;
+static const QVector<QPair<int, int>> &astroGainOptions(bool wide) {
+    return wide ? CameraSettingsPanel::s_wideGainValues
+                : CameraSettingsPanel::s_teleGainValues;
+}
+
+bool AstroNavigationPanel::useWideStacking() const {
+    return m_stackingSourceCombo && m_stackingSourceCombo->currentData().toString() == QStringLiteral("wide");
 }
 
 QString AstroNavigationPanel::formatExposureValue(int sliderIndex) const {
-    const auto &exp = astroExposureValues();
+    const auto &exp = astroExposureOptions(useWideStacking());
     if (sliderIndex < 0 || sliderIndex >= exp.size())
         return "?";
 
@@ -335,7 +341,7 @@ QString AstroNavigationPanel::formatExposureValue(int sliderIndex) const {
 }
 
 QString AstroNavigationPanel::formatGainValue(int sliderIndex) const {
-    const auto &gain = astroGainValues();
+    const auto &gain = astroGainOptions(useWideStacking());
     if (sliderIndex < 0 || sliderIndex >= gain.size())
         return "?";
     return QString::number(gain.at(sliderIndex).second);
@@ -348,21 +354,27 @@ void AstroNavigationPanel::setupStackingTab() {
     // Capture settings
     auto *settingsGroup = new QGroupBox(tr("Capture Settings"), tab);
     auto *settingsLayout = new QGridLayout(settingsGroup);
+
+    settingsLayout->addWidget(new QLabel(tr("Source:")), 0, 0);
+    m_stackingSourceCombo = new QComboBox(settingsGroup);
+    m_stackingSourceCombo->addItem(tr("Tele"), QStringLiteral("tele"));
+    m_stackingSourceCombo->addItem(tr("Wide"), QStringLiteral("wide"));
+    settingsLayout->addWidget(m_stackingSourceCombo, 0, 1, 1, 2);
     
     // Number of frames
-    settingsLayout->addWidget(new QLabel(tr("Frames:")), 0, 0);
+    settingsLayout->addWidget(new QLabel(tr("Frames:")), 1, 0);
     m_numFramesSpin = new QSpinBox(settingsGroup);
     m_numFramesSpin->setRange(1, 1000);
     m_numFramesSpin->setValue(100);
-    settingsLayout->addWidget(m_numFramesSpin, 0, 1, 1, 2);
+    settingsLayout->addWidget(m_numFramesSpin, 1, 1, 1, 2);
     
     // Exposure slider (like camera panel)
-    settingsLayout->addWidget(new QLabel(tr("Exposure:")), 1, 0);
+    settingsLayout->addWidget(new QLabel(tr("Exposure:")), 2, 0);
     m_astroExposureSlider = new QSlider(Qt::Horizontal, settingsGroup);
-    m_astroExposureSlider->setRange(0, astroExposureValues().size() - 1);
+    m_astroExposureSlider->setRange(0, astroExposureOptions(false).size() - 1);
     int defaultExposureUiIndex = 0;
-    for (int i = 0; i < astroExposureValues().size(); ++i) {
-        if (astroExposureValues().at(i).first == 141) {
+    for (int i = 0; i < astroExposureOptions(false).size(); ++i) {
+        if (astroExposureOptions(false).at(i).first == 141) {
             defaultExposureUiIndex = i;
             break;
         }
@@ -371,23 +383,23 @@ void AstroNavigationPanel::setupStackingTab() {
     m_astroExposureValueLabel = new QLabel(formatExposureValue(defaultExposureUiIndex), settingsGroup);
     m_astroExposureValueLabel->setMinimumWidth(60);
     m_astroExposureValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    settingsLayout->addWidget(m_astroExposureSlider, 1, 1);
-    settingsLayout->addWidget(m_astroExposureValueLabel, 1, 2);
+    settingsLayout->addWidget(m_astroExposureSlider, 2, 1);
+    settingsLayout->addWidget(m_astroExposureValueLabel, 2, 2);
     
     // Gain slider (like camera panel)
-    settingsLayout->addWidget(new QLabel(tr("Gain:")), 2, 0);
+    settingsLayout->addWidget(new QLabel(tr("Gain:")), 3, 0);
     m_astroGainSlider = new QSlider(Qt::Horizontal, settingsGroup);
     int minGainUiIndex = 0;
-    for (int i = 0; i < astroGainValues().size(); ++i) {
-        if (astroGainValues().at(i).second >= 40) {
+    for (int i = 0; i < astroGainOptions(false).size(); ++i) {
+        if (astroGainOptions(false).at(i).second >= 40) {
             minGainUiIndex = i;
             break;
         }
     }
-    m_astroGainSlider->setRange(minGainUiIndex, astroGainValues().size() - 1);
+    m_astroGainSlider->setRange(minGainUiIndex, astroGainOptions(false).size() - 1);
     int defaultGainUiIndex = 0;
-    for (int i = 0; i < astroGainValues().size(); ++i) {
-        if (astroGainValues().at(i).second == 60) {
+    for (int i = 0; i < astroGainOptions(false).size(); ++i) {
+        if (astroGainOptions(false).at(i).second == 60) {
             defaultGainUiIndex = i;
             break;
         }
@@ -398,8 +410,8 @@ void AstroNavigationPanel::setupStackingTab() {
     m_astroGainValueLabel = new QLabel(formatGainValue(defaultGainUiIndex), settingsGroup);
     m_astroGainValueLabel->setMinimumWidth(40);
     m_astroGainValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    settingsLayout->addWidget(m_astroGainSlider, 2, 1);
-    settingsLayout->addWidget(m_astroGainValueLabel, 2, 2);
+    settingsLayout->addWidget(m_astroGainSlider, 3, 1);
+    settingsLayout->addWidget(m_astroGainValueLabel, 3, 2);
     
     // Connect sliders to update labels
     connect(m_astroExposureSlider, &QSlider::valueChanged, this, [this](int value) {
@@ -421,7 +433,7 @@ void AstroNavigationPanel::setupStackingTab() {
     
     buttonLayout->addWidget(m_startStackingButton);
     buttonLayout->addWidget(m_stopStackingButton);
-    settingsLayout->addLayout(buttonLayout, 3, 0, 1, 3);
+    settingsLayout->addLayout(buttonLayout, 4, 0, 1, 3);
     
     // Calibration group
     auto *calibrationGroup = new QGroupBox(tr("Calibration Frames"), tab);
@@ -443,7 +455,7 @@ void AstroNavigationPanel::setupStackingTab() {
     // Connect checkbox to spinbox and capture button
     connect(m_useDarkFramesCheck, &QCheckBox::toggled, this, [this](bool checked) {
         m_darkFramesSpin->setEnabled(checked);
-        m_captureDarksButton->setEnabled(checked);
+        m_captureDarksButton->setEnabled(checked && !m_isStacking && !m_isCapturingDarkFrames);
     });
     
     // Flat frames
@@ -454,6 +466,10 @@ void AstroNavigationPanel::setupStackingTab() {
     calibrationLayout->addWidget(m_flatFramesSpin, 1, 1);
     m_captureFlatsButton = new QPushButton(tr("Capture Flats"), calibrationGroup);
     calibrationLayout->addWidget(m_captureFlatsButton, 1, 2);
+    m_flatFramesSpin->setEnabled(false);
+    m_captureFlatsButton->setEnabled(false);
+    m_captureFlatsButton->setToolTip(
+        tr("Flat-frame capture is not exposed by the current DWARF-II API client."));
     
     // Bias frames
     calibrationLayout->addWidget(new QLabel(tr("Bias Frames:")), 2, 0);
@@ -463,6 +479,10 @@ void AstroNavigationPanel::setupStackingTab() {
     calibrationLayout->addWidget(m_biasFramesSpin, 2, 1);
     m_captureBiasButton = new QPushButton(tr("Capture Bias"), calibrationGroup);
     calibrationLayout->addWidget(m_captureBiasButton, 2, 2);
+    m_biasFramesSpin->setEnabled(false);
+    m_captureBiasButton->setEnabled(false);
+    m_captureBiasButton->setToolTip(
+        tr("Bias-frame capture is not exposed by the current DWARF-II API client."));
     
     m_calibrationFramesStatusLabel = new QLabel(tr("No calibration frames captured"), calibrationGroup);
     m_calibrationFramesStatusLabel->setStyleSheet("color: gray; font-style: italic;");
@@ -499,6 +519,57 @@ void AstroNavigationPanel::setupStackingTab() {
     layout->addStretch();
     
     m_tabWidget->addTab(tab, tr("Stacking"));
+    updateStackingSourceUi();
+}
+
+void AstroNavigationPanel::updateStackingSourceUi() {
+    if (!m_astroExposureSlider || !m_astroGainSlider || !m_astroExposureValueLabel ||
+        !m_astroGainValueLabel) {
+        return;
+    }
+
+    const bool wide = useWideStacking();
+    const auto &expValues = astroExposureOptions(wide);
+    const auto &gainValues = astroGainOptions(wide);
+
+    if (expValues.isEmpty() || gainValues.isEmpty())
+        return;
+
+    const int expValue = qBound(0, m_astroExposureSlider->value(), expValues.size() - 1);
+    m_astroExposureSlider->setRange(0, expValues.size() - 1);
+    m_astroExposureSlider->setValue(expValue);
+    m_astroExposureValueLabel->setText(formatExposureValue(expValue));
+
+    int minGainUiIndex = 0;
+    for (int i = 0; i < gainValues.size(); ++i) {
+        if (gainValues.at(i).second >= 40) {
+            minGainUiIndex = i;
+            break;
+        }
+    }
+    const int gainValue =
+        qBound(minGainUiIndex, m_astroGainSlider->value(), gainValues.size() - 1);
+    m_astroGainSlider->setRange(minGainUiIndex, gainValues.size() - 1);
+    m_astroGainSlider->setValue(gainValue);
+    m_astroGainValueLabel->setText(formatGainValue(gainValue));
+
+    const bool teleDarksAvailable = !wide;
+    if (m_useDarkFramesCheck)
+        m_useDarkFramesCheck->setEnabled(teleDarksAvailable && !m_isStacking);
+    if (m_darkFramesSpin)
+        m_darkFramesSpin->setEnabled(teleDarksAvailable && !m_isStacking &&
+                                     m_useDarkFramesCheck && m_useDarkFramesCheck->isChecked());
+    if (m_captureDarksButton)
+        m_captureDarksButton->setEnabled(teleDarksAvailable && !m_isStacking &&
+                                         !m_isCapturingDarkFrames &&
+                                         (!m_useDarkFramesCheck || m_useDarkFramesCheck->isChecked()));
+
+    if (wide && m_calibrationFramesStatusLabel && !m_isCapturingDarkFrames) {
+        m_calibrationFramesStatusLabel->setText(
+            tr("Wide stacking is available; dark-frame capture remains Tele-only"));
+        m_calibrationFramesStatusLabel->setStyleSheet(
+            "color: gray; font-style: italic;");
+    }
 }
 
 void AstroNavigationPanel::setupSettingsTab() {
@@ -579,6 +650,27 @@ void AstroNavigationPanel::setupSettingsTab() {
     
     // Connect auto-location button
     connect(m_autoLocationButton, &QPushButton::clicked, this, &AstroNavigationPanel::onAutoLocationClicked);
+
+    auto *eqGroup = new QGroupBox(tr("EQ Alignment"), tab);
+    auto *eqLayout = new QGridLayout(eqGroup);
+
+    m_eqStartButton = new QPushButton(tr("Start EQ Solve"), eqGroup);
+    m_eqStopButton = new QPushButton(tr("Stop"), eqGroup);
+    m_eqStopButton->setEnabled(false);
+    eqLayout->addWidget(m_eqStartButton, 0, 0);
+    eqLayout->addWidget(m_eqStopButton, 0, 1);
+
+    m_eqStatusLabel = new QLabel(tr("Idle"), eqGroup);
+    m_eqStatusLabel->setStyleSheet("color: gray;");
+    eqLayout->addWidget(m_eqStatusLabel, 1, 0, 1, 2);
+
+    eqLayout->addWidget(new QLabel(tr("Azimuth error:")), 2, 0);
+    m_eqAziErrorLabel = new QLabel("--", eqGroup);
+    eqLayout->addWidget(m_eqAziErrorLabel, 2, 1);
+
+    eqLayout->addWidget(new QLabel(tr("Altitude error:")), 3, 0);
+    m_eqAltErrorLabel = new QLabel("--", eqGroup);
+    eqLayout->addWidget(m_eqAltErrorLabel, 3, 1);
     
     // LX200 Server settings
     auto *lx200Group = new QGroupBox(tr("LX200 Server"), tab);
@@ -604,6 +696,7 @@ void AstroNavigationPanel::setupSettingsTab() {
     
     layout->addWidget(displayGroup);
     layout->addWidget(locationGroup);
+    layout->addWidget(eqGroup);
     layout->addWidget(lx200Group);
     layout->addStretch();
     
@@ -641,6 +734,30 @@ void AstroNavigationPanel::connectSignals() {
     connect(m_startStackingButton, &QPushButton::clicked, this, &AstroNavigationPanel::onStartStackingClicked);
     connect(m_stopStackingButton, &QPushButton::clicked, this, &AstroNavigationPanel::onStopStackingClicked);
     connect(m_stackingTimer, &QTimer::timeout, this, &AstroNavigationPanel::updateStackingProgress);
+    if (m_stackingSourceCombo) {
+        connect(m_stackingSourceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, [this](int) {
+                    updateStackingSourceUi();
+                    saveSettings();
+                });
+    }
+    if (m_captureDarksButton) {
+        connect(m_captureDarksButton, &QPushButton::clicked, this, [this]() {
+            if (m_isCapturingDarkFrames) {
+                stopDarkFrameCapture();
+            } else {
+                startDarkFrameCapture();
+            }
+        });
+    }
+    if (m_eqStartButton) {
+        connect(m_eqStartButton, &QPushButton::clicked, this,
+                &AstroNavigationPanel::startEqSolving);
+    }
+    if (m_eqStopButton) {
+        connect(m_eqStopButton, &QPushButton::clicked, this,
+                &AstroNavigationPanel::stopEqSolving);
+    }
     
     // Settings signals
     connect(m_magnitudeLimitSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
@@ -1165,6 +1282,66 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
             QMessageBox::warning(this, tr("Stacking Failed"), error);
         });
 
+        connect(m_astroController, &DwarfAstroController::darkFrameProgress, this,
+                [this](int current, int total) {
+                    if (!m_calibrationFramesStatusLabel)
+                        return;
+
+                    if (total > 0) {
+                        m_calibrationFramesStatusLabel->setText(
+                            tr("Capturing darks: %1 / %2").arg(current).arg(total));
+                        m_calibrationFramesStatusLabel->setStyleSheet(
+                            "color: #3498db; font-style: italic;");
+                    }
+
+                    if (total > 0 && current >= total) {
+                        m_isCapturingDarkFrames = false;
+                        if (m_captureDarksButton) {
+                            m_captureDarksButton->setText(tr("Capture Darks"));
+                            m_captureDarksButton->setEnabled(
+                                !m_isStacking && (!m_useDarkFramesCheck || m_useDarkFramesCheck->isChecked()));
+                        }
+                        m_calibrationFramesStatusLabel->setText(
+                            tr("Dark-frame capture finished (%1 frames)").arg(total));
+                        m_calibrationFramesStatusLabel->setStyleSheet(
+                            "color: green; font-style: italic;");
+                        if (m_astroController)
+                            m_astroController->getDarkFrameList();
+                    }
+                });
+
+        connect(m_astroController, &DwarfAstroController::darkFrameListReceived, this,
+                [this](const QList<QVariantMap> &frames) {
+                    if (!m_calibrationFramesStatusLabel)
+                        return;
+                    if (frames.isEmpty()) {
+                        m_calibrationFramesStatusLabel->setText(
+                            tr("No dark-frame profiles stored"));
+                        m_calibrationFramesStatusLabel->setStyleSheet(
+                            "color: gray; font-style: italic;");
+                        return;
+                    }
+
+                    m_calibrationFramesStatusLabel->setText(
+                        tr("Dark-frame profiles available: %1").arg(frames.size()));
+                    m_calibrationFramesStatusLabel->setStyleSheet(
+                        "color: gray; font-style: italic;");
+                });
+
+        connect(m_astroController, &DwarfAstroController::eqSolvingResult, this,
+                [this](double aziError, double altError) {
+                    if (m_eqAziErrorLabel)
+                        m_eqAziErrorLabel->setText(
+                            tr("%1 deg").arg(aziError, 0, 'f', 3));
+                    if (m_eqAltErrorLabel)
+                        m_eqAltErrorLabel->setText(
+                            tr("%1 deg").arg(altError, 0, 'f', 3));
+                    if (m_eqStatusLabel) {
+                        m_eqStatusLabel->setText(tr("EQ solution updated"));
+                        m_eqStatusLabel->setStyleSheet("color: green;");
+                    }
+                });
+
         // Connect special tracking signals
         connect(m_astroController, &DwarfAstroController::specialTrackingStarted, this, [this](int index) {
             m_trackSunButton->setEnabled(false);
@@ -1183,6 +1360,8 @@ void AstroNavigationPanel::setAstroController(DwarfAstroController *controller) 
             m_calibrationStatusLabel->setText(tr("Tracking stopped"));
             m_calibrationStatusLabel->setStyleSheet("color: gray;");
         });
+
+        m_astroController->getDarkFrameList();
     }
 }
 
@@ -1192,6 +1371,134 @@ double AstroNavigationPanel::latitude() const {
 
 double AstroNavigationPanel::longitude() const {
     return m_longitudeSpin ? m_longitudeSpin->value() : 0.0;
+}
+
+void AstroNavigationPanel::startDarkFrameCapture() {
+    if (!m_astroController || !m_cameraController || !m_captureDarksButton ||
+        !m_darkFramesSpin || !m_astroExposureSlider || !m_astroGainSlider) {
+        return;
+    }
+
+    const int requestedCount = m_darkFramesSpin->value();
+    if (requestedCount <= 0) {
+        if (m_calibrationFramesStatusLabel) {
+            m_calibrationFramesStatusLabel->setText(
+                tr("Set the dark-frame count above zero"));
+            m_calibrationFramesStatusLabel->setStyleSheet(
+                "color: orange; font-style: italic;");
+        }
+        return;
+    }
+
+    const auto &exp = astroExposureOptions(false);
+    const auto &gain = astroGainOptions(false);
+    const int exposureUiIndex = m_astroExposureSlider->value();
+    const int gainUiIndex = m_astroGainSlider->value();
+    const int exposureIndex =
+        (exposureUiIndex >= 0 && exposureUiIndex < exp.size())
+            ? exp.at(exposureUiIndex).first
+            : 0;
+    const int gainIndex =
+        (gainUiIndex >= 0 && gainUiIndex < gain.size())
+            ? gain.at(gainUiIndex).first
+            : 0;
+
+    m_isCapturingDarkFrames = true;
+    m_requestedDarkFrameCount = requestedCount;
+    m_captureDarksButton->setText(tr("Stop Capture"));
+    if (m_calibrationFramesStatusLabel) {
+        m_calibrationFramesStatusLabel->setText(tr("Preparing dark capture..."));
+        m_calibrationFramesStatusLabel->setStyleSheet(
+            "color: #3498db; font-style: italic;");
+    }
+
+    m_cameraController->setExposureMode(DwarfCameraController::CameraKind::Tele, 1);
+    m_cameraController->setExposureIndex(DwarfCameraController::CameraKind::Tele,
+                                         exposureIndex);
+    m_cameraController->setGainMode(DwarfCameraController::CameraKind::Tele, 1);
+    m_cameraController->setGainIndex(DwarfCameraController::CameraKind::Tele,
+                                     gainIndex);
+
+    QTimer::singleShot(300, this, [this, exposureIndex, gainIndex, requestedCount]() {
+        if (!m_isCapturingDarkFrames || !m_astroController)
+            return;
+
+        if (m_calibrationFramesStatusLabel) {
+            m_calibrationFramesStatusLabel->setText(
+                tr("Activating Astro mode for dark capture..."));
+        }
+        m_astroController->goLive();
+
+        QTimer::singleShot(1500, this,
+                           [this, exposureIndex, gainIndex, requestedCount]() {
+                               if (!m_isCapturingDarkFrames || !m_astroController)
+                                   return;
+
+                               if (m_calibrationFramesStatusLabel) {
+                                   m_calibrationFramesStatusLabel->setText(
+                                       tr("Starting dark capture..."));
+                               }
+                               m_astroController->captureDarkFrameWithParams(
+                                   exposureIndex, gainIndex, 0, requestedCount);
+                           });
+    });
+}
+
+void AstroNavigationPanel::stopDarkFrameCapture() {
+    if (!m_isCapturingDarkFrames)
+        return;
+
+    m_isCapturingDarkFrames = false;
+    if (m_captureDarksButton) {
+        m_captureDarksButton->setText(tr("Capture Darks"));
+        m_captureDarksButton->setEnabled(
+            !m_isStacking && (!m_useDarkFramesCheck || m_useDarkFramesCheck->isChecked()));
+    }
+    if (m_calibrationFramesStatusLabel) {
+        m_calibrationFramesStatusLabel->setText(tr("Dark capture stopped"));
+        m_calibrationFramesStatusLabel->setStyleSheet(
+            "color: gray; font-style: italic;");
+    }
+    if (m_astroController) {
+        m_astroController->stopCaptureDarkFrame();
+        m_astroController->getDarkFrameList();
+    }
+}
+
+void AstroNavigationPanel::startEqSolving() {
+    if (!m_astroController)
+        return;
+
+    m_isEqSolving = true;
+    if (m_eqStartButton)
+        m_eqStartButton->setEnabled(false);
+    if (m_eqStopButton)
+        m_eqStopButton->setEnabled(true);
+    if (m_eqStatusLabel) {
+        m_eqStatusLabel->setText(tr("Starting EQ solve..."));
+        m_eqStatusLabel->setStyleSheet("color: #3498db;");
+    }
+
+    m_astroController->goLive();
+    QTimer::singleShot(1000, this, [this]() {
+        if (!m_isEqSolving || !m_astroController)
+            return;
+        m_astroController->startEqSolving(longitude(), latitude());
+    });
+}
+
+void AstroNavigationPanel::stopEqSolving() {
+    m_isEqSolving = false;
+    if (m_eqStartButton)
+        m_eqStartButton->setEnabled(true);
+    if (m_eqStopButton)
+        m_eqStopButton->setEnabled(false);
+    if (m_eqStatusLabel) {
+        m_eqStatusLabel->setText(tr("EQ solve stopped"));
+        m_eqStatusLabel->setStyleSheet("color: gray;");
+    }
+    if (m_astroController)
+        m_astroController->stopEqSolving();
 }
 
 double AstroNavigationPanel::altitude() const {
@@ -1469,6 +1776,11 @@ void AstroNavigationPanel::onStartStackingClicked() {
         return;
     }
     
+    const bool wideStacking = useWideStacking();
+    const DwarfCameraController::CameraKind stackCamera =
+        wideStacking ? DwarfCameraController::CameraKind::Wide
+                     : DwarfCameraController::CameraKind::Tele;
+
     m_isStacking = true;
     m_currentFrame = 0;
     m_totalFrames = m_numFramesSpin->value();
@@ -1476,6 +1788,8 @@ void AstroNavigationPanel::onStartStackingClicked() {
     
     m_startStackingButton->setEnabled(false);
     m_stopStackingButton->setEnabled(true);
+    if (m_stackingSourceCombo)
+        m_stackingSourceCombo->setEnabled(false);
     m_numFramesSpin->setEnabled(false);
     m_astroExposureSlider->setEnabled(false);
     m_astroGainSlider->setEnabled(false);
@@ -1490,8 +1804,8 @@ void AstroNavigationPanel::onStartStackingClicked() {
     const int exposureUiIndex = m_astroExposureSlider->value();
     const int gainUiIndex = m_astroGainSlider->value();
 
-    const auto &exp = astroExposureValues();
-    const auto &gain = astroGainValues();
+    const auto &exp = astroExposureOptions(wideStacking);
+    const auto &gain = astroGainOptions(wideStacking);
 
     const int exposureIndex = (exposureUiIndex >= 0 && exposureUiIndex < exp.size())
         ? exp.at(exposureUiIndex).first
@@ -1504,16 +1818,17 @@ void AstroNavigationPanel::onStartStackingClicked() {
     // The DWARF II requires exposure/gain to be set via camera API first
     qDebug() << "Setting camera params for stacking: exposure index=" << exposureIndex 
              << "gain index=" << gainIndex;
-    m_stackingStatusLabel->setText(tr("Preparing camera..."));
-    m_cameraController->setExposureMode(DwarfCameraController::CameraKind::Tele, 1);  // Manual mode
-    m_cameraController->setExposureIndex(DwarfCameraController::CameraKind::Tele, exposureIndex);
-    m_cameraController->setGainMode(DwarfCameraController::CameraKind::Tele, 1);  // Manual mode
-    m_cameraController->setGainIndex(DwarfCameraController::CameraKind::Tele, gainIndex);
+    m_stackingStatusLabel->setText(
+        wideStacking ? tr("Preparing wide camera...") : tr("Preparing camera..."));
+    m_cameraController->setExposureMode(stackCamera, 1);  // Manual mode
+    m_cameraController->setExposureIndex(stackCamera, exposureIndex);
+    m_cameraController->setGainMode(stackCamera, 1);  // Manual mode
+    m_cameraController->setGainIndex(stackCamera, gainIndex);
     
     emit stackingStarted(m_totalFrames, exposureIndex);
     
     // STEP 2: Wait 300ms for camera params to apply, then activate Astro mode
-    QTimer::singleShot(300, this, [this]() {
+    QTimer::singleShot(300, this, [this, wideStacking]() {
         if (!m_isStacking) return; // User cancelled
         
         m_stackingStatusLabel->setText(tr("Activating Astro mode..."));
@@ -1521,12 +1836,16 @@ void AstroNavigationPanel::onStartStackingClicked() {
         m_astroController->goLive();
         
         // STEP 3: Wait 1500ms for Go Live to activate, then start stacking
-        QTimer::singleShot(1500, this, [this]() {
+        QTimer::singleShot(1500, this, [this, wideStacking]() {
             if (!m_isStacking) return; // User cancelled
             
             m_stackingStatusLabel->setText(tr("Starting stacking..."));
             qDebug() << "=== STEP 3: Starting live stacking:" << m_totalFrames << "frames, useDarks:" << m_useDarkFramesCheck->isChecked();
-            m_astroController->startLiveStacking(m_useDarkFramesCheck->isChecked());
+            if (wideStacking) {
+                m_astroController->startWideLiveStacking(false);
+            } else {
+                m_astroController->startLiveStacking(m_useDarkFramesCheck->isChecked());
+            }
         });
     });
 }
@@ -1537,6 +1856,8 @@ void AstroNavigationPanel::onStopStackingClicked() {
     
     m_startStackingButton->setEnabled(true);
     m_stopStackingButton->setEnabled(false);
+    if (m_stackingSourceCombo)
+        m_stackingSourceCombo->setEnabled(true);
     m_numFramesSpin->setEnabled(true);
     m_astroExposureSlider->setEnabled(true);
     m_astroGainSlider->setEnabled(true);
@@ -1545,9 +1866,13 @@ void AstroNavigationPanel::onStopStackingClicked() {
     
     // Stop stacking via AstroController
     if (m_astroController) {
-        m_astroController->stopLiveStacking();
+        if (useWideStacking())
+            m_astroController->stopWideLiveStacking();
+        else
+            m_astroController->stopLiveStacking();
     }
     
+    updateStackingSourceUi();
     emit stackingStopped();
 }
 
@@ -1603,8 +1928,11 @@ void AstroNavigationPanel::refreshStackingUI() {
     m_rejectedFrames = rejected;
 
     if (m_isStacking) {
+        const bool wideStacking = useWideStacking();
         m_startStackingButton->setEnabled(false);
         m_stopStackingButton->setEnabled(true);
+        if (m_stackingSourceCombo)
+            m_stackingSourceCombo->setEnabled(false);
         m_numFramesSpin->setEnabled(false);
         m_astroExposureSlider->setEnabled(false);
         m_astroGainSlider->setEnabled(false);
@@ -1621,7 +1949,7 @@ void AstroNavigationPanel::refreshStackingUI() {
         m_astroController->getStackingSettings(expIndex, gainIndex, binIndex);
         
         if (expIndex != -1) {
-            const auto &expValues = astroExposureValues();
+            const auto &expValues = astroExposureOptions(wideStacking);
             for (int i = 0; i < expValues.size(); ++i) {
                 if (expValues[i].first == expIndex) {
                     m_astroExposureSlider->setValue(i);
@@ -1632,7 +1960,7 @@ void AstroNavigationPanel::refreshStackingUI() {
         }
         
         if (gainIndex != -1) {
-            const auto &gainValues = astroGainValues();
+            const auto &gainValues = astroGainOptions(wideStacking);
             for (int i = 0; i < gainValues.size(); ++i) {
                 if (gainValues[i].first == gainIndex) {
                     m_astroGainSlider->setValue(i);
@@ -1664,16 +1992,20 @@ void AstroNavigationPanel::refreshStackingUI() {
     } else {
         m_startStackingButton->setEnabled(true);
         m_stopStackingButton->setEnabled(false);
+        if (m_stackingSourceCombo)
+            m_stackingSourceCombo->setEnabled(true);
         m_numFramesSpin->setEnabled(true);
         m_astroExposureSlider->setEnabled(true);
         m_astroGainSlider->setEnabled(true);
         
         m_useDarkFramesCheck->setEnabled(true);
-        m_captureDarksButton->setEnabled(m_useDarkFramesCheck->isChecked());
-        m_captureFlatsButton->setEnabled(true);
-        m_captureBiasButton->setEnabled(true);
+        m_captureDarksButton->setEnabled(!m_isCapturingDarkFrames &&
+                                         m_useDarkFramesCheck->isChecked());
+        m_captureFlatsButton->setEnabled(false);
+        m_captureBiasButton->setEnabled(false);
         
         m_stackingStatusLabel->setText(tr("Idle"));
+        updateStackingSourceUi();
     }
 }
 
@@ -1771,9 +2103,14 @@ void AstroNavigationPanel::setClientMode(bool enabled) {
     if (m_trackMoonButton) m_trackMoonButton->setEnabled(controlsEnabled);
     if (m_stopSpecialTrackingButton) m_stopSpecialTrackingButton->setEnabled(controlsEnabled);
     if (m_startStackingButton) m_startStackingButton->setEnabled(controlsEnabled);
-    if (m_captureDarksButton) m_captureDarksButton->setEnabled(controlsEnabled);
-    if (m_captureFlatsButton) m_captureFlatsButton->setEnabled(controlsEnabled);
-    if (m_captureBiasButton) m_captureBiasButton->setEnabled(controlsEnabled);
+    if (m_stackingSourceCombo) m_stackingSourceCombo->setEnabled(controlsEnabled && !m_isStacking);
+    if (m_captureDarksButton) {
+        m_captureDarksButton->setEnabled(controlsEnabled && !m_isStacking &&
+                                         !m_isCapturingDarkFrames &&
+                                         (!m_useDarkFramesCheck || m_useDarkFramesCheck->isChecked()));
+    }
+    if (m_captureFlatsButton) m_captureFlatsButton->setEnabled(false);
+    if (m_captureBiasButton) m_captureBiasButton->setEnabled(false);
     
     // Additional stacking settings
     if (m_numFramesSpin) m_numFramesSpin->setEnabled(controlsEnabled);
@@ -1781,8 +2118,10 @@ void AstroNavigationPanel::setClientMode(bool enabled) {
     if (m_astroGainSlider) m_astroGainSlider->setEnabled(controlsEnabled);
     if (m_useDarkFramesCheck) m_useDarkFramesCheck->setEnabled(controlsEnabled);
     if (m_darkFramesSpin) m_darkFramesSpin->setEnabled(controlsEnabled && (m_useDarkFramesCheck && m_useDarkFramesCheck->isChecked()));
-    if (m_flatFramesSpin) m_flatFramesSpin->setEnabled(controlsEnabled);
-    if (m_biasFramesSpin) m_biasFramesSpin->setEnabled(controlsEnabled);
+    if (m_flatFramesSpin) m_flatFramesSpin->setEnabled(false);
+    if (m_biasFramesSpin) m_biasFramesSpin->setEnabled(false);
+    if (m_eqStartButton) m_eqStartButton->setEnabled(controlsEnabled && !m_isEqSolving);
+    if (m_eqStopButton) m_eqStopButton->setEnabled(controlsEnabled && m_isEqSolving);
 }
 
 void AstroNavigationPanel::onLx200EnableToggled(bool enabled) {
@@ -1870,6 +2209,15 @@ void AstroNavigationPanel::loadSettings() {
     }
 
     // Stacking settings
+    if (m_stackingSourceCombo) {
+        const QString source =
+            cfg->getValue("astro", "stacking_source", QStringLiteral("tele")).toString();
+        const int index = m_stackingSourceCombo->findData(source);
+        m_stackingSourceCombo->blockSignals(true);
+        m_stackingSourceCombo->setCurrentIndex(index >= 0 ? index : 0);
+        m_stackingSourceCombo->blockSignals(false);
+    }
+
     if (m_numFramesSpin) {
         int frames = cfg->getValue("astro", "num_frames", m_numFramesSpin->value()).toInt();
         m_numFramesSpin->blockSignals(true);
@@ -1940,6 +2288,7 @@ void AstroNavigationPanel::loadSettings() {
         m_lx200PortSpin->blockSignals(false);
     }
 
+    updateStackingSourceUi();
     qDebug() << "[AstroNavigationPanel] Loaded settings";
 }
 
@@ -1977,6 +2326,11 @@ void AstroNavigationPanel::saveSettings() {
     }
     
     // Stacking settings
+    if (m_stackingSourceCombo) {
+        cfg->setValue("astro", "stacking_source",
+                      m_stackingSourceCombo->currentData().toString());
+    }
+
     if (m_numFramesSpin) {
         cfg->setValue("astro", "num_frames", m_numFramesSpin->value());
     }

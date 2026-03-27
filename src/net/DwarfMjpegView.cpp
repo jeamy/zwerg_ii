@@ -21,6 +21,10 @@ QRect DwarfMjpegView::imageRect() const {
   return m_lastImageRect;
 }
 
+QSize DwarfMjpegView::sourceImageSize() const {
+  return m_image ? m_image->size() : QSize();
+}
+
 void DwarfMjpegView::paintEvent(QPaintEvent *event) {
   Q_UNUSED(event);
 

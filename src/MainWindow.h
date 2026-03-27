@@ -29,6 +29,8 @@
 class DwarfCameraController;
 class DwarfMotorController;
 class DwarfFocusController;
+class DwarfSystemController;
+class DwarfTrackingController;
 class DwarfAstroController;
 class DwarfPanoramaController;
 class DwarfMjpegStream;
@@ -45,6 +47,7 @@ class VirtualJoystick;
 class MotorControlPanel;
 class StarMapWidget;
 class ParametersOverlayPanel;
+class TrackingOverlayWidget;
 class QSpinBox;
 
 class DraggablePiP : public QWidget {
@@ -158,6 +161,8 @@ private:
   void setItemThumbnail(QListWidgetItem *item, const QByteArray &data);
   void syncTimeWithDevice();
   void ensureHttpClientForCurrentIp();
+  void setCurrentDeviceName(const QString &name);
+  void setDeviceHttpStatus(const QString &text);
   void setCaptureStatusTextAllPanels(const QString &text);
   void persistParamsConfig(const QJsonDocument &document);
   void applyCachedParamsConfig();
@@ -212,12 +217,27 @@ private:
   DwarfCameraController *m_cameraController;
   DwarfMotorController *m_motorController;
   DwarfFocusController *m_focusController;
+  DwarfSystemController *m_systemController;
+  DwarfTrackingController *m_trackingController;
   DwarfAstroController *m_astroController;
   DwarfPanoramaController *m_panoramaController;
 
   enum class CameraStream { Tele, Wide };
 
   QWidget *m_mainStreamView;
+  bool m_dualCameraLinkageMode = false;
+  TrackingOverlayWidget *m_trackingOverlay = nullptr;
+  QWidget *m_trackingControlOverlay = nullptr;
+  QPushButton *m_trackingSelectButton = nullptr;
+  QPushButton *m_trackingStopButton = nullptr;
+  QPushButton *m_trackingSentryButton = nullptr;
+  QPushButton *m_trackingUfoButton = nullptr;
+  QPushButton *m_trackingMotStartButton = nullptr;
+  QPushButton *m_trackingMotTrackButton = nullptr;
+  QComboBox *m_trackingSourceCombo = nullptr;
+  QComboBox *m_trackingUfoModeCombo = nullptr;
+  QSpinBox *m_trackingTargetIdSpin = nullptr;
+  QLabel *m_trackingStatusLabel = nullptr;
   QLabel *m_streamNameOverlay;
   DraggablePiP *m_pipContainer;
   DwarfMjpegView *m_mainVideoWidget;
@@ -270,6 +290,29 @@ private:
   QLabel *m_batteryLabel = nullptr;
   QLabel *m_firmwareLabel = nullptr;
   QLabel *m_sdSpaceLabel = nullptr;
+  QGroupBox *m_deviceHttpGroup = nullptr;
+  QLabel *m_currentDeviceNameLabel = nullptr;
+  QLineEdit *m_newDeviceNameEdit = nullptr;
+  QPushButton *m_setDeviceNameButton = nullptr;
+  QLineEdit *m_oldDevicePasswordEdit = nullptr;
+  QLineEdit *m_newDevicePasswordEdit = nullptr;
+  QPushButton *m_setDevicePasswordButton = nullptr;
+  QLineEdit *m_firmwareUploadPathEdit = nullptr;
+  QPushButton *m_selectFirmwareButton = nullptr;
+  QPushButton *m_uploadFirmwareButton = nullptr;
+  QLabel *m_deviceHttpStatusLabel = nullptr;
+  QGroupBox *m_systemControlGroup = nullptr;
+  QLineEdit *m_timezoneEdit = nullptr;
+  QPushButton *m_syncTimeButton = nullptr;
+  QPushButton *m_setTimezoneButton = nullptr;
+  QCheckBox *m_mtpModeCheck = nullptr;
+  QComboBox *m_cpuModeCombo = nullptr;
+  QCheckBox *m_rgbLightCheck = nullptr;
+  QCheckBox *m_powerIndicatorCheck = nullptr;
+  QPushButton *m_powerDownButton = nullptr;
+  QPushButton *m_rebootButton = nullptr;
+  QLabel *m_systemControlStatusLabel = nullptr;
+  QString m_currentDeviceName;
   QString m_downloadDir;
   DwarfFtpDownloader *m_ftpDownloader;
   DwarfMtpClient *m_mtpClient;

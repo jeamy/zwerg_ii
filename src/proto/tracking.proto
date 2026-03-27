@@ -27,3 +27,11 @@ message ReqMOTStart {
 message ReqMOTTrackOne {
     int32 id = 1;
 }
+
+message ReqWideTeleTrackSwitch {
+    int32 mode = 1;  // 0=tele, 1=wide
+}
+
+message ReqUfoHandAutoMode {
+    int32 mode = 1;  // 0=manual, 1=auto
+}

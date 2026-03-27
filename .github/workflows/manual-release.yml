@@ -1,0 +1,338 @@
+name: Manual Release Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to create and build"
+        required: true
+        type: string
+      ref:
+        description: "Branch, tag, or commit to build from"
+        required: true
+        default: "master"
+        type: string
+      linux_build_mode:
+        description: "Linux build mode"
+        required: true
+        default: "docker-ubuntu2004"
+        type: choice
+        options:
+          - docker-ubuntu2004
+          - native-ubuntu2004
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: Prepare Tag
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+      ref: ${{ steps.vars.outputs.ref }}
+    steps:
+      - name: Validate inputs
+        id: vars
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.tag }}"
+          REF="${{ inputs.ref }}"
+          if [[ -z "$TAG" ]]; then
+            echo "Tag input must not be empty" >&2
+            exit 1
+          fi
+          if [[ -z "$REF" ]]; then
+            echo "Ref input must not be empty" >&2
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout selected ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.vars.outputs.ref }}
+          fetch-depth: 0
+
+      - name: Create and push tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.vars.outputs.tag }}"
+          git fetch --tags --force
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "Tag already exists locally: $TAG" >&2
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag already exists on origin: $TAG" >&2
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "refs/tags/$TAG"
+
+  build_linux:
+    name: Build Linux
+    runs-on: ubuntu-20.04
+    needs: prepare
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ needs.prepare.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Install Qt for native Linux build
+        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2004' }}
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          host: "linux"
+          target: "desktop"
+          arch: "gcc_64"
+          modules: "qtmultimedia qtwebsockets qtsvg qttools"
+
+      - name: Install Linux dependencies
+        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2004' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            protobuf-compiler \
+            libprotobuf-dev \
+            patchelf \
+            zip \
+            libgl1-mesa-dev \
+            libdbus-1-dev \
+            libfreetype6-dev \
+            libfontconfig1-dev \
+            libxkbcommon-dev \
+            libvulkan-dev \
+            libxkbcommon-x11-0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-randr0 \
+            libxcb-render-util0 \
+            libxcb-shape0 \
+            libxcb-xinerama0 \
+            libxcb-cursor0 \
+            libxcb-xkb1
+
+      - name: Normalize Qt tools
+        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2004' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v qmake6 >/dev/null 2>&1 && command -v qmake >/dev/null 2>&1; then
+            sudo ln -sf "$(command -v qmake)" /usr/local/bin/qmake6
+          fi
+          if ! command -v qtpaths6 >/dev/null 2>&1 && command -v qtpaths >/dev/null 2>&1; then
+            sudo ln -sf "$(command -v qtpaths)" /usr/local/bin/qtpaths6
+          fi
+          QMAKE_BIN="$(command -v qmake6 || command -v qmake)"
+          QT_PREFIX="$(dirname "$(dirname "$QMAKE_BIN")")"
+          {
+            echo "CMAKE_PREFIX_PATH=$QT_PREFIX"
+            echo "Qt6_DIR=$QT_PREFIX/lib/cmake/Qt6"
+          } >> "$GITHUB_ENV"
+
+      - name: Build Linux release (Docker Ubuntu 20.04)
+        if: ${{ github.event.inputs.linux_build_mode == 'docker-ubuntu2004' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x ./build_linux_release_docker_ubuntu2004.sh
+          ./build_linux_release_docker_ubuntu2004.sh
+
+      - name: Build Linux release (native Ubuntu 20.04)
+        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2004' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x ./build_linux_release.sh
+          BUNDLE_NON_QT_LIBS=1 BUNDLE_TOOLCHAIN_LIBS=1 ./build_linux_release.sh
+
+      - name: Rename Linux ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.prepare.outputs.tag }}"
+          SRC="dist/zwergII-linux-release.zip"
+          DST="dist/zwergII-${TAG}-linux-ubuntu20.04.zip"
+          if [[ ! -f "$SRC" ]]; then
+            echo "Expected Linux ZIP not found: $SRC" >&2
+            exit 1
+          fi
+          mv "$SRC" "$DST"
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-release
+          path: dist/zwergII-*-linux-ubuntu20.04.zip
+          if-no-files-found: error
+
+  build_macos:
+    name: Build macOS
+    runs-on: macos-15
+    needs: prepare
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ needs.prepare.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          host: "mac"
+          target: "desktop"
+          arch: "clang_64"
+          modules: "qtmultimedia qtwebsockets qtsvg qttools"
+
+      - name: Install macOS dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          brew update
+          brew install cmake protobuf
+
+      - name: Build macOS release
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x ./build_macos_release.sh
+          ./build_macos_release.sh
+
+      - name: Create macOS ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.prepare.outputs.tag }}"
+          APP_PATH="dist/macos/DwarfController.app"
+          ZIP_PATH="dist/zwergII-${TAG}-macos15.zip"
+          if [[ ! -d "$APP_PATH" ]]; then
+            echo "Expected macOS app bundle not found: $APP_PATH" >&2
+            exit 1
+          fi
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_PATH"
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release
+          path: dist/zwergII-*-macos15.zip
+          if-no-files-found: error
+
+  build_windows:
+    name: Build Windows
+    runs-on: windows-2022
+    needs: prepare
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ needs.prepare.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          host: "windows"
+          target: "desktop"
+          arch: "win64_msvc2022_64"
+          modules: "qtmultimedia qtwebsockets qtsvg qttools"
+
+      - name: Resolve Qt paths
+        shell: pwsh
+        run: |
+          $qmake = (Get-Command qmake6 -ErrorAction SilentlyContinue)
+          if (-not $qmake) { $qmake = Get-Command qmake -ErrorAction Stop }
+          $qtPrefix = Split-Path -Parent (Split-Path -Parent $qmake.Source)
+          "CMAKE_PREFIX_PATH=$qtPrefix" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "Qt6_DIR=$qtPrefix\lib\cmake\Qt6" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "Qt6WebSockets_DIR=$qtPrefix\lib\cmake\Qt6WebSockets" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Install protoc
+        shell: pwsh
+        run: |
+          choco install protoc --no-progress -y
+          $protoc = Get-ChildItem -Path "C:\ProgramData\chocolatey" -Filter protoc.exe -Recurse | Select-Object -First 1
+          if (-not $protoc) {
+            throw "protoc.exe not found after Chocolatey install"
+          }
+          $protocBin = Split-Path -Parent $protoc.FullName
+          $protocPrefix = Split-Path -Parent $protocBin
+          "PROTOC_PREFIX_PATH=$protocPrefix" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          $protocBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Install vcpkg and protobuf
+        shell: pwsh
+        run: |
+          $vcpkgRoot = Join-Path $env:RUNNER_TEMP "vcpkg"
+          git clone --depth 1 https://github.com/microsoft/vcpkg $vcpkgRoot
+          & "$vcpkgRoot\bootstrap-vcpkg.bat"
+          & "$vcpkgRoot\vcpkg.exe" install protobuf:x64-windows-static
+          "CMAKE_TOOLCHAIN_FILE=$vcpkgRoot\scripts\buildsystems\vcpkg.cmake" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "VCPKG_DEFAULT_TRIPLET=x64-windows-static" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "VCPKG_TARGET_TRIPLET=x64-windows-static" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Build Windows release
+        shell: cmd
+        run: build_windows_release.bat
+
+      - name: Rename Windows ZIP
+        shell: pwsh
+        run: |
+          $tag = "${{ needs.prepare.outputs.tag }}"
+          $src = "dist\zwergII-windows-release.zip"
+          $dst = "dist\zwergII-$tag-windows.zip"
+          if (!(Test-Path $src)) {
+            throw "Expected Windows ZIP not found: $src"
+          }
+          Move-Item -Force $src $dst
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: dist/zwergII-*-windows.zip
+          if-no-files-found: error
+
+  publish_release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - build_linux
+      - build_macos
+      - build_windows
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Create GitHub Release and upload ZIPs
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: ${{ needs.prepare.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            release-assets/**/*.zip

@@ -61,9 +61,14 @@ void MotorControlPanel::setClientMode(bool enabled) {
     if (m_leftButton) m_leftButton->setEnabled(controlsEnabled);
     if (m_rightButton) m_rightButton->setEnabled(controlsEnabled);
     if (m_joystick) m_joystick->setEnabled(controlsEnabled);
+    if (m_linkageButton) m_linkageButton->setEnabled(controlsEnabled);
     if (m_focusFarButton) m_focusFarButton->setEnabled(controlsEnabled);
     if (m_focusNearButton) m_focusNearButton->setEnabled(controlsEnabled);
     if (m_autoFocusButton) m_autoFocusButton->setEnabled(controlsEnabled);
+    if (m_focusFarHoldButton) m_focusFarHoldButton->setEnabled(controlsEnabled);
+    if (m_focusStopButton) m_focusStopButton->setEnabled(controlsEnabled);
+    if (m_focusNearHoldButton) m_focusNearHoldButton->setEnabled(controlsEnabled);
+    if (m_astroFocusButton) m_astroFocusButton->setEnabled(controlsEnabled);
 }
 
 void MotorControlPanel::setupUi() {
@@ -178,6 +183,12 @@ void MotorControlPanel::setupUi() {
 
     motorLayout->addLayout(speedLayout);
 
+    m_linkageButton = new QPushButton(tr("Dual Link"), m_motorGroup);
+    m_linkageButton->setObjectName("motorLinkageButton");
+    m_linkageButton->setCheckable(true);
+    m_linkageButton->setMinimumHeight(32);
+    motorLayout->addWidget(m_linkageButton);
+
     mainLayout->addWidget(m_motorGroup);
 
     // Focus controls (docked below Motor Control)
@@ -190,9 +201,14 @@ void MotorControlPanel::setupUi() {
     focusGlow->setColor(QColor(39, 174, 96, 140));
     m_focusGroup->setGraphicsEffect(focusGlow);
 
-    auto *focusLayout = new QHBoxLayout(m_focusGroup);
+    auto *focusLayout = new QVBoxLayout(m_focusGroup);
     focusLayout->setContentsMargins(10, 8, 10, 10);
     focusLayout->setSpacing(8);
+
+    auto *focusStepRow = new QWidget(m_focusGroup);
+    auto *focusStepLayout = new QHBoxLayout(focusStepRow);
+    focusStepLayout->setContentsMargins(0, 0, 0, 0);
+    focusStepLayout->setSpacing(8);
 
     m_focusFarButton = new QPushButton(tr("Far -"), m_focusGroup);
     m_focusFarButton->setObjectName("motorFocusFarButton");
@@ -209,9 +225,37 @@ void MotorControlPanel::setupUi() {
     m_focusNearButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     m_focusNearButton->setFixedHeight(32);
 
-    focusLayout->addWidget(m_focusFarButton);
-    focusLayout->addWidget(m_autoFocusButton);
-    focusLayout->addWidget(m_focusNearButton);
+    focusStepLayout->addWidget(m_focusFarButton);
+    focusStepLayout->addWidget(m_autoFocusButton);
+    focusStepLayout->addWidget(m_focusNearButton);
+    focusLayout->addWidget(focusStepRow);
+
+    auto *focusAdvRow = new QWidget(m_focusGroup);
+    auto *focusAdvLayout = new QHBoxLayout(focusAdvRow);
+    focusAdvLayout->setContentsMargins(0, 0, 0, 0);
+    focusAdvLayout->setSpacing(8);
+
+    m_focusFarHoldButton = new QPushButton(tr("Hold Far"), m_focusGroup);
+    m_focusFarHoldButton->setObjectName("motorFocusFarHoldButton");
+    m_focusStopButton = new QPushButton(tr("Stop"), m_focusGroup);
+    m_focusStopButton->setObjectName("motorFocusStopButton");
+    m_focusNearHoldButton = new QPushButton(tr("Hold Near"), m_focusGroup);
+    m_focusNearHoldButton->setObjectName("motorFocusNearHoldButton");
+    m_astroFocusButton = new QPushButton(tr("ASTRO AF"), m_focusGroup);
+    m_astroFocusButton->setObjectName("motorAstroFocusButton");
+    m_astroFocusButton->setCheckable(true);
+
+    for (QPushButton *btn : {m_focusFarHoldButton, m_focusStopButton,
+                             m_focusNearHoldButton, m_astroFocusButton}) {
+        btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        btn->setFixedHeight(32);
+    }
+
+    focusAdvLayout->addWidget(m_focusFarHoldButton);
+    focusAdvLayout->addWidget(m_focusStopButton);
+    focusAdvLayout->addWidget(m_focusNearHoldButton);
+    focusAdvLayout->addWidget(m_astroFocusButton);
+    focusLayout->addWidget(focusAdvRow);
 
     mainLayout->addWidget(m_focusGroup);
     mainLayout->addStretch(1);
@@ -222,6 +266,7 @@ void MotorControlPanel::setupUi() {
 
     // Connect signals
     connect(m_speedSlider, &QSlider::valueChanged, this, &MotorControlPanel::onSpeedChanged);
+    connect(m_linkageButton, &QPushButton::toggled, this, &MotorControlPanel::onLinkageToggled);
     connect(m_joystick, &VirtualJoystick::joystickMoved, this, &MotorControlPanel::onJoystickMoved);
     connect(m_joystick, &VirtualJoystick::joystickReleased, this, &MotorControlPanel::onJoystickReleased);
 
@@ -237,6 +282,12 @@ void MotorControlPanel::setupUi() {
     connect(m_focusFarButton, &QPushButton::clicked, this, &MotorControlPanel::onFocusFarClicked);
     connect(m_focusNearButton, &QPushButton::clicked, this, &MotorControlPanel::onFocusNearClicked);
     connect(m_autoFocusButton, &QPushButton::clicked, this, &MotorControlPanel::onAutoFocusClicked);
+    connect(m_focusFarHoldButton, &QPushButton::pressed, this, &MotorControlPanel::onFocusFarHoldPressed);
+    connect(m_focusFarHoldButton, &QPushButton::released, this, &MotorControlPanel::onFocusHoldReleased);
+    connect(m_focusNearHoldButton, &QPushButton::pressed, this, &MotorControlPanel::onFocusNearHoldPressed);
+    connect(m_focusNearHoldButton, &QPushButton::released, this, &MotorControlPanel::onFocusHoldReleased);
+    connect(m_focusStopButton, &QPushButton::clicked, this, &MotorControlPanel::onFocusStopClicked);
+    connect(m_astroFocusButton, &QPushButton::toggled, this, &MotorControlPanel::onAstroFocusToggled);
 
     m_lastJoystickSend.invalidate();
 }
@@ -254,6 +305,35 @@ void MotorControlPanel::onFocusNearClicked() {
 void MotorControlPanel::onAutoFocusClicked() {
     if (m_focusController)
         m_focusController->autoFocusNormal();
+}
+
+void MotorControlPanel::onFocusFarHoldPressed() {
+    if (m_focusController)
+        m_focusController->startManualContinuousFar();
+}
+
+void MotorControlPanel::onFocusNearHoldPressed() {
+    if (m_focusController)
+        m_focusController->startManualContinuousNear();
+}
+
+void MotorControlPanel::onFocusHoldReleased() {
+    if (m_focusController)
+        m_focusController->stopManualContinuousFocus();
+}
+
+void MotorControlPanel::onFocusStopClicked() {
+    if (m_focusController)
+        m_focusController->stopManualContinuousFocus();
+}
+
+void MotorControlPanel::onAstroFocusToggled(bool checked) {
+    if (!m_focusController)
+        return;
+    if (checked)
+        m_focusController->startAstroAutoFocus(false);
+    else
+        m_focusController->stopAstroAutoFocus();
 }
 
 void MotorControlPanel::onUpPressed() {
@@ -330,6 +410,15 @@ void MotorControlPanel::onSpeedChanged(int value) {
         m_speedLabel->setText(QString("%1 deg/s").arg(speed));
         emit speedChanged(value);
     }
+}
+
+void MotorControlPanel::onLinkageToggled(bool checked) {
+    if (m_linkageButton) {
+        m_linkageButton->setStyleSheet(
+            checked ? QStringLiteral("background-color: #2980b9; color: white;")
+                    : QString());
+    }
+    emit linkageModeChanged(checked);
 }
 
 void MotorControlPanel::onJoystickMoved(double angle, double strength) {

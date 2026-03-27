@@ -5,6 +5,8 @@
 #include "net/DwarfFocusController.h"
 #include "net/DwarfFinder.h"
 #include "net/DwarfMessageDispatcher.h"
+#include "net/DwarfSystemController.h"
+#include "net/DwarfTrackingController.h"
 #include "net/DwarfWebSocketClient.h"
 #include "net/DwarfPanoramaController.h"
 #include "net/DwarfHttpClient.h"
@@ -20,6 +22,7 @@
 #include "ui/ParametersOverlayPanel.h"
 #include "ui/MediaLightbox.h"
 #include "ui/StarMapWidget.h"
+#include "ui/TrackingOverlayWidget.h"
 #include <QButtonGroup>
 #include <QDateTime>
 #include <QDebug>
@@ -46,11 +49,10 @@
 #include <QStatusBar>
 #include <QStyle>
 #include <QTimer>
+#include <QTimeZone>
 #include <QVBoxLayout>
 #include <QVector>
 #include <cmath>
-
-#include "system.pb.h"
 
 namespace {
 class PanoramaGridOverlayWidget : public QWidget {
@@ -331,6 +333,8 @@ MainWindow::MainWindow(QWidget *parent)
   m_cameraController = new DwarfCameraController(this);
   m_motorController = new DwarfMotorController(this);
   m_focusController = new DwarfFocusController(this);
+  m_systemController = new DwarfSystemController(this);
+  m_trackingController = new DwarfTrackingController(this);
 
   if (m_astroController) {
     connect(m_dispatcher, &DwarfMessageDispatcher::astroMessage, m_astroController,
@@ -358,6 +362,15 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::onPhotoCaptureFinished);
     connect(m_cameraController, &DwarfCameraController::recordFinished, this,
             &MainWindow::onRecordFinished);
+    connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage,
+            m_cameraController, &DwarfCameraController::handleNotification);
+  }
+
+  if (m_motorController) {
+    connect(m_motorController, &DwarfMotorController::statusMessage, this,
+            [this](const QString &message) {
+              statusBar()->showMessage(message, 3000);
+            });
   }
 
   if (m_panoramaController) {
@@ -367,6 +380,163 @@ MainWindow::MainWindow(QWidget *parent)
             &DwarfPanoramaController::handleNotification);
     connect(m_dispatcher, &DwarfMessageDispatcher::panoramaUiMessage, m_panoramaController,
             &DwarfPanoramaController::handlePanoramaUiMessage);
+  }
+
+  if (m_focusController) {
+    connect(m_dispatcher, &DwarfMessageDispatcher::focusMessage,
+            m_focusController, &DwarfFocusController::handleFocusMessage);
+    connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage,
+            m_focusController, &DwarfFocusController::handleNotification);
+    connect(m_focusController, &DwarfFocusController::statusMessage, this,
+            [this](const QString &message) {
+              statusBar()->showMessage(message, 3000);
+            });
+    connect(m_focusController, &DwarfFocusController::errorOccurred, this,
+            [this](const QString &message) {
+              statusBar()->showMessage(message, 5000);
+            });
+  }
+
+  if (m_systemController) {
+    connect(m_dispatcher, &DwarfMessageDispatcher::systemMessage,
+            m_systemController, &DwarfSystemController::handleSystemMessage);
+    connect(m_dispatcher, &DwarfMessageDispatcher::rgbPowerMessage,
+            m_systemController, &DwarfSystemController::handleRgbPowerMessage);
+    connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage,
+            m_systemController, &DwarfSystemController::handleNotification);
+
+    connect(m_systemController, &DwarfSystemController::statusMessage, this,
+            [this](const QString &message) {
+              if (m_systemControlStatusLabel)
+                m_systemControlStatusLabel->setText(message);
+              statusBar()->showMessage(message, 4000);
+            });
+    connect(m_systemController, &DwarfSystemController::errorOccurred, this,
+            [this](const QString &message) {
+              if (m_systemControlStatusLabel)
+                m_systemControlStatusLabel->setText(message);
+              statusBar()->showMessage(message, 5000);
+            });
+    connect(m_systemController, &DwarfSystemController::timezoneChanged, this,
+            [this](const QString &timezone) {
+              if (m_timezoneEdit)
+                m_timezoneEdit->setText(timezone);
+            });
+    connect(m_systemController, &DwarfSystemController::mtpModeChanged, this,
+            [this](bool enabled) {
+              if (!m_mtpModeCheck)
+                return;
+              const QSignalBlocker blocker(m_mtpModeCheck);
+              m_mtpModeCheck->setChecked(enabled);
+            });
+    connect(m_systemController, &DwarfSystemController::cpuModeChanged, this,
+            [this](int mode) {
+              if (!m_cpuModeCombo)
+                return;
+              const QSignalBlocker blocker(m_cpuModeCombo);
+              m_cpuModeCombo->setCurrentIndex(qBound(0, mode, 1));
+            });
+    connect(m_systemController, &DwarfSystemController::rgbStateChanged, this,
+            [this](bool enabled) {
+              if (!m_rgbLightCheck)
+                return;
+              const QSignalBlocker blocker(m_rgbLightCheck);
+              m_rgbLightCheck->setChecked(enabled);
+            });
+    connect(m_systemController,
+            &DwarfSystemController::powerIndicatorStateChanged, this,
+            [this](bool enabled) {
+              if (!m_powerIndicatorCheck)
+                return;
+              const QSignalBlocker blocker(m_powerIndicatorCheck);
+              m_powerIndicatorCheck->setChecked(enabled);
+            });
+    connect(m_systemController, &DwarfSystemController::poweringOff, this,
+            [this]() {
+              if (m_systemControlStatusLabel)
+                m_systemControlStatusLabel->setText(
+                    tr("Shutdown in progress..."));
+            });
+    connect(m_systemController, &DwarfSystemController::rebooting, this,
+            [this]() {
+              if (m_systemControlStatusLabel)
+                m_systemControlStatusLabel->setText(
+                    tr("Reboot in progress..."));
+            });
+    connect(m_systemController, &DwarfSystemController::poweredOff, this,
+            [this]() {
+              if (m_systemControlStatusLabel)
+                m_systemControlStatusLabel->setText(tr("Device powered off"));
+              statusBar()->showMessage(tr("DWARF II powered off"), 5000);
+            });
+  }
+
+  if (m_trackingController) {
+    connect(m_dispatcher, &DwarfMessageDispatcher::trackMessage,
+            m_trackingController, &DwarfTrackingController::handleTrackMessage);
+    connect(m_dispatcher, &DwarfMessageDispatcher::notifyMessage,
+            m_trackingController, &DwarfTrackingController::handleNotification);
+
+    connect(m_trackingController, &DwarfTrackingController::statusMessage, this,
+            [this](const QString &message) {
+              if (m_trackingStatusLabel)
+                m_trackingStatusLabel->setText(message);
+              statusBar()->showMessage(message, 4000);
+            });
+    connect(m_trackingController, &DwarfTrackingController::errorOccurred, this,
+            [this](const QString &message) {
+              if (m_trackingStatusLabel)
+                m_trackingStatusLabel->setText(message);
+              statusBar()->showMessage(message, 5000);
+            });
+
+    auto syncTrackingBoxes = [this]() {
+      if (!m_trackingOverlay || !m_trackingController)
+        return;
+
+      QVector<TrackingOverlayWidget::TrackBox> boxes;
+      const QRect currentRect = m_trackingController->currentTrackRect();
+      if (currentRect.isValid()) {
+        TrackingOverlayWidget::TrackBox box;
+        box.rect = currentRect;
+        box.id = m_trackingController->currentTrackId();
+        boxes.push_back(box);
+      }
+
+      const auto multi = m_trackingController->multiTrackResults();
+      for (const auto &result : multi) {
+        TrackingOverlayWidget::TrackBox box;
+        box.rect = result.rect;
+        box.id = result.id;
+        boxes.push_back(box);
+      }
+      m_trackingOverlay->setTrackBoxes(boxes);
+    };
+
+    connect(m_trackingController, &DwarfTrackingController::trackResultChanged,
+            this, syncTrackingBoxes);
+    connect(m_trackingController,
+            &DwarfTrackingController::multiTrackResultsChanged, this,
+            syncTrackingBoxes);
+    connect(m_trackingController, &DwarfTrackingController::trackStopped, this,
+            [this]() {
+              if (m_trackingOverlay)
+                m_trackingOverlay->setTrackBoxes({});
+            });
+    connect(m_trackingController, &DwarfTrackingController::sentryStateChanged,
+            this, [this](int state) {
+              if (!m_trackingSentryButton)
+                return;
+              const QSignalBlocker blocker(m_trackingSentryButton);
+              m_trackingSentryButton->setChecked(state != 0 && state != 4);
+            });
+    connect(m_trackingController, &DwarfTrackingController::ufoStateChanged,
+            this, [this](int state) {
+              if (!m_trackingUfoButton)
+                return;
+              const QSignalBlocker blocker(m_trackingUfoButton);
+              m_trackingUfoButton->setChecked(state != 0 && state != 4);
+            });
   }
 
   // Load application configuration BEFORE building UI panels, because setupUi()
@@ -403,6 +573,42 @@ void MainWindow::ensureHttpClientForCurrentIp() {
           &MainWindow::onMediaListReceived);
   connect(m_httpClient, &DwarfHttpClient::defaultParamsConfigReceived, this,
           &MainWindow::onDefaultParamsConfigReceived);
+  connect(m_httpClient, &DwarfHttpClient::deviceSettingChanged, this,
+          [this](int mode, const QString &appliedValue) {
+            if (mode == DwarfHttpClient::ChangeName) {
+              setCurrentDeviceName(appliedValue);
+              AppConfig *cfg = AppConfig::instance();
+              cfg->setValue("connection", "last_device_name", m_currentDeviceName);
+              cfg->save();
+              if (m_newDeviceNameEdit)
+                m_newDeviceNameEdit->clear();
+              setDeviceHttpStatus(
+                  tr("Device name updated to %1").arg(appliedValue));
+            } else {
+              if (m_oldDevicePasswordEdit)
+                m_oldDevicePasswordEdit->clear();
+              if (m_newDevicePasswordEdit)
+                m_newDevicePasswordEdit->clear();
+              setDeviceHttpStatus(tr("Device password updated"));
+            }
+          });
+  connect(m_httpClient, &DwarfHttpClient::deviceSettingError, this,
+          [this](int mode, const QString &error) {
+            const QString prefix = mode == DwarfHttpClient::ChangeName
+                                       ? tr("Device name")
+                                       : tr("Device password");
+            setDeviceHttpStatus(tr("%1 update failed: %2").arg(prefix, error));
+          });
+  connect(m_httpClient, &DwarfHttpClient::firmwareUploadFinished, this,
+          [this](const QString &, bool success, int code,
+                 const QString &message) {
+            const QString text =
+                success ? tr("Firmware upload accepted: %1").arg(message)
+                        : tr("Firmware upload failed (%1): %2")
+                              .arg(code)
+                              .arg(message);
+            setDeviceHttpStatus(text);
+          });
 
   if (m_mainVideoWidget && m_panoGridOverlay) {
     m_panoGridOverlay->setGeometry(m_mainVideoWidget->rect());
@@ -411,6 +617,25 @@ void MainWindow::ensureHttpClientForCurrentIp() {
   }
   connect(m_httpClient, &DwarfHttpClient::errorOccurred, this,
           &MainWindow::onMediaListError);
+}
+
+void MainWindow::setCurrentDeviceName(const QString &name) {
+  m_currentDeviceName = name.trimmed();
+  if (m_currentDeviceNameLabel) {
+    m_currentDeviceNameLabel->setText(m_currentDeviceName.isEmpty()
+                                          ? tr("Unknown")
+                                          : m_currentDeviceName);
+  }
+  if (m_newDeviceNameEdit) {
+    m_newDeviceNameEdit->setPlaceholderText(
+        m_currentDeviceName.isEmpty() ? tr("Enter new device name")
+                                      : m_currentDeviceName);
+  }
+}
+
+void MainWindow::setDeviceHttpStatus(const QString &text) {
+  if (m_deviceHttpStatusLabel)
+    m_deviceHttpStatusLabel->setText(text);
 }
 
 void MainWindow::setCaptureStatusTextAllPanels(const QString &text) {
@@ -893,6 +1118,10 @@ void MainWindow::setupUi() {
   m_streamNameOverlay->setObjectName("streamNameOverlay");
   m_streamNameOverlay->move(10, 10);
 
+  m_trackingOverlay = new TrackingOverlayWidget(m_mainVideoWidget);
+  m_trackingOverlay->setGeometry(m_mainVideoWidget->rect());
+  m_trackingOverlay->raise();
+
   m_pipContainer = new DraggablePiP(m_mainVideoWidget);
   m_pipContainer->setFixedSize(240, 135);
   m_pipContainer->move(10, 50);
@@ -905,14 +1134,102 @@ void MainWindow::setupUi() {
   connect(m_pipContainer, &DraggablePiP::doubleClicked, this,
           &MainWindow::onPipStreamClicked);
 
+  if (m_trackingOverlay) {
+    connect(m_trackingOverlay, &TrackingOverlayWidget::selectionFinished, this,
+            [this](const QRect &box) {
+              if (!m_trackingController)
+                return;
+              if (m_trackingStatusLabel)
+                m_trackingStatusLabel->setText(tr("Starting tracking..."));
+              m_trackingController->startTrack(box);
+            });
+  }
+
+  m_trackingControlOverlay = new QGroupBox(tr("Tracking"), centralWidget);
+  m_trackingControlOverlay->setObjectName("trackingControlOverlay");
+  m_trackingControlOverlay->setFixedSize(290, 250);
+  auto *trackingLayout = new QVBoxLayout(m_trackingControlOverlay);
+  trackingLayout->setContentsMargins(10, 8, 10, 10);
+  trackingLayout->setSpacing(8);
+
+  auto *trackingRow1 = new QWidget(m_trackingControlOverlay);
+  auto *trackingRow1Layout = new QHBoxLayout(trackingRow1);
+  trackingRow1Layout->setContentsMargins(0, 0, 0, 0);
+  trackingRow1Layout->setSpacing(8);
+  m_trackingSelectButton = new QPushButton(tr("Select Box"), trackingRow1);
+  m_trackingStopButton = new QPushButton(tr("Stop"), trackingRow1);
+  trackingRow1Layout->addWidget(m_trackingSelectButton, 1);
+  trackingRow1Layout->addWidget(m_trackingStopButton, 1);
+  trackingLayout->addWidget(trackingRow1);
+
+  auto *trackingRow2 = new QWidget(m_trackingControlOverlay);
+  auto *trackingRow2Layout = new QHBoxLayout(trackingRow2);
+  trackingRow2Layout->setContentsMargins(0, 0, 0, 0);
+  trackingRow2Layout->setSpacing(8);
+  m_trackingSentryButton = new QPushButton(tr("Sentry"), trackingRow2);
+  m_trackingUfoButton = new QPushButton(tr("UFO"), trackingRow2);
+  m_trackingSentryButton->setCheckable(true);
+  m_trackingUfoButton->setCheckable(true);
+  trackingRow2Layout->addWidget(m_trackingSentryButton, 1);
+  trackingRow2Layout->addWidget(m_trackingUfoButton, 1);
+  trackingLayout->addWidget(trackingRow2);
+
+  auto *sourceRow = new QWidget(m_trackingControlOverlay);
+  auto *sourceLayout = new QHBoxLayout(sourceRow);
+  sourceLayout->setContentsMargins(0, 0, 0, 0);
+  sourceLayout->addWidget(new QLabel(tr("Source:"), sourceRow));
+  m_trackingSourceCombo = new QComboBox(sourceRow);
+  m_trackingSourceCombo->addItem(tr("Tele"), 0);
+  m_trackingSourceCombo->addItem(tr("Wide"), 1);
+  sourceLayout->addWidget(m_trackingSourceCombo, 1);
+  trackingLayout->addWidget(sourceRow);
+
+  auto *ufoModeRow = new QWidget(m_trackingControlOverlay);
+  auto *ufoModeLayout = new QHBoxLayout(ufoModeRow);
+  ufoModeLayout->setContentsMargins(0, 0, 0, 0);
+  ufoModeLayout->addWidget(new QLabel(tr("UFO mode:"), ufoModeRow));
+  m_trackingUfoModeCombo = new QComboBox(ufoModeRow);
+  m_trackingUfoModeCombo->addItem(tr("Manual"), 0);
+  m_trackingUfoModeCombo->addItem(tr("Auto"), 1);
+  ufoModeLayout->addWidget(m_trackingUfoModeCombo, 1);
+  trackingLayout->addWidget(ufoModeRow);
+
+  auto *motRow = new QWidget(m_trackingControlOverlay);
+  auto *motLayout = new QHBoxLayout(motRow);
+  motLayout->setContentsMargins(0, 0, 0, 0);
+  motLayout->setSpacing(8);
+  m_trackingMotStartButton = new QPushButton(tr("Start MOT"), motRow);
+  m_trackingTargetIdSpin = new QSpinBox(motRow);
+  m_trackingTargetIdSpin->setRange(0, 99);
+  m_trackingMotTrackButton = new QPushButton(tr("Track ID"), motRow);
+  motLayout->addWidget(m_trackingMotStartButton);
+  motLayout->addWidget(m_trackingTargetIdSpin);
+  motLayout->addWidget(m_trackingMotTrackButton);
+  trackingLayout->addWidget(motRow);
+
+  m_trackingStatusLabel = new QLabel(tr("Idle"), m_trackingControlOverlay);
+  m_trackingStatusLabel->setWordWrap(true);
+  trackingLayout->addWidget(m_trackingStatusLabel);
+
+  m_trackingControlOverlay->hide();
+  m_trackingControlOverlay->raise();
+
   // Motor Control Overlay (draggable, top layer)
   // Parent is centralWidget so it can be dragged over other panels
   m_motorOverlay = new MotorControlPanel(centralWidget);
   m_motorOverlay->setMotorController(m_motorController);
   m_motorOverlay->setFocusController(m_focusController);
-  m_motorOverlay->setFixedSize(290, 380);
+  m_motorOverlay->setFixedSize(290, 430);
   m_motorOverlay->setCursor(Qt::OpenHandCursor);  // Show it's draggable
   m_motorOverlay->setMouseTracking(true);
+  connect(m_motorOverlay, &MotorControlPanel::linkageModeChanged, this,
+          [this](bool enabled) {
+            m_dualCameraLinkageMode = enabled;
+            statusBar()->showMessage(
+                enabled ? tr("Dual-camera linkage: click on WIDE view")
+                        : tr("Dual-camera linkage disabled"),
+                3000);
+          });
   // Initial position will be set by updateOverlayPositions
   m_motorOverlay->raise();
   m_motorOverlay->show();
@@ -1436,6 +1753,129 @@ void MainWindow::setupUi() {
   
   sl->addWidget(sysGroup);
 
+  m_deviceHttpGroup = new QGroupBox(tr("Device HTTP Configuration"), settingsTab);
+  auto *deviceHttpLayout = new QVBoxLayout(m_deviceHttpGroup);
+
+  auto *currentNameRow = new QWidget(m_deviceHttpGroup);
+  auto *currentNameLayout = new QHBoxLayout(currentNameRow);
+  currentNameLayout->setContentsMargins(0, 0, 0, 0);
+  currentNameLayout->addWidget(new QLabel(tr("Current name:"), currentNameRow));
+  m_currentDeviceNameLabel = new QLabel(tr("Unknown"), currentNameRow);
+  m_currentDeviceNameLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+  currentNameLayout->addWidget(m_currentDeviceNameLabel, 1);
+  deviceHttpLayout->addWidget(currentNameRow);
+
+  auto *nameRow = new QWidget(m_deviceHttpGroup);
+  auto *nameLayout = new QHBoxLayout(nameRow);
+  nameLayout->setContentsMargins(0, 0, 0, 0);
+  nameLayout->addWidget(new QLabel(tr("New name:"), nameRow));
+  m_newDeviceNameEdit = new QLineEdit(nameRow);
+  m_setDeviceNameButton = new QPushButton(tr("Apply Name"), nameRow);
+  nameLayout->addWidget(m_newDeviceNameEdit, 1);
+  nameLayout->addWidget(m_setDeviceNameButton);
+  deviceHttpLayout->addWidget(nameRow);
+
+  auto *passwordRow = new QWidget(m_deviceHttpGroup);
+  auto *passwordLayout = new QHBoxLayout(passwordRow);
+  passwordLayout->setContentsMargins(0, 0, 0, 0);
+  passwordLayout->addWidget(new QLabel(tr("Password:"), passwordRow));
+  m_oldDevicePasswordEdit = new QLineEdit(passwordRow);
+  m_oldDevicePasswordEdit->setEchoMode(QLineEdit::Password);
+  m_oldDevicePasswordEdit->setPlaceholderText(tr("Current password"));
+  m_newDevicePasswordEdit = new QLineEdit(passwordRow);
+  m_newDevicePasswordEdit->setEchoMode(QLineEdit::Password);
+  m_newDevicePasswordEdit->setPlaceholderText(tr("New password"));
+  m_setDevicePasswordButton = new QPushButton(tr("Apply Password"), passwordRow);
+  passwordLayout->addWidget(m_oldDevicePasswordEdit, 1);
+  passwordLayout->addWidget(m_newDevicePasswordEdit, 1);
+  passwordLayout->addWidget(m_setDevicePasswordButton);
+  deviceHttpLayout->addWidget(passwordRow);
+
+  auto *firmwareRow = new QWidget(m_deviceHttpGroup);
+  auto *firmwareLayout = new QHBoxLayout(firmwareRow);
+  firmwareLayout->setContentsMargins(0, 0, 0, 0);
+  firmwareLayout->addWidget(new QLabel(tr("Firmware:"), firmwareRow));
+  m_firmwareUploadPathEdit = new QLineEdit(firmwareRow);
+  m_firmwareUploadPathEdit->setReadOnly(true);
+  m_selectFirmwareButton = new QPushButton(tr("Browse..."), firmwareRow);
+  m_uploadFirmwareButton = new QPushButton(tr("Upload"), firmwareRow);
+  firmwareLayout->addWidget(m_firmwareUploadPathEdit, 1);
+  firmwareLayout->addWidget(m_selectFirmwareButton);
+  firmwareLayout->addWidget(m_uploadFirmwareButton);
+  deviceHttpLayout->addWidget(firmwareRow);
+
+  m_deviceHttpStatusLabel = new QLabel(tr("Not connected"), m_deviceHttpGroup);
+  m_deviceHttpStatusLabel->setWordWrap(true);
+  m_deviceHttpStatusLabel->setStyleSheet(
+      "color: rgba(255, 255, 255, 0.65);");
+  deviceHttpLayout->addWidget(m_deviceHttpStatusLabel);
+
+  m_deviceHttpGroup->setEnabled(false);
+  sl->addWidget(m_deviceHttpGroup);
+
+  m_systemControlGroup = new QGroupBox(tr("System Control"), settingsTab);
+  auto *ctrlLayout = new QVBoxLayout(m_systemControlGroup);
+
+  auto *timeRow = new QWidget(m_systemControlGroup);
+  auto *timeLayout = new QHBoxLayout(timeRow);
+  timeLayout->setContentsMargins(0, 0, 0, 0);
+  timeLayout->addWidget(new QLabel(tr("Clock:"), timeRow));
+  m_syncTimeButton = new QPushButton(tr("Sync Time Now"), timeRow);
+  timeLayout->addWidget(m_syncTimeButton);
+  timeLayout->addStretch(1);
+  ctrlLayout->addWidget(timeRow);
+
+  auto *timezoneRow = new QWidget(m_systemControlGroup);
+  auto *timezoneLayout = new QHBoxLayout(timezoneRow);
+  timezoneLayout->setContentsMargins(0, 0, 0, 0);
+  timezoneLayout->addWidget(new QLabel(tr("Timezone:"), timezoneRow));
+  m_timezoneEdit = new QLineEdit(timezoneRow);
+  m_timezoneEdit->setText(QString::fromUtf8(QTimeZone::systemTimeZoneId()));
+  m_setTimezoneButton = new QPushButton(tr("Apply"), timezoneRow);
+  timezoneLayout->addWidget(m_timezoneEdit, 1);
+  timezoneLayout->addWidget(m_setTimezoneButton);
+  ctrlLayout->addWidget(timezoneRow);
+
+  m_mtpModeCheck = new QCheckBox(tr("Enable MTP mode"), m_systemControlGroup);
+  ctrlLayout->addWidget(m_mtpModeCheck);
+
+  auto *cpuRow = new QWidget(m_systemControlGroup);
+  auto *cpuLayout = new QHBoxLayout(cpuRow);
+  cpuLayout->setContentsMargins(0, 0, 0, 0);
+  cpuLayout->addWidget(new QLabel(tr("CPU mode:"), cpuRow));
+  m_cpuModeCombo = new QComboBox(cpuRow);
+  m_cpuModeCombo->addItem(tr("Normal"), 0);
+  m_cpuModeCombo->addItem(tr("Performance"), 1);
+  cpuLayout->addWidget(m_cpuModeCombo);
+  cpuLayout->addStretch(1);
+  ctrlLayout->addWidget(cpuRow);
+
+  m_rgbLightCheck = new QCheckBox(tr("RGB ring light"), m_systemControlGroup);
+  m_powerIndicatorCheck =
+      new QCheckBox(tr("Power indicator"), m_systemControlGroup);
+  ctrlLayout->addWidget(m_rgbLightCheck);
+  ctrlLayout->addWidget(m_powerIndicatorCheck);
+
+  auto *powerRow = new QWidget(m_systemControlGroup);
+  auto *powerLayout = new QHBoxLayout(powerRow);
+  powerLayout->setContentsMargins(0, 0, 0, 0);
+  m_powerDownButton = new QPushButton(tr("Shutdown"), powerRow);
+  m_rebootButton = new QPushButton(tr("Reboot"), powerRow);
+  powerLayout->addWidget(m_powerDownButton);
+  powerLayout->addWidget(m_rebootButton);
+  powerLayout->addStretch(1);
+  ctrlLayout->addWidget(powerRow);
+
+  m_systemControlStatusLabel =
+      new QLabel(tr("Not connected"), m_systemControlGroup);
+  m_systemControlStatusLabel->setWordWrap(true);
+  m_systemControlStatusLabel->setStyleSheet(
+      "color: rgba(255, 255, 255, 0.65);");
+  ctrlLayout->addWidget(m_systemControlStatusLabel);
+
+  m_systemControlGroup->setEnabled(false);
+  sl->addWidget(m_systemControlGroup);
+
   sl->addStretch();
   m_contentStack->addWidget(settingsTab);
 
@@ -1489,6 +1929,236 @@ void MainWindow::setupUi() {
   if (m_changeDownloadDirButton)
     connect(m_changeDownloadDirButton, &QPushButton::clicked, this,
             &MainWindow::onChangeDownloadDirClicked);
+  if (m_setDeviceNameButton) {
+    connect(m_setDeviceNameButton, &QPushButton::clicked, this, [this]() {
+      if (!m_deviceHttpGroup || !m_deviceHttpGroup->isEnabled() ||
+          !m_newDeviceNameEdit)
+        return;
+      const QString newName = m_newDeviceNameEdit->text().trimmed();
+      if (newName.isEmpty()) {
+        setDeviceHttpStatus(tr("Enter a device name before applying"));
+        return;
+      }
+      ensureHttpClientForCurrentIp();
+      if (!m_httpClient)
+        return;
+      setDeviceHttpStatus(tr("Updating device name..."));
+      m_httpClient->setDeviceName(newName, m_currentDeviceName);
+    });
+  }
+  if (m_setDevicePasswordButton) {
+    connect(m_setDevicePasswordButton, &QPushButton::clicked, this, [this]() {
+      if (!m_deviceHttpGroup || !m_deviceHttpGroup->isEnabled() ||
+          !m_oldDevicePasswordEdit || !m_newDevicePasswordEdit)
+        return;
+      const QString oldPassword = m_oldDevicePasswordEdit->text();
+      const QString newPassword = m_newDevicePasswordEdit->text();
+      if (oldPassword.isEmpty() || newPassword.isEmpty()) {
+        setDeviceHttpStatus(
+            tr("Enter current and new password before applying"));
+        return;
+      }
+      ensureHttpClientForCurrentIp();
+      if (!m_httpClient)
+        return;
+      setDeviceHttpStatus(tr("Updating device password..."));
+      m_httpClient->setDevicePassword(oldPassword, newPassword);
+    });
+  }
+  if (m_selectFirmwareButton) {
+    connect(m_selectFirmwareButton, &QPushButton::clicked, this, [this]() {
+      QString startPath =
+          m_firmwareUploadPathEdit ? m_firmwareUploadPathEdit->text() : QString();
+      if (startPath.isEmpty())
+        startPath = QDir::homePath();
+      const QString filePath = QFileDialog::getOpenFileName(
+          this, tr("Select firmware package"), startPath,
+          tr("Firmware packages (*.bin *.img *.zip *.tar *.gz);;All files (*)"));
+      if (filePath.isEmpty())
+        return;
+      if (m_firmwareUploadPathEdit)
+        m_firmwareUploadPathEdit->setText(filePath);
+      saveSettings();
+    });
+  }
+  if (m_uploadFirmwareButton) {
+    connect(m_uploadFirmwareButton, &QPushButton::clicked, this, [this]() {
+      if (!m_deviceHttpGroup || !m_deviceHttpGroup->isEnabled() ||
+          !m_firmwareUploadPathEdit)
+        return;
+      const QString filePath = m_firmwareUploadPathEdit->text().trimmed();
+      if (filePath.isEmpty()) {
+        setDeviceHttpStatus(tr("Select a firmware package first"));
+        return;
+      }
+      if (QMessageBox::question(
+              this, tr("Upload firmware"),
+              tr("Upload the selected firmware package to the connected DWARF II?")) !=
+          QMessageBox::Yes) {
+        return;
+      }
+      ensureHttpClientForCurrentIp();
+      if (!m_httpClient)
+        return;
+      setDeviceHttpStatus(tr("Uploading firmware package..."));
+      m_httpClient->uploadFirmware(filePath);
+    });
+  }
+
+  if (m_syncTimeButton)
+    connect(m_syncTimeButton, &QPushButton::clicked, this,
+            &MainWindow::syncTimeWithDevice);
+  if (m_setTimezoneButton) {
+    connect(m_setTimezoneButton, &QPushButton::clicked, this, [this]() {
+      if (!m_systemController || !m_timezoneEdit)
+        return;
+      const QString timezone = m_timezoneEdit->text().trimmed();
+      if (timezone.isEmpty())
+        return;
+      m_systemController->setTimezone(timezone);
+    });
+  }
+  if (m_mtpModeCheck) {
+    connect(m_mtpModeCheck, &QCheckBox::toggled, this, [this](bool checked) {
+      if (m_systemController)
+        m_systemController->setMtpMode(checked);
+    });
+  }
+  if (m_cpuModeCombo) {
+    connect(m_cpuModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [this](int index) {
+              if (!m_systemController || !m_cpuModeCombo)
+                return;
+              m_systemController->setCpuMode(
+                  m_cpuModeCombo->itemData(index).toInt());
+            });
+  }
+  if (m_rgbLightCheck) {
+    connect(m_rgbLightCheck, &QCheckBox::toggled, this, [this](bool checked) {
+      if (!m_systemController)
+        return;
+      if (checked)
+        m_systemController->openRgb();
+      else
+        m_systemController->closeRgb();
+    });
+  }
+  if (m_powerIndicatorCheck) {
+    connect(m_powerIndicatorCheck, &QCheckBox::toggled, this,
+            [this](bool checked) {
+              if (!m_systemController)
+                return;
+              if (checked)
+                m_systemController->openPowerIndicator();
+              else
+                m_systemController->closePowerIndicator();
+            });
+  }
+  if (m_powerDownButton) {
+    connect(m_powerDownButton, &QPushButton::clicked, this, [this]() {
+      if (!m_systemController)
+        return;
+      if (QMessageBox::question(this, tr("Shutdown DWARF II"),
+                                tr("Power off the connected DWARF II now?")) !=
+          QMessageBox::Yes) {
+        return;
+      }
+      m_systemController->powerDown();
+    });
+  }
+  if (m_rebootButton) {
+    connect(m_rebootButton, &QPushButton::clicked, this, [this]() {
+      if (!m_systemController)
+        return;
+      if (QMessageBox::question(this, tr("Reboot DWARF II"),
+                                tr("Reboot the connected DWARF II now?")) !=
+          QMessageBox::Yes) {
+        return;
+      }
+      m_systemController->reboot();
+    });
+  }
+  if (m_trackingSelectButton) {
+    connect(m_trackingSelectButton, &QPushButton::clicked, this, [this]() {
+      if (!m_trackingOverlay || !m_trackingControlOverlay)
+        return;
+      m_trackingOverlay->setSelectionEnabled(true);
+      m_trackingControlOverlay->raise();
+      if (m_trackingStatusLabel)
+        m_trackingStatusLabel->setText(tr("Draw a tracking box on the live view"));
+    });
+  }
+  if (m_trackingStopButton) {
+    connect(m_trackingStopButton, &QPushButton::clicked, this, [this]() {
+      if (m_trackingController)
+        m_trackingController->stopTrack();
+    });
+  }
+  if (m_trackingSentryButton) {
+    connect(m_trackingSentryButton, &QPushButton::toggled, this,
+            [this](bool checked) {
+              if (!m_trackingController)
+                return;
+              if (checked)
+                m_trackingController->startSentryMode(0);
+              else
+                m_trackingController->stopSentryMode();
+            });
+  }
+  if (m_trackingUfoButton) {
+    connect(m_trackingUfoButton, &QPushButton::toggled, this,
+            [this](bool checked) {
+              if (!m_trackingController)
+                return;
+              const int mode =
+                  m_trackingUfoModeCombo
+                      ? m_trackingUfoModeCombo->currentData().toInt()
+                      : 1;
+              if (checked)
+                m_trackingController->startUfoMode(mode);
+              else
+                m_trackingController->stopUfoMode();
+            });
+  }
+  if (m_trackingSourceCombo) {
+    connect(m_trackingSourceCombo,
+            QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            [this](int index) {
+              if (!m_trackingController || !m_trackingSourceCombo)
+                return;
+              m_trackingController->setWideTeleTrackSwitch(
+                  m_trackingSourceCombo->itemData(index).toInt());
+            });
+  }
+  if (m_trackingUfoModeCombo) {
+    connect(m_trackingUfoModeCombo,
+            QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            [this](int index) {
+              if (!m_trackingController || !m_trackingUfoModeCombo)
+                return;
+              m_trackingController->setUfoHandAutoMode(
+                  m_trackingUfoModeCombo->itemData(index).toInt());
+            });
+  }
+  if (m_trackingMotStartButton) {
+    connect(m_trackingMotStartButton, &QPushButton::clicked, this, [this]() {
+      if (m_trackingController)
+        m_trackingController->startMot();
+    });
+  }
+  if (m_trackingMotTrackButton) {
+    connect(m_trackingMotTrackButton, &QPushButton::clicked, this, [this]() {
+      if (!m_trackingController || !m_trackingTargetIdSpin)
+        return;
+      const int id = m_trackingTargetIdSpin->value();
+      const bool wide = m_trackingSourceCombo &&
+                        m_trackingSourceCombo->currentData().toInt() == 1;
+      if (wide)
+        m_trackingController->wideMotTrackOne(id);
+      else
+        m_trackingController->motTrackOne(id);
+    });
+  }
 
   connect(m_deviceList, &QListWidget::itemDoubleClicked, this,
           &MainWindow::onDeviceSelected);
@@ -1574,11 +2244,17 @@ void MainWindow::updateOverlayVisibility() {
 
   const bool motorVisible = connected && allowOverlays && !blockedByFullscreenOverlay && m_motorOverlayUserVisible;
   const bool paramsVisible = connected && allowOverlays && !blockedByFullscreenOverlay && m_paramsOverlayUserVisible;
+  const bool trackingVisible =
+      connected && camSelected && !blockedByFullscreenOverlay;
 
   if (m_motorOverlay)
     m_motorOverlay->setVisible(motorVisible);
   if (m_paramsOverlay)
     m_paramsOverlay->setVisible(paramsVisible);
+  if (m_trackingOverlay)
+    m_trackingOverlay->setVisible(trackingVisible);
+  if (m_trackingControlOverlay)
+    m_trackingControlOverlay->setVisible(trackingVisible);
 
   // Panorama grid overlay is only relevant in PANO tab and when connected.
   if (m_panoGridOverlay) {
@@ -1625,22 +2301,26 @@ void MainWindow::onDeviceFound(const DwarfDeviceInfo &info) {
   QListWidgetItem *item = new QListWidgetItem(label);
   item->setData(Qt::UserRole, info.ip);
   item->setData(Qt::UserRole + 1, info.version);
+  item->setData(Qt::UserRole + 2, info.name);
   m_deviceList->addItem(item);
 }
 
 void MainWindow::onDeviceSelected(QListWidgetItem *item) {
   QString ip = item->data(Qt::UserRole).toString();
   QString version = item->data(Qt::UserRole + 1).toString();
+  const QString name = item->data(Qt::UserRole + 2).toString();
   
   m_ipInput->setText(ip);
+  setCurrentDeviceName(name);
   if (m_firmwareLabel) {
     m_firmwareLabel->setText(version.isEmpty() ? "--" : version);
   }
 
   // Cache firmware so it is still displayed when connecting via manual IP.
-  if (!version.isEmpty()) {
+  if (!version.isEmpty() || !name.isEmpty()) {
     AppConfig *cfg = AppConfig::instance();
     cfg->setValue("connection", "last_firmware", version);
+    cfg->setValue("connection", "last_device_name", name);
     cfg->save();
   }
   
@@ -1709,6 +2389,10 @@ void MainWindow::onConnectClicked() {
     m_motorController->setClient(m_wsClient);
   if (m_focusController)
     m_focusController->setClient(m_wsClient);
+  if (m_systemController)
+    m_systemController->setClient(m_wsClient);
+  if (m_trackingController)
+    m_trackingController->setClient(m_wsClient);
   if (m_astroController)
     m_astroController->setClient(m_wsClient);
   if (m_panoramaController)
@@ -1762,6 +2446,10 @@ void MainWindow::onDisconnectClicked() {
     m_motorController->setClient(nullptr);
   if (m_focusController)
     m_focusController->setClient(nullptr);
+  if (m_systemController)
+    m_systemController->setClient(nullptr);
+  if (m_trackingController)
+    m_trackingController->setClient(nullptr);
   if (m_astroController)
     m_astroController->setClient(nullptr);
   if (m_panoramaController)
@@ -1770,6 +2458,23 @@ void MainWindow::onDisconnectClicked() {
     m_astroPanel->setWebSocketClient(nullptr);
 
   stopStreaming();
+
+  if (m_deviceHttpGroup)
+    m_deviceHttpGroup->setEnabled(false);
+  if (m_deviceHttpStatusLabel)
+    m_deviceHttpStatusLabel->setText(tr("Not connected"));
+  if (m_systemControlGroup)
+    m_systemControlGroup->setEnabled(false);
+  if (m_systemControlStatusLabel)
+    m_systemControlStatusLabel->setText(tr("Not connected"));
+  if (m_trackingControlOverlay)
+    m_trackingControlOverlay->setEnabled(false);
+  if (m_trackingStatusLabel)
+    m_trackingStatusLabel->setText(tr("Not connected"));
+  if (m_trackingOverlay) {
+    m_trackingOverlay->setSelectionEnabled(false);
+    m_trackingOverlay->setTrackBoxes({});
+  }
 }
 
 void MainWindow::onCancelConnectClicked() {
@@ -1815,6 +2520,28 @@ void MainWindow::onWebSocketConnected() {
 
   // Sync time with DWARF device
   syncTimeWithDevice();
+
+  if (m_deviceHttpGroup)
+    m_deviceHttpGroup->setEnabled(!m_wsClient->isClientMode());
+  if (m_deviceHttpStatusLabel) {
+    m_deviceHttpStatusLabel->setText(
+        m_wsClient->isClientMode() ? tr("View-only connection")
+                                   : tr("Connected"));
+  }
+  if (m_systemControlGroup)
+    m_systemControlGroup->setEnabled(!m_wsClient->isClientMode());
+  if (m_systemControlStatusLabel) {
+    m_systemControlStatusLabel->setText(
+        m_wsClient->isClientMode() ? tr("View-only connection")
+                                   : tr("Connected"));
+  }
+  if (m_trackingControlOverlay) {
+    m_trackingControlOverlay->setEnabled(!m_wsClient->isClientMode());
+    if (m_trackingStatusLabel) {
+      m_trackingStatusLabel->setText(
+          m_wsClient->isClientMode() ? tr("View-only connection") : tr("Idle"));
+    }
+  }
 
   if (m_cameraSettingsPanel) {
     m_cameraSettingsPanel->setClientMode(m_wsClient->isClientMode());
@@ -1904,23 +2631,11 @@ void MainWindow::onDefaultParamsConfigReceived(const QJsonDocument &document) {
 }
 
 void MainWindow::syncTimeWithDevice() {
-  if (!m_wsClient || !m_wsClient->isConnected()) {
+  if (!m_systemController || !m_wsClient || !m_wsClient->isConnected()) {
     return;
   }
 
-  // CMD_SYSTEM_SET_TIME = 13000, MODULE_SYSTEM = 4
-  // Send current Unix timestamp
-  qint64 timestamp = QDateTime::currentSecsSinceEpoch();
-  qWarning() << "[MainWindow] Syncing time with DWARF, timestamp:" << timestamp;
-
-  // Create ReqSetTime protobuf message
-  dwarf::ReqSetTime req;
-  req.set_timestamp(static_cast<uint64_t>(timestamp));
-  QByteArray data(req.ByteSizeLong(), '\0');
-  req.SerializeToArray(data.data(), data.size());
-
-  m_wsClient->sendCommand(4, 13000,
-                          data); // MODULE_SYSTEM=4, CMD_SYSTEM_SET_TIME=13000
+  m_systemController->setTime(QDateTime::currentSecsSinceEpoch());
 }
 
 void MainWindow::onWebSocketDisconnected() {
@@ -1932,6 +2647,19 @@ void MainWindow::onWebSocketDisconnected() {
   statusBar()->showMessage(tr("Disconnected from DWARF II"));
 
   updateSidebarForConnectionState(false);
+
+  if (m_deviceHttpGroup)
+    m_deviceHttpGroup->setEnabled(false);
+  if (m_deviceHttpStatusLabel)
+    m_deviceHttpStatusLabel->setText(tr("Not connected"));
+  if (m_systemControlGroup)
+    m_systemControlGroup->setEnabled(false);
+  if (m_systemControlStatusLabel)
+    m_systemControlStatusLabel->setText(tr("Not connected"));
+  if (m_trackingControlOverlay)
+    m_trackingControlOverlay->setEnabled(false);
+  if (m_trackingStatusLabel)
+    m_trackingStatusLabel->setText(tr("Not connected"));
 }
 
 void MainWindow::onWebSocketError(const QString &error) {
@@ -2070,6 +2798,24 @@ void MainWindow::onMainViewPointClicked(const QPointF &normalizedPos) {
   if (m_mainStream != CameraStream::Wide)
     return;
 
+  if (m_dualCameraLinkageMode && m_wideStream) {
+    const QSize imageSize = m_wideStream->currentFrame().size();
+    if (imageSize.isValid() && imageSize.width() > 0 && imageSize.height() > 0) {
+      const double u = qBound(0.0, (normalizedPos.x() + 1.0) * 0.5, 1.0);
+      const double v = qBound(0.0, (normalizedPos.y() + 1.0) * 0.5, 1.0);
+      const int x =
+          qBound(0, static_cast<int>(std::lround(u * (imageSize.width() - 1))),
+                 imageSize.width() - 1);
+      const int y =
+          qBound(0, static_cast<int>(std::lround(v * (imageSize.height() - 1))),
+                 imageSize.height() - 1);
+      m_motorController->dualCameraLinkage(x, y);
+      statusBar()->showMessage(
+          tr("Dual-camera linkage at %1, %2").arg(x).arg(y), 3000);
+    }
+    return;
+  }
+
   double nx = normalizedPos.x();
   double ny = normalizedPos.y();
 
@@ -2120,16 +2866,9 @@ void MainWindow::onOpenGalleryClicked() {
     m_currentLightbox = nullptr;
   }
 
-  if (m_httpClient) {
-    m_httpClient->deleteLater();
-    m_httpClient = nullptr;
-  }
-
-  m_httpClient = new DwarfHttpClient(ip, this);
-  connect(m_httpClient, &DwarfHttpClient::mediaListReceived, this,
-          &MainWindow::onMediaListReceived);
-  connect(m_httpClient, &DwarfHttpClient::errorOccurred, this,
-          &MainWindow::onMediaListError);
+  ensureHttpClientForCurrentIp();
+  if (!m_httpClient)
+    return;
 
   if (m_openGalleryButton)
     m_openGalleryButton->setEnabled(false);
@@ -2843,6 +3582,16 @@ void MainWindow::onPipStreamClicked() {
 }
 
 void MainWindow::updateOverlayPositions() {
+  if (m_mainVideoWidget && m_trackingOverlay) {
+    m_trackingOverlay->setGeometry(m_mainVideoWidget->rect());
+    if (m_trackingOverlay->isVisible())
+      m_trackingOverlay->raise();
+    if (m_streamNameOverlay)
+      m_streamNameOverlay->raise();
+    if (m_pipContainer)
+      m_pipContainer->raise();
+  }
+
   if (m_mainVideoWidget && m_motorOverlay && m_mainStreamView) {
     // Calculate position relative to central widget (including sidebar offset)
     QPoint videoPos = m_mainStreamView->mapTo(centralWidget(), QPoint(0, 0));
@@ -2892,6 +3641,15 @@ void MainWindow::updateOverlayPositions() {
 
     m_paramsOverlay->move(overlayX, overlayY);
     m_paramsOverlay->raise();
+  }
+
+  if (m_mainVideoWidget && m_trackingControlOverlay && m_mainStreamView) {
+    const QPoint videoPos = m_mainStreamView->mapTo(centralWidget(), QPoint(0, 0));
+    const int overlayX = videoPos.x() + 20;
+    const int overlayY = videoPos.y() + 20;
+    m_trackingControlOverlay->move(overlayX, overlayY);
+    if (m_trackingControlOverlay->isVisible())
+      m_trackingControlOverlay->raise();
   }
 
   if (m_starMapOverlayContainer && m_mainStreamView) {
@@ -3136,6 +3894,12 @@ void MainWindow::loadSettings() {
     QString fw = cfg->getValue("connection", "last_firmware", "").toString();
     m_firmwareLabel->setText(fw.isEmpty() ? "--" : fw);
   }
+  setCurrentDeviceName(
+      cfg->getValue("connection", "last_device_name", "").toString());
+  if (m_firmwareUploadPathEdit) {
+    m_firmwareUploadPathEdit->setText(
+        cfg->getValue("connection", "firmware_upload_path", "").toString());
+  }
 
   // Display / overlay settings
   // Always start on the first tab (Scan/Connect) to ensure clean UI state
@@ -3226,6 +3990,11 @@ void MainWindow::saveSettings() {
   // Download directory
   if (m_downloadDirEdit) {
     cfg->setValue("media", "download_dir", m_downloadDirEdit->text());
+  }
+  cfg->setValue("connection", "last_device_name", m_currentDeviceName);
+  if (m_firmwareUploadPathEdit) {
+    cfg->setValue("connection", "firmware_upload_path",
+                  m_firmwareUploadPathEdit->text());
   }
   
   // Save panel settings
