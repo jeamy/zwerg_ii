@@ -107,17 +107,6 @@ jobs:
           ref: refs/tags/${{ needs.prepare.outputs.tag }}
           fetch-depth: 0
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: "6.8.3"
-          host: "linux"
-          target: "desktop"
-          arch: "gcc_64"
-          # Svg is part of the base desktop package in Qt 6, and qttools is not
-          # exposed as an installable AQT module on all platforms.
-          modules: "qtmultimedia qtwebsockets"
-
       - name: Install Linux dependencies
         shell: bash
         run: |
@@ -126,10 +115,19 @@ jobs:
           sudo apt-get install -y \
             build-essential \
             cmake \
+            pkg-config \
             protobuf-compiler \
             libprotobuf-dev \
             patchelf \
             zip \
+            qt6-base-dev \
+            qt6-base-dev-tools \
+            qt6-tools-dev \
+            qt6-tools-dev-tools \
+            qt6-multimedia-dev \
+            qt6-websockets-dev \
+            qt6-svg-dev \
+            libqt6sql6-sqlite \
             libgl1-mesa-dev \
             libdbus-1-dev \
             libfreetype6-dev \
@@ -151,6 +149,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [[ -d /usr/lib/qt6/bin ]]; then
+            echo "/usr/lib/qt6/bin" >> "$GITHUB_PATH"
+            export PATH="/usr/lib/qt6/bin:$PATH"
+          fi
           if ! command -v qmake6 >/dev/null 2>&1 && command -v qmake >/dev/null 2>&1; then
             sudo ln -sf "$(command -v qmake)" /usr/local/bin/qmake6
           fi
