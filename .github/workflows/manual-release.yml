@@ -12,19 +12,6 @@ on:
         required: true
         default: "master"
         type: string
-      overwrite_existing_tag:
-        description: "Move an existing tag to the selected ref"
-        required: true
-        default: false
-        type: boolean
-      linux_build_mode:
-        description: "Linux build mode"
-        required: true
-        default: "docker-ubuntu2204"
-        type: choice
-        options:
-          - docker-ubuntu2204
-          - native-ubuntu2204
 
 permissions:
   contents: write
@@ -67,7 +54,6 @@ jobs:
           set -euo pipefail
           TAG="${{ steps.vars.outputs.tag }}"
           TARGET_COMMIT="$(git rev-parse HEAD)"
-          OVERWRITE_TAG="${{ github.event.inputs.overwrite_existing_tag }}"
           git fetch --tags --force
 
           if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
@@ -77,22 +63,32 @@ jobs:
               exit 0
             fi
 
-            if [[ "$OVERWRITE_TAG" == "true" ]]; then
-              echo "Retagging existing tag $TAG from $EXISTING_COMMIT to $TARGET_COMMIT"
-              git config user.name "github-actions[bot]"
-              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-              git tag -d "$TAG"
-              git push origin ":refs/tags/$TAG"
-              git tag -a "$TAG" -m "Release $TAG"
-              git push origin "refs/tags/$TAG"
-              exit 0
+            RELEASE_API="https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG"
+            RELEASE_STATUS="$(curl -sS -o /tmp/release.json -w '%{http_code}' \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+              "$RELEASE_API")"
+
+            if [[ "$RELEASE_STATUS" == "200" ]]; then
+              echo "Tag already has a GitHub release and will not be moved: $TAG" >&2
+              echo "Selected ref commit: $TARGET_COMMIT" >&2
+              echo "Tag commit:          $EXISTING_COMMIT" >&2
+              exit 1
             fi
 
-            echo "Tag already exists but points to a different commit: $TAG" >&2
-            echo "Selected ref commit: $TARGET_COMMIT" >&2
-            echo "Tag commit:          $EXISTING_COMMIT" >&2
-            echo "Enable overwrite_existing_tag to move the tag explicitly." >&2
-            exit 1
+            if [[ "$RELEASE_STATUS" != "404" ]]; then
+              echo "Could not verify release state for tag $TAG (HTTP $RELEASE_STATUS)" >&2
+              exit 1
+            fi
+
+            echo "Retagging existing tag $TAG from $EXISTING_COMMIT to $TARGET_COMMIT"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -d "$TAG"
+            git push origin ":refs/tags/$TAG"
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin "refs/tags/$TAG"
+            exit 0
           fi
 
           git config user.name "github-actions[bot]"
@@ -111,8 +107,7 @@ jobs:
           ref: refs/tags/${{ needs.prepare.outputs.tag }}
           fetch-depth: 0
 
-      - name: Install Qt for native Linux build
-        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2204' }}
+      - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
           version: "6.8.3"
@@ -124,7 +119,6 @@ jobs:
           modules: "qtmultimedia qtwebsockets"
 
       - name: Install Linux dependencies
-        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2204' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -154,7 +148,6 @@ jobs:
             libxcb-xkb1
 
       - name: Normalize Qt tools
-        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2204' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -171,16 +164,7 @@ jobs:
             echo "Qt6_DIR=$QT_PREFIX/lib/cmake/Qt6"
           } >> "$GITHUB_ENV"
 
-      - name: Build Linux release (Docker Ubuntu 22.04)
-        if: ${{ github.event.inputs.linux_build_mode == 'docker-ubuntu2204' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          chmod +x ./build_linux_release_docker_ubuntu2204.sh
-          ./build_linux_release_docker_ubuntu2204.sh
-
-      - name: Build Linux release (native Ubuntu 22.04)
-        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2204' }}
+      - name: Build Linux release
         shell: bash
         run: |
           set -euo pipefail
