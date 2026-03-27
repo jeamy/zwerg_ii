@@ -102,7 +102,7 @@ jobs:
 
   build_linux:
     name: Build Linux
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: prepare
     steps:
       - name: Checkout release tag
@@ -112,7 +112,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Qt for native Linux build
-        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2004' }}
+        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2204' }}
         uses: jurplel/install-qt-action@v4
         with:
           version: "6.8.3"
@@ -124,7 +124,7 @@ jobs:
           modules: "qtmultimedia qtwebsockets"
 
       - name: Install Linux dependencies
-        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2004' }}
+        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2204' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -154,7 +154,7 @@ jobs:
             libxcb-xkb1
 
       - name: Normalize Qt tools
-        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2004' }}
+        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2204' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -171,16 +171,16 @@ jobs:
             echo "Qt6_DIR=$QT_PREFIX/lib/cmake/Qt6"
           } >> "$GITHUB_ENV"
 
-      - name: Build Linux release (Docker Ubuntu 20.04)
-        if: ${{ github.event.inputs.linux_build_mode == 'docker-ubuntu2004' }}
+      - name: Build Linux release (Docker Ubuntu 22.04)
+        if: ${{ github.event.inputs.linux_build_mode == 'docker-ubuntu2204' }}
         shell: bash
         run: |
           set -euo pipefail
-          chmod +x ./build_linux_release_docker_ubuntu2004.sh
-          ./build_linux_release_docker_ubuntu2004.sh
+          chmod +x ./build_linux_release_docker_ubuntu2204.sh
+          ./build_linux_release_docker_ubuntu2204.sh
 
-      - name: Build Linux release (native Ubuntu 20.04)
-        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2004' }}
+      - name: Build Linux release (native Ubuntu 22.04)
+        if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2204' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -193,7 +193,7 @@ jobs:
           set -euo pipefail
           TAG="${{ needs.prepare.outputs.tag }}"
           SRC="dist/zwergII-linux-release.zip"
-          DST="dist/zwergII-${TAG}-linux-ubuntu20.04.zip"
+          DST="dist/zwergII-${TAG}-linux-ubuntu22.04.zip"
           if [[ ! -f "$SRC" ]]; then
             echo "Expected Linux ZIP not found: $SRC" >&2
             exit 1
@@ -204,7 +204,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux-release
-          path: dist/zwergII-*-linux-ubuntu20.04.zip
+          path: dist/zwergII-*-linux-ubuntu22.04.zip
           if-no-files-found: error
 
   build_macos:
