@@ -12,6 +12,11 @@ on:
         required: true
         default: "master"
         type: string
+      overwrite_existing_tag:
+        description: "Move an existing tag to the selected ref"
+        required: true
+        default: false
+        type: boolean
       linux_build_mode:
         description: "Linux build mode"
         required: true
@@ -62,6 +67,7 @@ jobs:
           set -euo pipefail
           TAG="${{ steps.vars.outputs.tag }}"
           TARGET_COMMIT="$(git rev-parse HEAD)"
+          OVERWRITE_TAG="${{ github.event.inputs.overwrite_existing_tag }}"
           git fetch --tags --force
 
           if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
@@ -71,9 +77,21 @@ jobs:
               exit 0
             fi
 
+            if [[ "$OVERWRITE_TAG" == "true" ]]; then
+              echo "Retagging existing tag $TAG from $EXISTING_COMMIT to $TARGET_COMMIT"
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git tag -d "$TAG"
+              git push origin ":refs/tags/$TAG"
+              git tag -a "$TAG" -m "Release $TAG"
+              git push origin "refs/tags/$TAG"
+              exit 0
+            fi
+
             echo "Tag already exists but points to a different commit: $TAG" >&2
             echo "Selected ref commit: $TARGET_COMMIT" >&2
             echo "Tag commit:          $EXISTING_COMMIT" >&2
+            echo "Enable overwrite_existing_tag to move the tag explicitly." >&2
             exit 1
           fi
 
