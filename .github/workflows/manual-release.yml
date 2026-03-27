@@ -125,8 +125,8 @@ jobs:
             qt6-tools-dev \
             qt6-tools-dev-tools \
             qt6-multimedia-dev \
-            qt6-websockets-dev \
-            qt6-svg-dev \
+            libqt6websockets6-dev \
+            libqt6svg6-dev \
             libqt6sql6-sqlite \
             libgl1-mesa-dev \
             libdbus-1-dev \
