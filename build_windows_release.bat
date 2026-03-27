@@ -203,14 +203,20 @@ rem ===========================================================================
 echo [1/3] Configure (CMake)...
 
 set "CMAKE_GEN="
-where g++ >NUL 2>&1
+where cl >NUL 2>&1
 if not errorlevel 1 (
-  echo Detected MinGW, using MinGW Makefiles generator
-  set "CMAKE_GEN=MinGW Makefiles"
-) else (
-  where cl >NUL 2>&1
+  where ninja >NUL 2>&1
   if not errorlevel 1 (
+    echo Detected MSVC + Ninja, using Ninja generator
+    set "CMAKE_GEN=Ninja"
+  ) else (
     echo Detected MSVC, using default Visual Studio generator
+  )
+) else (
+  where g++ >NUL 2>&1
+  if not errorlevel 1 (
+    echo Detected MinGW, using MinGW Makefiles generator
+    set "CMAKE_GEN=MinGW Makefiles"
   )
 )
 
@@ -251,7 +257,7 @@ rem [2] Build
 rem ===========================================================================
 echo.
 echo [2/3] Build...
-cmake --build "%BUILD_DIR%" --config %BUILD_TYPE%
+cmake --build "%BUILD_DIR%" --config %BUILD_TYPE% --parallel %NUMBER_OF_PROCESSORS%
 if errorlevel 1 goto error
 
 rem ===========================================================================
@@ -292,6 +298,17 @@ if exist "%PROJECT_DIR%\data\constellationship.fab" copy /Y "%PROJECT_DIR%\data\
 
 if exist "%PROJECT_DIR%\resources" (
   xcopy "%PROJECT_DIR%\resources" "%DIST_DIR%\resources" /E /I /Y >NUL
+)
+
+rem Optional non-Qt runtime DLLs from vcpkg
+if defined VCPKG_INSTALLED_DIR (
+  if defined VCPKG_TARGET_TRIPLET (
+    set "VCPKG_BIN=%VCPKG_INSTALLED_DIR%\%VCPKG_TARGET_TRIPLET%\bin"
+    if exist "!VCPKG_BIN!" (
+      echo Copying vcpkg runtime DLLs from !VCPKG_BIN!...
+      xcopy "!VCPKG_BIN!\*.dll" "%DIST_DIR%" /Y >NUL
+    )
+  )
 )
 
 rem Qt deployment
