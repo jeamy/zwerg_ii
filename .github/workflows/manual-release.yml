@@ -61,13 +61,19 @@ jobs:
         run: |
           set -euo pipefail
           TAG="${{ steps.vars.outputs.tag }}"
+          TARGET_COMMIT="$(git rev-parse HEAD)"
           git fetch --tags --force
+
           if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-            echo "Tag already exists locally: $TAG" >&2
-            exit 1
-          fi
-          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
-            echo "Tag already exists on origin: $TAG" >&2
+            EXISTING_COMMIT="$(git rev-list -n 1 "refs/tags/$TAG")"
+            if [[ "$EXISTING_COMMIT" == "$TARGET_COMMIT" ]]; then
+              echo "Tag already exists on selected commit, reusing: $TAG"
+              exit 0
+            fi
+
+            echo "Tag already exists but points to a different commit: $TAG" >&2
+            echo "Selected ref commit: $TARGET_COMMIT" >&2
+            echo "Tag commit:          $EXISTING_COMMIT" >&2
             exit 1
           fi
 
