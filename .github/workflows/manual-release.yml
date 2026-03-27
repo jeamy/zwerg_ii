@@ -95,7 +95,9 @@ jobs:
           host: "linux"
           target: "desktop"
           arch: "gcc_64"
-          modules: "qtmultimedia qtwebsockets qtsvg qttools"
+          # Svg is part of the base desktop package in Qt 6, and qttools is not
+          # exposed as an installable AQT module on all platforms.
+          modules: "qtmultimedia qtwebsockets"
 
       - name: Install Linux dependencies
         if: ${{ github.event.inputs.linux_build_mode == 'native-ubuntu2004' }}
@@ -182,9 +184,19 @@ jobs:
           if-no-files-found: error
 
   build_macos:
-    name: Build macOS
-    runs-on: macos-15
+    name: Build macOS (${{ matrix.label }})
+    runs-on: ${{ matrix.runner }}
     needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Intel
+            runner: macos-15-intel
+            archive_suffix: macos15-intel
+          - label: Apple Silicon
+            runner: macos-15
+            archive_suffix: macos15-silicon
     steps:
       - name: Checkout release tag
         uses: actions/checkout@v4
@@ -199,7 +211,7 @@ jobs:
           host: "mac"
           target: "desktop"
           arch: "clang_64"
-          modules: "qtmultimedia qtwebsockets qtsvg qttools"
+          modules: "qtmultimedia qtwebsockets"
 
       - name: Install macOS dependencies
         shell: bash
@@ -221,7 +233,7 @@ jobs:
           set -euo pipefail
           TAG="${{ needs.prepare.outputs.tag }}"
           APP_PATH="dist/macos/DwarfController.app"
-          ZIP_PATH="dist/zwergII-${TAG}-macos15.zip"
+          ZIP_PATH="dist/zwergII-${TAG}-${{ matrix.archive_suffix }}.zip"
           if [[ ! -d "$APP_PATH" ]]; then
             echo "Expected macOS app bundle not found: $APP_PATH" >&2
             exit 1
@@ -231,8 +243,8 @@ jobs:
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-release
-          path: dist/zwergII-*-macos15.zip
+          name: macos-release-${{ matrix.archive_suffix }}
+          path: dist/zwergII-*-${{ matrix.archive_suffix }}.zip
           if-no-files-found: error
 
   build_windows:
@@ -256,7 +268,7 @@ jobs:
           host: "windows"
           target: "desktop"
           arch: "win64_msvc2022_64"
-          modules: "qtmultimedia qtwebsockets qtsvg qttools"
+          modules: "qtmultimedia qtwebsockets"
 
       - name: Resolve Qt paths
         shell: pwsh
