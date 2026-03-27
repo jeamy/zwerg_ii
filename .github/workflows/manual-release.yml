@@ -15,11 +15,11 @@ on:
       linux_build_mode:
         description: "Linux build mode"
         required: true
-        default: "docker-ubuntu2004"
+        default: "docker-ubuntu2204"
         type: choice
         options:
-          - docker-ubuntu2004
-          - native-ubuntu2004
+          - docker-ubuntu2204
+          - native-ubuntu2204
 
 permissions:
   contents: write
