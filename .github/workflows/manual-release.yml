@@ -16,6 +16,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   prepare:
     name: Prepare Tag
@@ -43,7 +46,7 @@ jobs:
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
 
       - name: Checkout selected ref
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ steps.vars.outputs.ref }}
           fetch-depth: 0
@@ -102,7 +105,7 @@ jobs:
     needs: prepare
     steps:
       - name: Checkout release tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: refs/tags/${{ needs.prepare.outputs.tag }}
           fetch-depth: 0
@@ -187,7 +190,7 @@ jobs:
           mv "$SRC" "$DST"
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: linux-release
           path: dist/zwergII-*-linux-ubuntu22.04.zip
@@ -209,7 +212,7 @@ jobs:
             archive_suffix: macos15-silicon
     steps:
       - name: Checkout release tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: refs/tags/${{ needs.prepare.outputs.tag }}
           fetch-depth: 0
@@ -251,7 +254,7 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_PATH"
 
       - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: macos-release-${{ matrix.archive_suffix }}
           path: dist/zwergII-*-${{ matrix.archive_suffix }}.zip
@@ -263,7 +266,7 @@ jobs:
     needs: prepare
     steps:
       - name: Checkout release tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: refs/tags/${{ needs.prepare.outputs.tag }}
           fetch-depth: 0
@@ -330,7 +333,7 @@ jobs:
           Move-Item -Force $src $dst
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: windows-release
           path: dist/zwergII-*-windows.zip
@@ -346,7 +349,7 @@ jobs:
       - build_windows
     steps:
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: release-assets
 
